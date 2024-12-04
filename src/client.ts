@@ -8,6 +8,7 @@ import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import { PublicKey } from "@solana/web3.js";
 import { QuartzUser } from "./user";
 import { getDriftUser, getVaultPubkey } from "./helpers";
+import { DriftClientService } from "./services/driftClientService";
 
 export class QuartzClient {
     private connection: Connection;
@@ -45,19 +46,7 @@ export class QuartzClient {
         const quartzLookupTable = await connection.getAddressLookupTable(QUARTZ_ADDRESS_TABLE).then((res) => res.value);
         if (!quartzLookupTable) throw Error("Address Lookup Table account not found");
 
-        const driftClient = new DriftClient({
-            connection,
-            wallet,
-            env: 'mainnet-beta',
-            userStats: false,
-            perpMarketIndexes: [],
-            spotMarketIndexes: SUPPORTED_DRIFT_MARKETS,
-            accountSubscription: {
-                type: 'websocket',
-                commitment: "confirmed"
-            }
-        });
-        await driftClient.subscribe();
+        const driftClient = await DriftClientService.getDriftClient(connection);
 
         const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
         const oracles = new Map<string, PublicKey>([

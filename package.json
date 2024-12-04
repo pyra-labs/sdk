@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "description": "SDK for interacting with the Quartz Protocol",
   "main": "index.js",
+  "types": "index.d.ts",
+  "typesVersions": {
+    ">=4.7": { "*": ["ts/*"] }
+  },
   "scripts": {
     "build": "tsc",
     "test": "jest"
