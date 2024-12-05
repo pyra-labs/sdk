@@ -1,0 +1,36 @@
+import { BN, DriftClient, MarginCategory, UserAccount } from "@drift-labs/sdk";
+import { Connection, PublicKey } from "@solana/web3.js";
+export declare class DriftUser {
+    private isInitialized;
+    private authority;
+    private connection;
+    private driftClient;
+    private userAccount;
+    pubkey: PublicKey;
+    statsPubkey: PublicKey;
+    constructor(authority: PublicKey, connection: Connection, driftClient: DriftClient, userAccount?: UserAccount);
+    initialize(): Promise<void>;
+    getDriftUserAccount(): UserAccount;
+    getHealth(): number;
+    getTokenAmount(marketIndex: number): BN;
+    getWithdrawalLimit(marketIndex: number, reduceOnly?: boolean): BN;
+    private getFreeCollateral;
+    private canBypassWithdrawLimits;
+    private isBeingLiquidated;
+    getTotalCollateral(marginCategory?: MarginCategory, strict?: boolean, includeOpenOrders?: boolean): BN;
+    private getSpotMarketAssetValue;
+    private getSpotMarketAssetAndLiabilityValue;
+    private getSpotLiabilityValue;
+    private getSpotAssetValue;
+    private getUnrealizedPNL;
+    private getActivePerpPositions;
+    private getPerpPositionWithLPSettle;
+    private getPerpPosition;
+    private getEmptyPosition;
+    private getClonedPosition;
+    getMaintenanceMarginRequirement(): BN;
+    private getMarginRequirement;
+    private getTotalPerpPositionLiability;
+    private calculateWeightedPerpPositionLiability;
+    private getSpotMarketLiabilityValue;
+}
