@@ -1,7 +1,7 @@
 import type { DriftClient } from "@drift-labs/sdk";
 import { fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
 import { QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID } from "./config/constants.js";
-import quartzIdl from "./idl/quartz.json";
+import quartzIdl from "./idl/quartz.json" with { type: "json" };
 import type { Quartz } from "./types/quartz.js";
 import { AnchorProvider, Program, setProvider } from "@coral-xyz/anchor";
 import type { Idl, Wallet } from "@coral-xyz/anchor";

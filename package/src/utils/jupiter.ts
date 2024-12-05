@@ -2,7 +2,7 @@ import type { Connection, AccountInfo } from "@solana/web3.js";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import type { QuoteResponse } from "@jup-ag/api";
 import { AddressLookupTableAccount } from "@solana/web3.js";
-import type { RemainingAccount } from "../interfaces/remainingAccount.interface";
+import type { RemainingAccount } from "../interfaces/remainingAccount.interface.js";
 
 export async function getJupiterSwapIx(
   walletPubkey: PublicKey, 
@@ -12,7 +12,7 @@ export async function getJupiterSwapIx(
   ix_jupiterSwap: TransactionInstruction, 
   jupiterLookupTables: AddressLookupTableAccount[] 
 }> {
-    const instructions = await (
+    const instructions: any = await (
         await fetch('https://quote-api.jup.ag/v6/swap-instructions', {
             method: 'POST',
             headers: {
@@ -55,7 +55,7 @@ export async function getJupiterSwapIx(
 
     const addressLookupTableAccounts: AddressLookupTableAccount[] = [];
     addressLookupTableAccounts.push(
-        ...(await getAddressLookupTableAccounts(addressLookupTableAddresses))
+        ...(await getAddressLookupTableAccounts(addressLookupTableAddresses ?? []))
     );
 
     const ix_jupiterSwap =  new TransactionInstruction({

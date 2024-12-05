@@ -35,6 +35,9 @@
 				"noUnusedFunctionParameters": "error",
 				"noUnusedPrivateClassMembers": "error",
 				"noUnusedLabels": "error"
+			},
+			"suspicious": {
+				"noExplicitAny": "off"
 			}
 		}
 	},

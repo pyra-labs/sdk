@@ -6,7 +6,7 @@ import type { Connection, AddressLookupTableAccount, TransactionInstruction } fr
 import { DRIFT_MARKET_INDEX_SOL, DRIFT_MARKET_INDEX_USDC, QUARTZ_HEALTH_BUFFER, USDC_MINT, WSOL_MINT } from "./config/constants.js";
 import type { Quartz } from "./types/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
-import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
+import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { SwapMode } from "@jup-ag/api";
 import { getJupiterSwapIx } from "./utils/jupiter.js";
