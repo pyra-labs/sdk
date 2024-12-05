@@ -9,7 +9,8 @@
 		"ignoreUnknown": false,
 		"ignore": [
 			"dist/**/*",
-			"node_modules/**/*"
+			"node_modules/**/*",
+			"src/tests/**/*"
 		]
 	},
 	"formatter": {
