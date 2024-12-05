@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { QUARTZ_PROGRAM_ID } from "../config/constants";
+import { QUARTZ_PROGRAM_ID } from "../config/constants.js";
 import { BN } from "@coral-xyz/anchor";
 import { DRIFT_PROGRAM_ID } from "@drift-labs/sdk";
 
@@ -59,10 +59,10 @@ export const getDriftSpotMarketPublicKey = (marketIndex: number) => {
     return spotMarketVaultPda;
 }
 
-export const toRemainingAccount = (
-    pubkey: PublicKey, 
-    isWritable: boolean, 
-    isSigner: boolean
-) => {
-    return { pubkey, isWritable, isSigner }
-}
+// export const toRemainingAccount = (
+//     pubkey: PublicKey, 
+//     isWritable: boolean, 
+//     isSigner: boolean
+// ) => {
+//     return { pubkey, isWritable, isSigner }
+// }

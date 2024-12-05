@@ -1,15 +1,16 @@
-import { AddressLookupTableAccount, PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, TransactionInstruction } from "@solana/web3.js";
-import { DriftUser } from "./model/driftUser";
-import { BN, DRIFT_PROGRAM_ID, DriftClient, getSpotMarketPublicKey, QuoteResponse, UserAccount } from "@drift-labs/sdk";
-import { getDriftSpotMarketPublicKey, getDriftStatePublicKey, getVaultPublicKey, getVaultSplPublicKey, toRemainingAccount } from "./utils/helpers";
-import { Connection } from "@solana/web3.js";
-import { DRIFT_MARKET_INDEX_SOL, DRIFT_MARKET_INDEX_USDC, QUARTZ_HEALTH_BUFFER, USDC_MINT, WSOL_MINT } from "./config/constants";
-import { Quartz } from "./types/quartz";
-import { Program } from "@coral-xyz/anchor";
+import { DriftUser } from "./model/driftUser.js";
+import type { DriftClient, QuoteResponse, UserAccount } from "@drift-labs/sdk";
+import { BN, DRIFT_PROGRAM_ID } from "@drift-labs/sdk";
+import { getDriftSpotMarketPublicKey, getDriftStatePublicKey, getVaultPublicKey, getVaultSplPublicKey } from "./utils/helpers.js";
+import type { Connection, AddressLookupTableAccount, TransactionInstruction } from "@solana/web3.js";
+import { DRIFT_MARKET_INDEX_SOL, DRIFT_MARKET_INDEX_USDC, QUARTZ_HEALTH_BUFFER, USDC_MINT, WSOL_MINT } from "./config/constants.js";
+import type { Quartz } from "./types/quartz.js";
+import type { Program } from "@coral-xyz/anchor";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { SwapMode } from "@jup-ag/api";
-import { getJupiterSwapIx } from "./utils/jupiter";
+import { getJupiterSwapIx } from "./utils/jupiter.js";
+import { PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
 
 export class QuartzUser {
     public readonly pubkey: PublicKey;
@@ -76,8 +77,8 @@ export class QuartzUser {
         //
         // The following is an algebraicly simplified expression of the above formula, in terms of repayAmount
 
-        if (targetHealth <= 0 || targetHealth >= 100) throw Error(`Target health must be between 0 and 100`);
-        if (targetHealth <= this.getHealth()) throw Error(`Target health must be greater than current health`);
+        if (targetHealth <= 0 || targetHealth >= 100) throw Error("Target health must be between 0 and 100");
+        if (targetHealth <= this.getHealth()) throw Error("Target health must be greater than current health");
 
         const currentWeightedCollateral = this.getTotalWeightedCollateral();
         const loanValue = this.getMaintenanceMarginRequirement();

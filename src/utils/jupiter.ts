@@ -1,6 +1,8 @@
-import { PublicKey, Connection, TransactionInstruction } from "@solana/web3.js";
-import { QuoteResponse } from "@jup-ag/api";
+import type { Connection, AccountInfo } from "@solana/web3.js";
+import { PublicKey, TransactionInstruction } from "@solana/web3.js";
+import type { QuoteResponse } from "@jup-ag/api";
 import { AddressLookupTableAccount } from "@solana/web3.js";
+import type { RemainingAccount } from "../interfaces/remainingAccount.interface";
 
 export async function getJupiterSwapIx(
   walletPubkey: PublicKey, 
@@ -25,7 +27,7 @@ export async function getJupiterSwapIx(
     ).json();
 
     if (instructions.error) {
-        throw new Error("Failed to get swap instructions: " + instructions.error);
+        throw new Error(`Failed to get swap instructions: ${instructions.error}`);
     }
     const { swapInstruction, addressLookupTableAddresses } = instructions;
 
@@ -37,7 +39,7 @@ export async function getJupiterSwapIx(
             keys.map((key) => new PublicKey(key))
           );
       
-        return addressLookupTableAccountInfos.reduce((acc: any, accountInfo: any, index: any) => {
+        return addressLookupTableAccountInfos.reduce((acc: AddressLookupTableAccount[], accountInfo: AccountInfo<Buffer> | null, index: number) => {
           const addressLookupTableAddress = keys[index];
           if (accountInfo) {
             const addressLookupTableAccount = new AddressLookupTableAccount({
@@ -58,10 +60,10 @@ export async function getJupiterSwapIx(
 
     const ix_jupiterSwap =  new TransactionInstruction({
         programId: new PublicKey(swapInstruction.programId),
-        keys: swapInstruction.accounts.map((key: any) => ({
-        pubkey: new PublicKey(key.pubkey),
-        isSigner: key.isSigner,
-        isWritable: key.isWritable,
+        keys: swapInstruction.accounts.map((key: RemainingAccount) => ({
+          pubkey: new PublicKey(key.pubkey),
+          isSigner: key.isSigner,
+          isWritable: key.isWritable,
         })),
         data: Buffer.from(swapInstruction.data, "base64"),
     });

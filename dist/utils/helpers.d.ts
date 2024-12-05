@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import type { PublicKey } from "@solana/web3.js";
 export declare const getVaultPublicKey: (user: PublicKey) => PublicKey;
 export declare const getVaultSplPublicKey: (user: PublicKey, mint: PublicKey) => PublicKey;
 export declare const getDriftUserPublicKey: (vaultPda: PublicKey) => PublicKey;

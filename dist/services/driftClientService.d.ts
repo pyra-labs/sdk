@@ -1,5 +1,5 @@
-import { DriftClient } from "@drift-labs/sdk";
-import { Connection } from "@solana/web3.js";
+import type { DriftClient } from "@drift-labs/sdk";
+import type { Connection } from "@solana/web3.js";
 export declare class DriftClientService {
     private static instance;
     private driftClient;

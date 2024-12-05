@@ -1,14 +1,15 @@
-import { DriftClient, fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
-import { DRIFT_MARKET_INDEX_USDC, QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID, SUPPORTED_DRIFT_MARKETS } from "./config/constants";
+import type { DriftClient } from "@drift-labs/sdk";
+import { fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
+import { QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID } from "./config/constants.js";
 import quartzIdl from "./idl/quartz.json";
-import { Quartz } from "./types/quartz.js";
-import { AnchorProvider, BN, Idl, Program, setProvider, Wallet } from "@coral-xyz/anchor";
-import { Connection, AddressLookupTableAccount, TransactionInstruction, SYSVAR_INSTRUCTIONS_PUBKEY, SystemProgram } from "@solana/web3.js";
+import type { Quartz } from "./types/quartz.js";
+import { AnchorProvider, Program, setProvider } from "@coral-xyz/anchor";
+import type { Idl, Wallet } from "@coral-xyz/anchor";
+import type { PublicKey, Connection, AddressLookupTableAccount } from "@solana/web3.js";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
-import { PublicKey } from "@solana/web3.js";
-import { QuartzUser } from "./user";
-import { getDriftUserPublicKey, getVaultPublicKey } from "./utils/helpers";
-import { DriftClientService } from "./services/driftClientService";
+import { QuartzUser } from "./user.js";
+import { getDriftUserPublicKey, getVaultPublicKey } from "./utils/helpers.js";
+import { DriftClientService } from "./services/driftClientService.js";
 
 export class QuartzClient {
     private connection: Connection;

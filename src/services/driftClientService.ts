@@ -1,5 +1,6 @@
 import { DriftClient, Wallet } from "@drift-labs/sdk";
-import { Connection, Keypair } from "@solana/web3.js";
+import type { Connection } from "@solana/web3.js";
+import { Keypair } from "@solana/web3.js";
 import { SUPPORTED_DRIFT_MARKETS } from "../config/constants.js";
 
 export class DriftClientService {

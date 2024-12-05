@@ -1,6 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
-import { getDriftSpotMarketPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getVaultPublicKey, getVaultSplPublicKey } from "../utils/helpers";
-import { DRIFT_MARKET_INDEX_SOL, DRIFT_MARKET_INDEX_USDC, USDC_MINT, WSOL_MINT } from "../config/constants";
+import { getDriftSpotMarketPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getVaultPublicKey, getVaultSplPublicKey } from "../utils/helpers.js";
+import { DRIFT_MARKET_INDEX_SOL, DRIFT_MARKET_INDEX_USDC, USDC_MINT, WSOL_MINT } from "../config/constants.js";
 
 describe("PDAs", () => {
     const testAddress = new PublicKey("DcJpAhpbhwgXF5UBJP1KN6ub4GS61TmAb32LtoB57pAf");

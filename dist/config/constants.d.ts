@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import type { PublicKey } from "@solana/web3.js";
 export declare const QUARTZ_PROGRAM_ID: PublicKey;
 export declare const QUARTZ_ADDRESS_TABLE: PublicKey;
 export declare const QUARTZ_HEALTH_BUFFER = 0.1;

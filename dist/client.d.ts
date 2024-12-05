@@ -1,9 +1,9 @@
-import { DriftClient } from "@drift-labs/sdk";
-import { Quartz } from "./types/quartz.js";
-import { Program, Wallet } from "@coral-xyz/anchor";
-import { Connection, AddressLookupTableAccount } from "@solana/web3.js";
-import { PublicKey } from "@solana/web3.js";
-import { QuartzUser } from "./user";
+import type { DriftClient } from "@drift-labs/sdk";
+import type { Quartz } from "./types/quartz.js";
+import type { Program, Wallet } from "@coral-xyz/anchor";
+import type { Connection, AddressLookupTableAccount } from "@solana/web3.js";
+import type { PublicKey } from "@solana/web3.js";
+import type { QuartzUser } from "./user";
 export declare class QuartzClient {
     private connection;
     private wallet;

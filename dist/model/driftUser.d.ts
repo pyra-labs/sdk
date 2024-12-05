@@ -1,5 +1,5 @@
-import { BN, DriftClient, MarginCategory, UserAccount } from "@drift-labs/sdk";
-import { Connection, PublicKey } from "@solana/web3.js";
+import type { BN, DriftClient, MarginCategory, UserAccount } from "@drift-labs/sdk";
+import type { Connection, PublicKey } from "@solana/web3.js";
 export declare class DriftUser {
     private isInitialized;
     private authority;

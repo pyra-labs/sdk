@@ -1,8 +1,8 @@
-import { AddressLookupTableAccount, PublicKey, TransactionInstruction } from "@solana/web3.js";
-import { DriftClient, QuoteResponse, UserAccount } from "@drift-labs/sdk";
-import { Connection } from "@solana/web3.js";
-import { Quartz } from "./types/quartz";
-import { Program } from "@coral-xyz/anchor";
+import type { AddressLookupTableAccount, PublicKey, TransactionInstruction } from "@solana/web3.js";
+import type { DriftClient, QuoteResponse, UserAccount } from "@drift-labs/sdk";
+import type { Connection } from "@solana/web3.js";
+import type { Quartz } from "./types/quartz";
+import type { Program } from "@coral-xyz/anchor";
 export declare class QuartzUser {
     readonly pubkey: PublicKey;
     readonly vaultPubkey: PublicKey;
