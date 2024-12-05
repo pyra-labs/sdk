@@ -31,7 +31,7 @@ export class QuartzUser {
         quartzLookupTable: AddressLookupTableAccount,
         oracles: Map<string, PublicKey>,
         driftClient: DriftClient,
-        driftUserAccount?: UserAccount
+        driftUserAccount: UserAccount
     ) {
         this.pubkey = pubkey;
         this.vaultPubkey = getVaultPublicKey(pubkey);

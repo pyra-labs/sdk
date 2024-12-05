@@ -1,9 +1,8 @@
-import { AMM_RESERVE_PRECISION, AMM_RESERVE_PRECISION_EXP, BN, calculateAssetWeight, calculateLiabilityWeight, calculateLiveOracleTwap, calculateMarketMarginRatio, calculateMarketOpenBidAsk, calculatePerpLiabilityValue, calculatePositionPNL, calculateUnrealizedAssetWeight, calculateUnsettledFundingPnl, calculateWithdrawLimit, calculateWorstCasePerpLiabilityValue, type DriftClient, fetchUserAccountsUsingKeys, FIVE_MINUTE, getSignedTokenAmount, getStrictTokenValue, getTokenAmount, getWorstCaseTokenAmounts, isSpotPositionAvailable, isVariant, MARGIN_PRECISION, type MarginCategory, ONE, OPEN_ORDER_MARGIN_REQUIREMENT, type PerpPosition, PRICE_PRECISION, QUOTE_PRECISION, QUOTE_SPOT_MARKET_INDEX, SPOT_MARKET_WEIGHT_PRECISION, SpotBalanceType, StrictOraclePrice, type UserAccount, UserStatus, ZERO, TEN, divCeil, type SpotMarketAccount } from "@drift-labs/sdk";
+import { AMM_RESERVE_PRECISION, AMM_RESERVE_PRECISION_EXP, BN, calculateAssetWeight, calculateLiabilityWeight, calculateLiveOracleTwap, calculateMarketMarginRatio, calculateMarketOpenBidAsk, calculatePerpLiabilityValue, calculatePositionPNL, calculateUnrealizedAssetWeight, calculateUnsettledFundingPnl, calculateWithdrawLimit, calculateWorstCasePerpLiabilityValue, type DriftClient, FIVE_MINUTE, getSignedTokenAmount, getStrictTokenValue, getTokenAmount, getWorstCaseTokenAmounts, isSpotPositionAvailable, isVariant, MARGIN_PRECISION, type MarginCategory, ONE, OPEN_ORDER_MARGIN_REQUIREMENT, type PerpPosition, PRICE_PRECISION, QUOTE_PRECISION, QUOTE_SPOT_MARKET_INDEX, SPOT_MARKET_WEIGHT_PRECISION, SpotBalanceType, StrictOraclePrice, type UserAccount, UserStatus, ZERO, TEN, divCeil, type SpotMarketAccount } from "@drift-labs/sdk";
 import type { Connection, PublicKey } from "@solana/web3.js";
 import { getDriftUserPublicKey, getDriftUserStatsPublicKey } from "../utils/helpers.js";
 
 export class DriftUser {
-    private isInitialized = false;
     private authority: PublicKey;
     private connection: Connection;
     private driftClient: DriftClient;
@@ -16,7 +15,7 @@ export class DriftUser {
         authority: PublicKey,
         connection: Connection, 
         driftClient: DriftClient,
-		userAccount?: UserAccount
+		userAccount: UserAccount
     ) {
         this.authority = authority;
         this.connection = connection;
@@ -24,34 +23,15 @@ export class DriftUser {
 
 		this.pubkey = getDriftUserPublicKey(this.authority);
 		this.statsPubkey = getDriftUserStatsPublicKey(this.authority);
-
-		if (userAccount) {
-			this.userAccount = userAccount;
-			this.isInitialized = true;
-		}
-    }
-
-    public async initialize(): Promise<void> {
-		if (this.isInitialized) return;
-		
-        const [ userAccount ] = await fetchUserAccountsUsingKeys(
-            this.connection, 
-            this.driftClient.program, 
-            [this.pubkey]
-        );
-        if (!userAccount) throw new Error("Drift user not found");
-        this.userAccount = userAccount;
-        this.isInitialized = true;
+		this.userAccount = userAccount;
     }
 
 	public getDriftUserAccount(): UserAccount {
-		if (!this.isInitialized || !this.userAccount) throw new Error("DriftUser not initialized");
+		if (!this.userAccount) throw new Error("DriftUser not initialized");
 		return this.userAccount;
 	}
 
     public getHealth(): number{
-        if (!this.isInitialized) throw new Error("DriftUser not initialized");
-
         if (this.isBeingLiquidated()) return 0;
 
         const totalCollateral = this.getTotalCollateral('Maintenance');
@@ -77,7 +57,7 @@ export class DriftUser {
     }
 
     public getTokenAmount(marketIndex: number): BN {
-        if (!this.isInitialized || !this.userAccount) throw new Error("DriftUser not initialized");
+        if (!this.userAccount) throw new Error("DriftUser not initialized");
 
 		const spotPosition = this.userAccount.spotPositions.find(
 			(position) => position.marketIndex === marketIndex
@@ -191,7 +171,7 @@ export class DriftUser {
 		depositAmount: BN;
 		maxDepositAmount: BN;
 	} {
-		if (!this.isInitialized || !this.userAccount) throw new Error("DriftUser not initialized");
+		if (!this.userAccount) throw new Error("DriftUser not initialized");
 
 		const spotMarket = this.driftClient.getSpotMarketAccount(marketIndex);
 		if (!spotMarket) throw new Error("Spot market not found");
@@ -245,7 +225,7 @@ export class DriftUser {
 	}
 
     private isBeingLiquidated(): boolean {
-		if (!this.isInitialized || !this.userAccount) throw new Error("DriftUser not initialized");
+		if (!this.userAccount) throw new Error("DriftUser not initialized");
 		return (
 			(this.userAccount.status &
 				(UserStatus.BEING_LIQUIDATED | UserStatus.BANKRUPT)) >
@@ -258,7 +238,7 @@ export class DriftUser {
 		strict = false,
 		includeOpenOrders = true
 	): BN {
-		if (!this.isInitialized) throw new Error("DriftUser not initialized");
+		if (!this.userAccount) throw new Error("DriftUser not initialized");
 
 		return this.getSpotMarketAssetValue(
 			marginCategory,
@@ -294,7 +274,7 @@ export class DriftUser {
 		strict = false,
 		now: BN = new BN(new Date().getTime() / 1000)
 	): { totalAssetValue: BN; totalLiabilityValue: BN } {
-		if (!this.isInitialized || !this.userAccount) throw new Error("DriftUser not initialized");
+		if (!this.userAccount) throw new Error("DriftUser not initialized");
 
 		let netQuoteValue = ZERO;
 		let totalAssetValue = ZERO;
@@ -484,7 +464,7 @@ export class DriftUser {
 		marginCategory?: MarginCategory,
 		liquidationBuffer?: BN
 	): BN {
-		if (!this.isInitialized || !this.userAccount) throw new Error("DriftUser not initialized");
+		if (!this.userAccount) throw new Error("DriftUser not initialized");
 
 		let liabilityValue = getStrictTokenValue(
 			tokenAmount,
@@ -529,7 +509,7 @@ export class DriftUser {
 		spotMarketAccount: SpotMarketAccount,
 		marginCategory?: MarginCategory
 	): BN {
-		if (!this.isInitialized || !this.userAccount) throw new Error("DriftUser not initialized");
+		if (!this.userAccount) throw new Error("DriftUser not initialized");
 		
 		let assetValue = getStrictTokenValue(
 			tokenAmount,
@@ -646,7 +626,7 @@ export class DriftUser {
 	}
 
     private getActivePerpPositions() {
-		if (!this.isInitialized || !this.userAccount) throw new Error("DriftUser not initialized");
+		if (!this.userAccount) throw new Error("DriftUser not initialized");
         return this.userAccount.perpPositions.filter(
 			(pos) =>
 				!pos.baseAssetAmount.eq(ZERO) ||
@@ -852,7 +832,7 @@ export class DriftUser {
 	}
 
     private getPerpPosition(marketIndex: number): PerpPosition | undefined {
-		if (!this.isInitialized || !this.userAccount) throw new Error("DriftUser not initialized");
+		if (!this.userAccount) throw new Error("DriftUser not initialized");
         const activePositions = this.userAccount.perpPositions.filter(
 			(pos) =>
 				!pos.baseAssetAmount.eq(ZERO) ||
@@ -891,7 +871,7 @@ export class DriftUser {
 	}
 
     public getMaintenanceMarginRequirement(): BN {
-		if (!this.isInitialized) throw new Error("Drift user not initialized");
+		if (!this.userAccount) throw new Error("DriftUser not initialized");
 		
 		// if user being liq'd, can continue to be liq'd until total collateral above the margin requirement plus buffer
 		let liquidationBuffer: BN | undefined = undefined;
@@ -954,7 +934,7 @@ export class DriftUser {
 		includeOpenOrders?: boolean,
 		strict = false
 	): BN {
-		if (!this.isInitialized || !this.userAccount) throw new Error("DriftUser not initialized");
+		if (!this.userAccount) throw new Error("DriftUser not initialized");
 
 		const market = this.driftClient.getPerpMarketAccount(
 			perpPosition.marketIndex

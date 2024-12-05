@@ -76,13 +76,22 @@ export class QuartzClient {
     public async getQuartzAccount(owner: PublicKey): Promise<QuartzUser> {
         const vault = getVaultPublicKey(owner);
         await this.program.account.vault.fetch(vault); // Check account exists
+
+        const [ driftUserAccount ] = await fetchDriftAccountsUsingKeys(
+            this.connection,
+            this.driftClient.program,
+            [getDriftUserPublicKey(vault)]
+        );
+        if (!driftUserAccount) throw Error("Drift user not found");
+
         return new QuartzUser(
             vault, 
             this.connection, 
             this.program, 
             this.quartzLookupTable, 
             this.oracles, 
-            this.driftClient
+            this.driftClient,
+            driftUserAccount
         );
     }
 
@@ -115,7 +124,8 @@ export class QuartzClient {
                 this.program, 
                 this.quartzLookupTable, 
                 this.oracles, 
-                this.driftClient
+                this.driftClient,
+                driftUser
             )
         });
     }
