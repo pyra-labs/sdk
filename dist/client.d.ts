@@ -12,8 +12,8 @@ export declare class QuartzClient {
     private driftClient;
     private oracles;
     constructor(connection: Connection, wallet: Wallet, program: Program<Quartz>, quartzAddressTable: AddressLookupTableAccount, driftClient: DriftClient, oracles: Map<string, PublicKey>);
-    static initialize(connection: Connection, wallet: Wallet): Promise<QuartzClient>;
-    getAllQuartzAccountPubkeys(): Promise<PublicKey[]>;
-    getQuartzAccount(vault: PublicKey): Promise<QuartzUser>;
-    getMultipleQuartzAccounts(vaults: PublicKey[]): Promise<(QuartzUser | null)[]>;
+    static fetchClient(connection: Connection, wallet: Wallet): Promise<QuartzClient>;
+    getAllQuartzAccountOwnerPubkeys(): Promise<PublicKey[]>;
+    getQuartzAccount(owner: PublicKey): Promise<QuartzUser>;
+    getMultipleQuartzAccounts(owners: PublicKey[]): Promise<(QuartzUser | null)[]>;
 }

@@ -4,7 +4,7 @@ import quartzIdl from "./idl/quartz.json";
 import { AnchorProvider, Program, setProvider } from "@coral-xyz/anchor";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import { QuartzUser } from "./user";
-import { getDriftUserPublicKey } from "./utils/helpers";
+import { getDriftUserPublicKey, getVaultPublicKey } from "./utils/helpers";
 import { DriftClientService } from "./services/driftClientService";
 export class QuartzClient {
     constructor(connection, wallet, program, quartzAddressTable, driftClient, oracles) {
@@ -15,7 +15,7 @@ export class QuartzClient {
         this.driftClient = driftClient;
         this.oracles = oracles;
     }
-    static async initialize(connection, wallet) {
+    static async fetchClient(connection, wallet) {
         const provider = new AnchorProvider(connection, wallet, { commitment: "confirmed" });
         setProvider(provider);
         const program = new Program(quartzIdl, QUARTZ_PROGRAM_ID, provider);
@@ -30,16 +30,18 @@ export class QuartzClient {
         ]);
         return new QuartzClient(connection, wallet, program, quartzLookupTable, driftClient, oracles);
     }
-    async getAllQuartzAccountPubkeys() {
-        return (await this.program.account.vault.all()).map((vault) => vault.publicKey);
+    async getAllQuartzAccountOwnerPubkeys() {
+        return (await this.program.account.vault.all()).map((vault) => vault.account.owner);
     }
-    async getQuartzAccount(vault) {
+    async getQuartzAccount(owner) {
+        const vault = getVaultPublicKey(owner);
         await this.program.account.vault.fetch(vault); // Check account exists
         return new QuartzUser(vault, this.connection, this.program, this.quartzLookupTable, this.oracles, this.driftClient);
     }
-    async getMultipleQuartzAccounts(vaults) {
-        if (vaults.length === 0)
+    async getMultipleQuartzAccounts(owners) {
+        if (owners.length === 0)
             return [];
+        const vaults = owners.map((owner) => getVaultPublicKey(owner));
         const accounts = await this.program.account.vault.fetchMultiple(vaults);
         accounts.forEach((account, index) => {
             if (account === null)

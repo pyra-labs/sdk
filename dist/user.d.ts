@@ -4,8 +4,8 @@ import { Connection } from "@solana/web3.js";
 import { Quartz } from "./types/quartz";
 import { Program } from "@coral-xyz/anchor";
 export declare class QuartzUser {
-    private pubkey;
-    private vaultPubkey;
+    readonly pubkey: PublicKey;
+    readonly vaultPubkey: PublicKey;
     private connection;
     private program;
     private quartzLookupTable;
