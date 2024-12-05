@@ -1,6 +1,6 @@
 import { AMM_RESERVE_PRECISION, AMM_RESERVE_PRECISION_EXP, BN, calculateAssetWeight, calculateLiabilityWeight, calculateLiveOracleTwap, calculateMarketMarginRatio, calculateMarketOpenBidAsk, calculatePerpLiabilityValue, calculatePositionPNL, calculateUnrealizedAssetWeight, calculateUnsettledFundingPnl, calculateWithdrawLimit, calculateWorstCasePerpLiabilityValue, DriftClient, fetchUserAccountsUsingKeys, FIVE_MINUTE, getSignedTokenAmount, getStrictTokenValue, getTokenAmount, getWorstCaseTokenAmounts, isSpotPositionAvailable, isVariant, MARGIN_PRECISION, MarginCategory, ONE, OPEN_ORDER_MARGIN_REQUIREMENT, PerpPosition, PRICE_PRECISION, QUOTE_PRECISION, QUOTE_SPOT_MARKET_INDEX, SPOT_MARKET_WEIGHT_PRECISION, SpotBalanceType, StrictOraclePrice, UserAccount, UserStatus, ZERO, TEN, divCeil, SpotMarketAccount } from "@drift-labs/sdk";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { getDriftUser } from "../helpers.js";
+import { getDriftUserPublicKey, getDriftUserStatsPublicKey } from "../utils/helpers.js";
 
 export class DriftUser {
     private isInitialized: boolean = false;
@@ -9,6 +9,8 @@ export class DriftUser {
     private driftClient: DriftClient;
 
     private userAccount: UserAccount | undefined;
+	public pubkey: PublicKey;
+	public statsPubkey: PublicKey;
 
     constructor (
         authority: PublicKey,
@@ -19,6 +21,9 @@ export class DriftUser {
         this.authority = authority;
         this.connection = connection;
         this.driftClient = driftClient;
+
+		this.pubkey = getDriftUserPublicKey(this.authority);
+		this.statsPubkey = getDriftUserStatsPublicKey(this.authority);
 
 		if (userAccount) {
 			this.userAccount = userAccount;
@@ -32,12 +37,17 @@ export class DriftUser {
         const [ userAccount ] = await fetchUserAccountsUsingKeys(
             this.connection, 
             this.driftClient.program, 
-            [getDriftUser(this.authority)]
+            [this.pubkey]
         );
         if (!userAccount) throw new Error("Drift user not found");
         this.userAccount = userAccount;
         this.isInitialized = true;
     }
+
+	public getDriftUserAccount(): UserAccount {
+		if (!this.isInitialized) throw new Error("DriftUser not initialized");
+		return this.userAccount!;
+	}
 
     public getHealth(): number{
         if (!this.isInitialized) throw new Error("DriftUser not initialized");

@@ -1,4 +1,5 @@
 import { QuartzClient } from "./client";
 
-export * from "./helpers";
+export * from "./config/constants";
+export * from "./utils/helpers";
 export { QuartzClient };

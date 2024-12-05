@@ -1,20 +1,20 @@
 import { DriftClient, fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
-import { QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID, SUPPORTED_DRIFT_MARKETS } from "./config/constants";
+import { DRIFT_MARKET_INDEX_USDC, QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID, SUPPORTED_DRIFT_MARKETS } from "./config/constants";
 import quartzIdl from "./idl/quartz.json";
 import { Quartz } from "./types/quartz.js";
-import { AnchorProvider, Idl, Program, setProvider, Wallet } from "@coral-xyz/anchor";
-import { Connection, AddressLookupTableAccount } from "@solana/web3.js";
+import { AnchorProvider, BN, Idl, Program, setProvider, Wallet } from "@coral-xyz/anchor";
+import { Connection, AddressLookupTableAccount, TransactionInstruction, SYSVAR_INSTRUCTIONS_PUBKEY, SystemProgram } from "@solana/web3.js";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import { PublicKey } from "@solana/web3.js";
 import { QuartzUser } from "./user";
-import { getDriftUser, getVaultPubkey } from "./helpers";
+import { getDriftUserPublicKey, getVaultPublicKey } from "./utils/helpers";
 import { DriftClientService } from "./services/driftClientService";
 
 export class QuartzClient {
     private connection: Connection;
     private wallet: Wallet;
     private program: Program<Quartz>;
-    private quartzAddressTable: AddressLookupTableAccount;
+    private quartzLookupTable: AddressLookupTableAccount;
 
     private driftClient: DriftClient;
     private oracles: Map<string, PublicKey>;
@@ -30,7 +30,7 @@ export class QuartzClient {
         this.connection = connection;
         this.wallet = wallet;
         this.program = program;
-        this.quartzAddressTable = quartzAddressTable;
+        this.quartzLookupTable = quartzAddressTable;
         this.driftClient = driftClient;
         this.oracles = oracles;
     }
@@ -66,41 +66,54 @@ export class QuartzClient {
         );
     }
 
-    public async getAllAccountPubkeys(): Promise<PublicKey[]> {
+    public async getAllQuartzAccountPubkeys(): Promise<PublicKey[]> {
         return (
             await this.program.account.vault.all()
         ).map((vault) => vault.publicKey);
     }
 
-    public async getQuartzAccount(pubkey: PublicKey): Promise<QuartzUser> {
-        const vault = getVaultPubkey(pubkey);
+    public async getQuartzAccount(vault: PublicKey): Promise<QuartzUser> {
         await this.program.account.vault.fetch(vault); // Check account exists
-        return new QuartzUser(pubkey, this.connection, this.driftClient);
+        return new QuartzUser(
+            vault, 
+            this.connection, 
+            this.program, 
+            this.quartzLookupTable, 
+            this.oracles, 
+            this.driftClient
+        );
     }
 
-    public async getMultipleQuartzAccounts(pubkeys: PublicKey[]): Promise<QuartzUser[]> {
-        if (pubkeys.length === 0) return [];
-
-        const vaults = pubkeys.map((pubkey) => getVaultPubkey(pubkey));
+    public async getMultipleQuartzAccounts(vaults: PublicKey[]): Promise<(QuartzUser | null)[]> {
+        if (vaults.length === 0) return [];
         const accounts = await this.program.account.vault.fetchMultiple(vaults);
 
         accounts.forEach((account, index) => {
-            if (account === null) throw Error(`Account not found for pubkey: ${pubkeys[index].toBase58()}`)
+            if (account === null) throw Error(`Account not found for pubkey: ${vaults[index].toBase58()}`)
         });
 
         const driftUsers = await fetchDriftAccountsUsingKeys(
             this.connection,
             this.driftClient.program,
-            vaults.map((vault) => getDriftUser(vault))
+            vaults.map((vault) => getDriftUserPublicKey(vault))
         )
 
-        const undefinedIndex = driftUsers.findIndex(user => !user);
-        if (undefinedIndex !== -1) {
-            throw new Error(`[${this.wallet?.publicKey}] Failed to fetch drift user for vault ${vaults[undefinedIndex].toBase58()}`);
-        }
+        // TODO: Uncomment once Drift accounts are guaranteed
+        // const undefinedIndex = driftUsers.findIndex(user => !user);
+        // if (undefinedIndex !== -1) {
+        //     throw new Error(`[${this.wallet?.publicKey}] Failed to fetch drift user for vault ${vaults[undefinedIndex].toBase58()}`);
+        // }
 
         return driftUsers.map((driftUser, index) => {
-            return new QuartzUser(pubkeys[index], this.connection, this.driftClient, driftUser)
+            if (driftUser === undefined) return null;
+            return new QuartzUser(
+                vaults[index], 
+                this.connection, 
+                this.program, 
+                this.quartzLookupTable, 
+                this.oracles, 
+                this.driftClient
+            )
         });
     }
 }

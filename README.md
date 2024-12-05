@@ -14,4 +14,4 @@ Docs: [docs.quartzpay.io](https://docs.quartzpay.io/)
 
 X: [@quartzpay](https://x.com/quartzpay)
 
-Contact: [diego@quartzpay.io](mailto:diego@quartzpay.io)
+Contact: [iarla@quartzpay.io](mailto:diego@quartzpay.io)
