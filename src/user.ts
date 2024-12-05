@@ -12,8 +12,8 @@ import { SwapMode } from "@jup-ag/api";
 import { getJupiterSwapIx } from "./utils/jupiter";
 
 export class QuartzUser {
-    private pubkey: PublicKey;
-    private vaultPubkey: PublicKey;
+    public readonly pubkey: PublicKey;
+    public readonly vaultPubkey: PublicKey;
 
     private connection: Connection;
     private program: Program<Quartz>;

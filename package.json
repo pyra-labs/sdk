@@ -1,19 +1,12 @@
 {
   "name": "@quartz-labs/sdk",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "SDK for interacting with the Quartz Protocol",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
-  "typesVersions": {
-    ">=4.7": {
-      "*": [
-        "ts/*"
-      ]
-    }
-  },
   "scripts": {
     "build": "tsc",
     "test": "jest"

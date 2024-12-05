@@ -35,7 +35,7 @@ export class QuartzClient {
         this.oracles = oracles;
     }
 
-    static async initialize(
+    static async fetchClient(
         connection: Connection, 
         wallet: Wallet
     ) {
@@ -66,13 +66,14 @@ export class QuartzClient {
         );
     }
 
-    public async getAllQuartzAccountPubkeys(): Promise<PublicKey[]> {
+    public async getAllQuartzAccountOwnerPubkeys(): Promise<PublicKey[]> {
         return (
             await this.program.account.vault.all()
-        ).map((vault) => vault.publicKey);
+        ).map((vault) => vault.account.owner);
     }
 
-    public async getQuartzAccount(vault: PublicKey): Promise<QuartzUser> {
+    public async getQuartzAccount(owner: PublicKey): Promise<QuartzUser> {
+        const vault = getVaultPublicKey(owner);
         await this.program.account.vault.fetch(vault); // Check account exists
         return new QuartzUser(
             vault, 
@@ -84,8 +85,9 @@ export class QuartzClient {
         );
     }
 
-    public async getMultipleQuartzAccounts(vaults: PublicKey[]): Promise<(QuartzUser | null)[]> {
-        if (vaults.length === 0) return [];
+    public async getMultipleQuartzAccounts(owners: PublicKey[]): Promise<(QuartzUser | null)[]> {
+        if (owners.length === 0) return [];
+        const vaults = owners.map((owner) => getVaultPublicKey(owner));
         const accounts = await this.program.account.vault.fetchMultiple(vaults);
 
         accounts.forEach((account, index) => {
