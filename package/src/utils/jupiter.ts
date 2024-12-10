@@ -42,6 +42,7 @@ export async function getJupiterSwapIx(
         return addressLookupTableAccountInfos.reduce((acc: AddressLookupTableAccount[], accountInfo: AccountInfo<Buffer> | null, index: number) => {
           const addressLookupTableAddress = keys[index];
           if (accountInfo) {
+            if (addressLookupTableAddress === undefined) throw new Error("Address lookup table address is undefined");
             const addressLookupTableAccount = new AddressLookupTableAccount({
               key: new PublicKey(addressLookupTableAddress),
               state: AddressLookupTableAccount.deserialize(accountInfo.data),

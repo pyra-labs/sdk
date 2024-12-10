@@ -15,10 +15,10 @@
     }
   },
   "scripts": {
+    "lint": "yarn biome lint --write",
     "build": "tsc",
-    "test": "jest",
-    "lint": "npx biome lint",
-    "deploy": "npx biome lint && tsc && npm publish"
+    "test": "yarn node --experimental-vm-modules $(yarn bin jest)",
+    "deploy": "yarn lint && yarn build && yarn test && npm publish"
   },
   "repository": {
     "type": "git",

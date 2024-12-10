@@ -724,7 +724,8 @@ export class DriftUser {
 			deltaBaa,
 			market.amm.orderStepSize
 		);
-
+		if (standardizedBaa === undefined) throw new Error("Standardized BAA is undefined");
+		if (remainderBaa === undefined) throw new Error("Remainder BAA is undefined");
 		position.remainderBaseAssetAmount += remainderBaa.toNumber();
 
 		if (
@@ -735,6 +736,8 @@ export class DriftUser {
 				new BN(position.remainderBaseAssetAmount),
 				market.amm.orderStepSize
 			);
+			if (newStandardizedBaa === undefined) throw new Error("New standardized BAA is undefined");
+			if (newRemainderBaa === undefined) throw new Error("New remainder BAA is undefined");
 			position.baseAssetAmount =
 				position.baseAssetAmount.add(newStandardizedBaa);
 			position.remainderBaseAssetAmount = newRemainderBaa.toNumber();

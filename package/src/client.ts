@@ -101,7 +101,7 @@ export class QuartzClient {
         const accounts = await this.program.account.vault.fetchMultiple(vaults);
 
         accounts.forEach((account, index) => {
-            if (account === null) throw Error(`Account not found for pubkey: ${vaults[index].toBase58()}`)
+            if (account === null) throw Error(`Account not found for pubkey: ${vaults[index]?.toBase58()}`)
         });
 
         const driftUsers = await fetchDriftAccountsUsingKeys(
@@ -118,6 +118,7 @@ export class QuartzClient {
 
         return driftUsers.map((driftUser, index) => {
             if (driftUser === undefined) return null;
+            if (vaults[index] === undefined) throw Error("Missing pubkey in vaults array");
             return new QuartzUser(
                 vaults[index], 
                 this.connection, 
