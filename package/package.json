@@ -1,24 +1,24 @@
 {
   "name": "@quartz-labs/sdk",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "SDK for interacting with the Quartz Protocol",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
+  "scripts": {
+    "lint": "yarn biome lint --write",
+    "build": "yarn install && yarn lint && tsc -p tsconfig.json",
+    "test": "yarn node --experimental-vm-modules $(yarn bin jest)",
+    "deploy": "yarn build && yarn test && npm publish"
+  },
   "type": "module",
   "exports": {
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
-  },
-  "scripts": {
-    "lint": "yarn biome lint --write",
-    "build": "tsc",
-    "test": "yarn node --experimental-vm-modules $(yarn bin jest)",
-    "deploy": "yarn lint && yarn build && yarn test && npm publish"
   },
   "repository": {
     "type": "git",
@@ -51,6 +51,12 @@
     "@jup-ag/api": "^6.0.30",
     "@pythnetwork/pyth-solana-receiver": "^0.8.2",
     "@solana/spl-token": "^0.4.9",
+    "@solana/web3.js": "^1.95.8",
+    "fastestsmallesttextencoderdecoder": "^1.0.22",
+    "solana-bankrun": "^0.2.0"
+  },
+  "resolutions": {
+    "rpc-websockets": "^9.0.2",
     "@solana/web3.js": "^1.95.8"
   }
 }
