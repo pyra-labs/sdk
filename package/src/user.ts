@@ -1,13 +1,13 @@
 import { DriftUser } from "./model/driftUser.js";
 import type { DriftClient, QuoteResponse, UserAccount } from "@drift-labs/sdk";
 import { BN, DRIFT_PROGRAM_ID } from "@drift-labs/sdk";
-import { getDriftSpotMarketPublicKey, getDriftStatePublicKey, getVaultPublicKey, getVaultSplPublicKey } from "./utils/helpers.js";
+import { getDriftSpotMarketPublicKey, getDriftStatePublicKey, getVaultPublicKey, getVaultSplPublicKey, toRemainingAccount } from "./utils/helpers.js";
 import type { Connection, AddressLookupTableAccount, TransactionInstruction } from "@solana/web3.js";
 import { DRIFT_MARKET_INDEX_SOL, DRIFT_MARKET_INDEX_USDC, QUARTZ_HEALTH_BUFFER, USDC_MINT, WSOL_MINT } from "./config/constants.js";
 import type { Quartz } from "./types/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
-import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token.js";
-import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { ASSOCIATED_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token.js";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from "@solana/spl-token";
 import { SwapMode } from "@jup-ag/api";
 import { getJupiterSwapIx } from "./utils/jupiter.js";
 import { PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
@@ -112,6 +112,109 @@ export class QuartzUser {
         return this.driftUser.getWithdrawalLimit(spotMarketIndex, false, true).toNumber();
     }
 
+
+    // === Instructions ===
+
+    public async makeCloseAccountIxs() {
+        const ix_closeDriftAccount = await this.program.methods
+            .closeDriftAccount()
+            .accounts({
+                vault: this.vaultPubkey,
+                owner: this.pubkey,
+                driftUser: this.driftUser.pubkey,
+                driftUserStats: this.driftUser.statsPubkey,
+                driftState: getDriftStatePublicKey(),
+                driftProgram: DRIFT_PROGRAM_ID
+            })
+            .instruction();
+
+        const ix_closeVault = await this.program.methods
+            .closeUser()
+            .accounts({
+                vault: this.vaultPubkey,
+                owner: this.pubkey
+            })
+            .instruction();
+
+        return [ix_closeDriftAccount, ix_closeVault];
+    }
+
+    public async makeDepositIx(
+        amountBaseUnits: number,
+        mint: PublicKey,
+        marketIndex: number,
+        reduceOnly: boolean
+    ) {
+        const ownerSpl = await getAssociatedTokenAddress(mint, this.pubkey);
+        
+        const ix = await this.program.methods
+            .deposit(new BN(amountBaseUnits), marketIndex, reduceOnly)
+            .accounts({
+                vault: this.vaultPubkey,
+                vaultSpl: getVaultSplPublicKey(this.vaultPubkey, mint),
+                owner: this.pubkey,
+                ownerSpl: ownerSpl,
+                splMint: mint,
+                driftUser: this.driftUser.pubkey,
+                driftUserStats: this.driftUser.statsPubkey,
+                driftState: getDriftStatePublicKey(),
+                spotMarketVault: getDriftSpotMarketPublicKey(marketIndex),
+                tokenProgram: TOKEN_PROGRAM_ID,
+                associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
+                driftProgram: DRIFT_PROGRAM_ID,
+                systemProgram: SystemProgram.programId
+            })
+            .remainingAccounts(
+                this.driftClient.getRemainingAccounts({
+                    userAccounts: [this.driftUser.getDriftUserAccount()],
+                    useMarketLastSlotCache: true,
+                    writableSpotMarketIndexes: [marketIndex],
+                })
+            )
+            .instruction();
+
+        return ix;
+    }
+
+    public async makeWithdrawIx(
+        amountBaseUnits: number,
+        mint: PublicKey,
+        marketIndex: number,
+        reduceOnly: boolean
+    ) {
+        const ownerSpl = await getAssociatedTokenAddress(mint, this.pubkey);
+        
+        const ix = await this.program.methods
+            .withdraw(new BN(amountBaseUnits), marketIndex, reduceOnly)
+            .accounts({
+                vault: this.vaultPubkey,
+                vaultSpl: getVaultSplPublicKey(this.vaultPubkey, mint),
+                owner: this.pubkey,
+                ownerSpl: ownerSpl,
+                splMint: mint,
+                driftUser: this.driftUser.pubkey,
+                driftUserStats: this.driftUser.statsPubkey,
+                driftState: getDriftStatePublicKey(),
+                spotMarketVault: getDriftSpotMarketPublicKey(marketIndex),
+                driftSigner: this.driftClient.getSignerPublicKey(),
+                tokenProgram: TOKEN_PROGRAM_ID,
+                associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
+                driftProgram: DRIFT_PROGRAM_ID,
+                systemProgram: SystemProgram.programId
+            })
+            .remainingAccounts(
+                this.driftClient.getRemainingAccounts({
+                    userAccounts: [this.driftUser.getDriftUserAccount()],
+                    useMarketLastSlotCache: true,
+                    writableSpotMarketIndexes: [marketIndex],
+                    readableSpotMarketIndexes: [DRIFT_MARKET_INDEX_USDC], // Quote is in USDC
+                })
+            )
+            .instruction();
+
+        return ix;
+    }
+
     public async makeCollateralRepayIxs(
         caller: PublicKey,
         callerDepositSpl: PublicKey,
@@ -135,8 +238,8 @@ export class QuartzUser {
         const driftSpotMarketDeposit = getDriftSpotMarketPublicKey(depositMarketIndex);
         const driftSpotMarketWithdraw = getDriftSpotMarketPublicKey(withdrawMarketIndex);
 
-        const autoRepayStartPromise = this.program.methods
-            .autoRepayStart(new BN(callerStartingDepositBalance))
+        const collateralRepayStartPromise = this.program.methods
+            .collateralRepayStart(new BN(callerStartingDepositBalance))
             .accounts({
                 caller: caller,
                 callerWithdrawSpl: callerWithdrawSpl,
@@ -153,8 +256,8 @@ export class QuartzUser {
 
         const jupiterSwapPromise = getJupiterSwapIx(caller, this.connection, jupiterExactOutRouteQuote);
 
-        const autoRepayDepositPromise = this.program.methods
-            .autoRepayDeposit(depositMarketIndex)
+        const collateralRepayDepositPromise = this.program.methods
+            .collateralRepayDeposit(depositMarketIndex)
             .accounts({
                 vault: this.vaultPubkey,
                 vaultSpl: getVaultSplPublicKey(this.vaultPubkey, depositMint),
@@ -181,8 +284,8 @@ export class QuartzUser {
             )
             .instruction();
 
-        const autoRepayWithdrawPromise = this.program.methods
-            .autoRepayWithdraw(withdrawMarketIndex)
+        const collateralRepayWithdrawPromise = this.program.methods
+            .collateralRepayWithdraw(withdrawMarketIndex)
             .accounts({
                 vault: this.vaultPubkey,
                 vaultSpl: getVaultSplPublicKey(this.vaultPubkey, withdrawMint),
@@ -213,23 +316,23 @@ export class QuartzUser {
             .instruction();
 
         const [
-            ix_autoRepayStart,
+            ix_collateralRepayStart,
             { ix_jupiterSwap, jupiterLookupTables },
-            ix_autoRepayDeposit,
-            ix_autoRepayWithdraw
+            ix_collateralRepayDeposit,
+            ix_collateralRepayWithdraw
         ] = await Promise.all([
-            autoRepayStartPromise,
+            collateralRepayStartPromise,
             jupiterSwapPromise,
-            autoRepayDepositPromise,
-            autoRepayWithdrawPromise
+            collateralRepayDepositPromise,
+            collateralRepayWithdrawPromise
         ]);
 
         return {
             ixs: [
-                ix_autoRepayStart,
+                ix_collateralRepayStart,
                 ix_jupiterSwap,
-                ix_autoRepayDeposit,
-                ix_autoRepayWithdraw
+                ix_collateralRepayDeposit,
+                ix_collateralRepayWithdraw
             ],
             lookupTables: [
                 this.quartzLookupTable,

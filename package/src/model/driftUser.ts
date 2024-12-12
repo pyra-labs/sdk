@@ -80,7 +80,7 @@ export class DriftUser {
 		);
 	}
 
-	public getWithdrawalLimit(marketIndex: number, reduceOnly?: boolean, preventAutoRepay = false): BN {
+	public getWithdrawalLimit(marketIndex: number, reduceOnly?: boolean, preventcollateralRepay = false): BN {
 		const nowTs = new BN(Math.floor(Date.now() / 1000));
 		const spotMarket = this.driftClient.getSpotMarketAccount(marketIndex);
 		if (!spotMarket) throw new Error("Spot market not found");
@@ -91,8 +91,8 @@ export class DriftUser {
 			nowTs
 		);
 
-		const freeCollateral = this.getFreeCollateral("Initial", preventAutoRepay);
-		const initialMarginRequirement = this.getMarginRequirement('Initial', undefined, false, true, preventAutoRepay);
+		const freeCollateral = this.getFreeCollateral("Initial", preventcollateralRepay);
+		const initialMarginRequirement = this.getMarginRequirement('Initial', undefined, false, true, preventcollateralRepay);
 		const oracleData = this.driftClient.getOracleDataForSpotMarket(marketIndex);
 		const precisionIncrease = TEN.pow(new BN(spotMarket.decimals - 6));
 
@@ -155,11 +155,11 @@ export class DriftUser {
 		return BN.max(maxBorrowValue, ZERO);
 	}
 
-	private getFreeCollateral(marginCategory: MarginCategory = 'Initial', preventAutoRepay = false): BN {
+	private getFreeCollateral(marginCategory: MarginCategory = 'Initial', preventcollateralRepay = false): BN {
 		const totalCollateral = this.getTotalCollateralValue(marginCategory, true);
 		const marginRequirement =
 			marginCategory === 'Initial'
-				? this.getMarginRequirement('Initial', undefined, false, true,preventAutoRepay)
+				? this.getMarginRequirement('Initial', undefined, false, true,preventcollateralRepay)
 				: this.getMaintenanceMarginRequirement();
 		const freeCollateral = totalCollateral.sub(marginRequirement);
 		return freeCollateral.gte(ZERO) ? freeCollateral : ZERO;
@@ -892,7 +892,7 @@ export class DriftUser {
 		liquidationBuffer?: BN,
 		strict = false,
 		includeOpenOrders = true,
-		preventAutoRepay = false
+		preventcollateralRepay = false
 	): BN {
 		const driftMarginRequirement = this.getTotalPerpPositionLiability(
 			marginCategory,
@@ -909,7 +909,7 @@ export class DriftUser {
 			)
 		);
 
-		if (preventAutoRepay) {
+		if (preventcollateralRepay) {
 			const adjusted =  driftMarginRequirement.mul(new BN(100)).div(
 				new BN(100 - (QUARTZ_HEALTH_BUFFER * 100))
 			);

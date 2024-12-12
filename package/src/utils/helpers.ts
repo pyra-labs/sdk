@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { ComputeBudgetProgram, Connection, Keypair, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
 import { QUARTZ_PROGRAM_ID } from "../config/constants.js";
 import pkg from "@coral-xyz/anchor";
 const { BN } = pkg;
@@ -60,10 +60,21 @@ export const getDriftSpotMarketPublicKey = (marketIndex: number) => {
     return spotMarketVaultPda;
 }
 
-// export const toRemainingAccount = (
-//     pubkey: PublicKey, 
-//     isWritable: boolean, 
-//     isSigner: boolean
-// ) => {
-//     return { pubkey, isWritable, isSigner }
-// }
+export const toRemainingAccount = (
+    pubkey: PublicKey, 
+    isWritable: boolean, 
+    isSigner: boolean
+) => {
+    return { pubkey, isWritable, isSigner }
+}
+
+export const createPriorityFeeInstructions = async (computeBudget: number) => {
+    const computeLimitIx = ComputeBudgetProgram.setComputeUnitLimit({
+        units: computeBudget,
+    });
+
+    const computePriceIx = ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: 1_000_000, // TODO: Calculate priority fee based on tx accounts
+    });
+    return [computeLimitIx, computePriceIx];
+}

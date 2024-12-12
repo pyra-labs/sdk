@@ -295,7 +295,7 @@ export type Quartz = {
       ]
     },
     {
-      "name": "autoRepayStart",
+      "name": "collateralRepayStart",
       "accounts": [
         {
           "name": "caller",
@@ -356,7 +356,7 @@ export type Quartz = {
       ]
     },
     {
-      "name": "autoRepayDeposit",
+      "name": "collateralRepayDeposit",
       "accounts": [
         {
           "name": "vault",
@@ -442,7 +442,7 @@ export type Quartz = {
       ]
     },
     {
-      "name": "autoRepayWithdraw",
+      "name": "collateralRepayWithdraw",
       "accounts": [
         {
           "name": "vault",
@@ -559,8 +559,8 @@ export type Quartz = {
   "errors": [
     {
       "code": 6000,
-      "name": "IllegalAutoRepayInstructions",
-      "msg": "Illegal auto repay instructions"
+      "name": "IllegalCollateralRepayInstructions",
+      "msg": "Illegal collateral repay instructions"
     },
     {
       "code": 6001,
@@ -629,18 +629,18 @@ export type Quartz = {
     },
     {
       "code": 6014,
-      "name": "NotReachedAutoRepayThreshold",
-      "msg": "Account health is not low enough for auto_repay"
+      "name": "NotReachedCollateralRepayThreshold",
+      "msg": "Account health is not low enough for collateral_repay"
     },
     {
       "code": 6015,
-      "name": "AutoRepayHealthTooLow",
-      "msg": "Not enough collateral sold in auto_repay"
+      "name": "CollateralRepayHealthTooLow",
+      "msg": "Not enough collateral sold in collateral_repay"
     },
     {
       "code": 6016,
-      "name": "AutoRepayHealthTooHigh",
-      "msg": "Too much collateral sold in auto_repay"
+      "name": "CollateralRepayHealthTooHigh",
+      "msg": "Too much collateral sold in collateral_repay"
     }
   ]
 };
@@ -942,7 +942,7 @@ export const IDL: Quartz = {
       ]
     },
     {
-      "name": "autoRepayStart",
+      "name": "collateralRepayStart",
       "accounts": [
         {
           "name": "caller",
@@ -1003,7 +1003,7 @@ export const IDL: Quartz = {
       ]
     },
     {
-      "name": "autoRepayDeposit",
+      "name": "collateralRepayDeposit",
       "accounts": [
         {
           "name": "vault",
@@ -1089,7 +1089,7 @@ export const IDL: Quartz = {
       ]
     },
     {
-      "name": "autoRepayWithdraw",
+      "name": "collateralRepayWithdraw",
       "accounts": [
         {
           "name": "vault",
@@ -1206,8 +1206,8 @@ export const IDL: Quartz = {
   "errors": [
     {
       "code": 6000,
-      "name": "IllegalAutoRepayInstructions",
-      "msg": "Illegal auto repay instructions"
+      "name": "IllegalCollateralRepayInstructions",
+      "msg": "Illegal collateral repay instructions"
     },
     {
       "code": 6001,
@@ -1276,18 +1276,18 @@ export const IDL: Quartz = {
     },
     {
       "code": 6014,
-      "name": "NotReachedAutoRepayThreshold",
-      "msg": "Account health is not low enough for auto_repay"
+      "name": "NotReachedCollateralRepayThreshold",
+      "msg": "Account health is not low enough for collateral_repay"
     },
     {
       "code": 6015,
-      "name": "AutoRepayHealthTooLow",
-      "msg": "Not enough collateral sold in auto_repay"
+      "name": "CollateralRepayHealthTooLow",
+      "msg": "Not enough collateral sold in collateral_repay"
     },
     {
       "code": 6016,
-      "name": "AutoRepayHealthTooHigh",
-      "msg": "Too much collateral sold in auto_repay"
+      "name": "CollateralRepayHealthTooHigh",
+      "msg": "Too much collateral sold in collateral_repay"
     }
   ]
 };
