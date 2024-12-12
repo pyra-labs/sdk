@@ -12,7 +12,7 @@
     "build": "yarn install && yarn lint && tsc -p tsconfig.json",
     "test": "yarn node --experimental-vm-modules $(yarn bin jest)",
     "doc": "yarn typedoc",
-    "deploy": "yarn build && yarn test && yarn publish"
+    "deploy": "yarn build && yarn test && yarn publish && yarn doc"
   },
   "type": "module",
   "exports": {
