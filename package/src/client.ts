@@ -1,5 +1,5 @@
 import type { DriftClient } from "@drift-labs/sdk";
-import { fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
+import { calculateBorrowRate, calculateDepositRate, fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
 import { QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID } from "./config/constants.js";
 import quartzIdl from "./idl/quartz.json" with { type: "json" };
 import type { Quartz } from "./types/quartz.js";
@@ -129,6 +129,24 @@ export class QuartzClient {
                 driftUser
             )
         });
+    }
+
+    public async getDepositRate(spotMarketIndex: number) {
+        const spotMarket = await this.getSpotMarketAccount(spotMarketIndex);
+        const depositRate = calculateDepositRate(spotMarket);
+        return depositRate;
+    }
+
+    public async getBorrowRate(spotMarketIndex: number) {
+        const spotMarket = await this.getSpotMarketAccount(spotMarketIndex);
+        const borrowRate = calculateBorrowRate(spotMarket);
+        return borrowRate;
+    }
+
+    private async getSpotMarketAccount(spotMarketIndex: number) {
+        const spotMarket = await this.driftClient.getSpotMarketAccount(spotMarketIndex);
+        if (!spotMarket) throw Error("Spot market not found");
+        return spotMarket;
     }
 
     public async listenForInstruction(

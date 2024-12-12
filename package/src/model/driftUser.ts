@@ -1,6 +1,7 @@
 import { AMM_RESERVE_PRECISION, AMM_RESERVE_PRECISION_EXP, BN, calculateAssetWeight, calculateLiabilityWeight, calculateLiveOracleTwap, calculateMarketMarginRatio, calculateMarketOpenBidAsk, calculatePerpLiabilityValue, calculatePositionPNL, calculateUnrealizedAssetWeight, calculateUnsettledFundingPnl, calculateWithdrawLimit, calculateWorstCasePerpLiabilityValue, type DriftClient, FIVE_MINUTE, getSignedTokenAmount, getStrictTokenValue, getTokenAmount, getWorstCaseTokenAmounts, isSpotPositionAvailable, isVariant, MARGIN_PRECISION, type MarginCategory, ONE, OPEN_ORDER_MARGIN_REQUIREMENT, type PerpPosition, PRICE_PRECISION, QUOTE_PRECISION, QUOTE_SPOT_MARKET_INDEX, SPOT_MARKET_WEIGHT_PRECISION, SpotBalanceType, StrictOraclePrice, type UserAccount, UserStatus, ZERO, TEN, divCeil, type SpotMarketAccount } from "@drift-labs/sdk";
 import type { Connection, PublicKey } from "@solana/web3.js";
 import { getDriftUserPublicKey, getDriftUserStatsPublicKey } from "../utils/helpers.js";
+import { QUARTZ_HEALTH_BUFFER } from "../config/constants.js";
 
 export class DriftUser {
     private authority: PublicKey;
@@ -34,7 +35,7 @@ export class DriftUser {
     public getHealth(): number{
         if (this.isBeingLiquidated()) return 0;
 
-        const totalCollateral = this.getTotalCollateral('Maintenance');
+        const totalCollateral = this.getTotalCollateralValue('Maintenance');
 		const maintenanceMarginReq = this.getMaintenanceMarginRequirement();
 
 		if (maintenanceMarginReq.eq(ZERO) && totalCollateral.gte(ZERO)) {
@@ -79,18 +80,19 @@ export class DriftUser {
 		);
 	}
 
-	public getWithdrawalLimit(marketIndex: number, reduceOnly?: boolean): BN {
+	public getWithdrawalLimit(marketIndex: number, reduceOnly?: boolean, preventAutoRepay = false): BN {
 		const nowTs = new BN(Math.floor(Date.now() / 1000));
 		const spotMarket = this.driftClient.getSpotMarketAccount(marketIndex);
 		if (!spotMarket) throw new Error("Spot market not found");
+
 		// eslint-disable-next-line prefer-const
 		let { borrowLimit, withdrawLimit } = calculateWithdrawLimit(
 			spotMarket,
 			nowTs
 		);
 
-		const freeCollateral = this.getFreeCollateral();
-		const initialMarginRequirement = this.getMarginRequirement('Initial', undefined, false);
+		const freeCollateral = this.getFreeCollateral("Initial", preventAutoRepay);
+		const initialMarginRequirement = this.getMarginRequirement('Initial', undefined, false, true, preventAutoRepay);
 		const oracleData = this.driftClient.getOracleDataForSpotMarket(marketIndex);
 		const precisionIncrease = TEN.pow(new BN(spotMarket.decimals - 6));
 
@@ -126,9 +128,7 @@ export class DriftUser {
 			withdrawLimit.abs()
 		);
 
-		if (reduceOnly) {
-			return BN.max(maxWithdrawValue, ZERO);
-		}
+		if (reduceOnly) return BN.max(maxWithdrawValue, ZERO);
 
 		const weightedAssetValue = this.getSpotMarketAssetValue(
 			'Initial',
@@ -155,11 +155,11 @@ export class DriftUser {
 		return BN.max(maxBorrowValue, ZERO);
 	}
 
-	private getFreeCollateral(marginCategory: MarginCategory = 'Initial'): BN {
-		const totalCollateral = this.getTotalCollateral(marginCategory, true);
+	private getFreeCollateral(marginCategory: MarginCategory = 'Initial', preventAutoRepay = false): BN {
+		const totalCollateral = this.getTotalCollateralValue(marginCategory, true);
 		const marginRequirement =
 			marginCategory === 'Initial'
-				? this.getMarginRequirement('Initial', undefined, false)
+				? this.getMarginRequirement('Initial', undefined, false, true,preventAutoRepay)
 				: this.getMaintenanceMarginRequirement();
 		const freeCollateral = totalCollateral.sub(marginRequirement);
 		return freeCollateral.gte(ZERO) ? freeCollateral : ZERO;
@@ -233,8 +233,8 @@ export class DriftUser {
 		);
 	}
 
-    public getTotalCollateral(
-		marginCategory: MarginCategory = 'Initial',
+    public getTotalCollateralValue(
+		marginCategory?: MarginCategory,
 		strict = false,
 		includeOpenOrders = true
 	): BN {
@@ -249,7 +249,7 @@ export class DriftUser {
 	}
 
     private getSpotMarketAssetValue(
-		marginCategory: MarginCategory,
+		marginCategory?: MarginCategory,
 		marketIndex?: number,
 		includeOpenOrders?: boolean,
 		strict = false,
@@ -267,7 +267,7 @@ export class DriftUser {
 	}
 
     private getSpotMarketAssetAndLiabilityValue(
-		marginCategory: MarginCategory,
+		marginCategory?: MarginCategory,
 		marketIndex?: number,
 		liquidationBuffer?: BN,
 		includeOpenOrders?: boolean,
@@ -396,7 +396,7 @@ export class DriftUser {
 				spotPosition,
 				spotMarketAccount,
 				strictOraclePrice,
-				marginCategory,
+				marginCategory ?? "Initial",
 				this.userAccount.maxMarginRatio
 			);
 
@@ -891,9 +891,10 @@ export class DriftUser {
 		marginCategory: MarginCategory,
 		liquidationBuffer?: BN,
 		strict = false,
-		includeOpenOrders = true
+		includeOpenOrders = true,
+		preventAutoRepay = false
 	): BN {
-		return this.getTotalPerpPositionLiability(
+		const driftMarginRequirement = this.getTotalPerpPositionLiability(
 			marginCategory,
 			liquidationBuffer,
 			includeOpenOrders,
@@ -907,6 +908,15 @@ export class DriftUser {
 				strict
 			)
 		);
+
+		if (preventAutoRepay) {
+			const adjusted =  driftMarginRequirement.mul(new BN(100)).div(
+				new BN(100 - (QUARTZ_HEALTH_BUFFER * 100))
+			);
+			return adjusted;
+		}
+
+		return driftMarginRequirement;
 	}
 
     private getTotalPerpPositionLiability(

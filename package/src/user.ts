@@ -80,7 +80,7 @@ export class QuartzUser {
         if (targetHealth <= 0 || targetHealth >= 100) throw Error("Target health must be between 0 and 100");
         if (targetHealth <= this.getHealth()) throw Error("Target health must be greater than current health");
 
-        const currentWeightedCollateral = this.getTotalWeightedCollateral();
+        const currentWeightedCollateral = this.getTotalWeightedCollateralValue();
         const loanValue = this.getMaintenanceMarginRequirement();
 
         return Math.round(
@@ -92,12 +92,24 @@ export class QuartzUser {
         );
     }
 
-    public getTotalWeightedCollateral(): number {
-        return this.driftUser.getTotalCollateral('Maintenance').toNumber();
+    public getTotalCollateralValue(): number {
+        return this.driftUser.getTotalCollateralValue(undefined).toNumber();
+    }
+
+    public getTotalWeightedCollateralValue(): number {
+        return this.driftUser.getTotalCollateralValue('Maintenance').toNumber();
     }
 
     public getMaintenanceMarginRequirement(): number {
         return this.driftUser.getMaintenanceMarginRequirement().toNumber();
+    }
+
+    public async getTokenBalance(spotMarketIndex: number): Promise<number> {
+        return this.driftUser.getTokenAmount(spotMarketIndex).toNumber();
+    }
+
+    public async getWithdrawalLimit(spotMarketIndex: number): Promise<number> {
+        return this.driftUser.getWithdrawalLimit(spotMarketIndex, false, true).toNumber();
     }
 
     public async makeCollateralRepayIxs(
