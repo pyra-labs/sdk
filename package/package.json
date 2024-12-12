@@ -1,6 +1,6 @@
 {
   "name": "@quartz-labs/sdk",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "SDK for interacting with the Quartz Protocol",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,7 +11,7 @@
     "lint": "yarn biome lint --write",
     "build": "yarn install && yarn lint && tsc -p tsconfig.json",
     "test": "yarn node --experimental-vm-modules $(yarn bin jest)",
-    "deploy": "yarn build && yarn test && npm publish"
+    "deploy": "yarn build && yarn test && yarn publish"
   },
   "type": "module",
   "exports": {
@@ -50,9 +50,7 @@
     "@drift-labs/sdk": "^2.103.0-beta.9",
     "@jup-ag/api": "^6.0.30",
     "@pythnetwork/pyth-solana-receiver": "^0.8.2",
-    "@solana/spl-token": "^0.4.9",
-    "fastestsmallesttextencoderdecoder": "^1.0.22",
-    "solana-bankrun": "^0.2.0"
+    "@solana/spl-token": "^0.4.9"
   },
   "peerDependencies": {
     "rpc-websockets": "^9.0.2",

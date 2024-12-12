@@ -3,9 +3,9 @@ import { fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drif
 import { QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID } from "./config/constants.js";
 import quartzIdl from "./idl/quartz.json" with { type: "json" };
 import type { Quartz } from "./types/quartz.js";
-import { AnchorProvider, Program, setProvider } from "@coral-xyz/anchor";
+import { AnchorProvider, BorshInstructionCoder, Program, setProvider } from "@coral-xyz/anchor";
 import type { Idl, Wallet } from "@coral-xyz/anchor";
-import type { PublicKey, Connection, AddressLookupTableAccount } from "@solana/web3.js";
+import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledInstruction, Logs } from "@solana/web3.js";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import { QuartzUser } from "./user.js";
 import { getDriftUserPublicKey, getVaultPublicKey } from "./utils/helpers.js";
@@ -129,5 +129,36 @@ export class QuartzClient {
                 driftUser
             )
         });
+    }
+
+    public async listenForInstruction(
+        instructionName: string,
+        onInstruction: (instruction: MessageCompiledInstruction, accountKeys: PublicKey[]) => void
+    ) {
+        this.connection.onLogs(
+            QUARTZ_PROGRAM_ID,
+            async (logs: Logs) => {
+                if (!logs.logs.some(log => log.includes(instructionName))) return;
+
+                const tx = await this.connection.getTransaction(logs.signature, {
+                    maxSupportedTransactionVersion: 0,
+                    commitment: 'confirmed'
+                });
+                if (!tx) throw new Error("Transaction not found"); 
+
+                const encodedIxs = tx.transaction.message.compiledInstructions;
+                const coder = new BorshInstructionCoder(quartzIdl as Idl);
+                for (const ix of encodedIxs) {
+                    try {
+                        const quartzIx = coder.decode(Buffer.from(ix.data), "base58");
+                        if (quartzIx?.name.toLowerCase() === instructionName.toLowerCase()) {
+                            const accountKeys = tx.transaction.message.staticAccountKeys;
+                            onInstruction(ix, accountKeys);
+                        }
+                    } catch { }
+                }
+            },
+            "confirmed"
+        )
     }
 }
