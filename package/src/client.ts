@@ -8,10 +8,9 @@ import type { Idl, Wallet } from "@coral-xyz/anchor";
 import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledInstruction, Logs, TransactionInstruction } from "@solana/web3.js";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import { QuartzUser } from "./user.js";
-import { createPriorityFeeInstructions, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getVaultPublicKey } from "./utils/helpers.js";
+import { getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getVaultPublicKey } from "./utils/helpers.js";
 import { DriftClientService } from "./services/driftClientService.js";
-import { SystemProgram, SYSVAR_RENT_PUBKEY, TransactionMessage } from "@solana/web3.js";
-import type { VersionedTransaction } from "@solana/web3.js";
+import { SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
 
 export class QuartzClient {
     private connection: Connection;

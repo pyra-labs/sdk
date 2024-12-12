@@ -1,4 +1,4 @@
-import { ComputeBudgetProgram, Connection, Keypair, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
+import { ComputeBudgetProgram, PublicKey, } from "@solana/web3.js";
 import { QUARTZ_PROGRAM_ID } from "../config/constants.js";
 import pkg from "@coral-xyz/anchor";
 const { BN } = pkg;

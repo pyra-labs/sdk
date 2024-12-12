@@ -1,7 +1,7 @@
 import { DriftUser } from "./model/driftUser.js";
 import type { DriftClient, QuoteResponse, UserAccount } from "@drift-labs/sdk";
 import { BN, DRIFT_PROGRAM_ID } from "@drift-labs/sdk";
-import { getDriftSpotMarketPublicKey, getDriftStatePublicKey, getVaultPublicKey, getVaultSplPublicKey, toRemainingAccount } from "./utils/helpers.js";
+import { getDriftSpotMarketPublicKey, getDriftStatePublicKey, getVaultPublicKey, getVaultSplPublicKey, } from "./utils/helpers.js";
 import type { Connection, AddressLookupTableAccount, TransactionInstruction } from "@solana/web3.js";
 import { DRIFT_MARKET_INDEX_SOL, DRIFT_MARKET_INDEX_USDC, QUARTZ_HEALTH_BUFFER, USDC_MINT, WSOL_MINT } from "./config/constants.js";
 import type { Quartz } from "./types/quartz.js";
