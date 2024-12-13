@@ -1,10 +1,9 @@
 import type { DriftClient } from "@drift-labs/sdk";
 import { calculateBorrowRate, calculateDepositRate, DRIFT_PROGRAM_ID, fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
 import { QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID } from "./config/constants.js";
-import quartzIdl from "./idl/quartz.json" with { type: "json" };
-import type { Quartz } from "./types/quartz.js";
+import { IDL, type Quartz } from "./types/quartz.js";
 import { AnchorProvider, BorshInstructionCoder, Program, setProvider } from "@coral-xyz/anchor";
-import type { Idl, Wallet } from "@coral-xyz/anchor";
+import type { Wallet } from "@coral-xyz/anchor";
 import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledInstruction, Logs, TransactionInstruction } from "@solana/web3.js";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import { QuartzUser } from "./user.js";
@@ -43,7 +42,7 @@ export class QuartzClient {
     ) {
         const provider = new AnchorProvider(connection, wallet, { commitment: "confirmed" });
         setProvider(provider);
-        const program = new Program(quartzIdl as Idl, QUARTZ_PROGRAM_ID, provider) as unknown as Program<Quartz>;
+        const program = new Program(IDL, QUARTZ_PROGRAM_ID, provider) as unknown as Program<Quartz>;
 
         const quartzLookupTable = await connection.getAddressLookupTable(QUARTZ_ADDRESS_TABLE).then((res) => res.value);
         if (!quartzLookupTable) throw Error("Address Lookup Table account not found");
@@ -194,7 +193,7 @@ export class QuartzClient {
                 if (!tx) throw new Error("Transaction not found"); 
 
                 const encodedIxs = tx.transaction.message.compiledInstructions;
-                const coder = new BorshInstructionCoder(quartzIdl as Idl);
+                const coder = new BorshInstructionCoder(IDL);
                 for (const ix of encodedIxs) {
                     try {
                         const quartzIx = coder.decode(Buffer.from(ix.data), "base58");

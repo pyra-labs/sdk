@@ -60,14 +60,6 @@ export const getDriftSpotMarketPublicKey = (marketIndex: number) => {
     return spotMarketVaultPda;
 }
 
-export const toRemainingAccount = (
-    pubkey: PublicKey, 
-    isWritable: boolean, 
-    isSigner: boolean
-) => {
-    return { pubkey, isWritable, isSigner }
-}
-
 export const createPriorityFeeInstructions = async (computeBudget: number) => {
     const computeLimitIx = ComputeBudgetProgram.setComputeUnitLimit({
         units: computeBudget,
