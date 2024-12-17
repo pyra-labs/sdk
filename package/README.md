@@ -6,6 +6,23 @@
 
 Typescript SDK for interacting with the Quartz Protocol. 
 
+Install using:
+
+```bash
+yarn add @quartz-labs/sdk
+# or
+npm install @quartz-labs/sdk
+```
+
+There is currently an issue with dependancy resolutions, so add the following to your package.json to fix:
+
+```json
+"resolutions": {
+  "rpc-websockets": "^9.0.2",
+  "@solana/web3.js": "^1.95.8"
+}
+```
+
 ## Links
 
 Website and waitlist: [quartzpay.io](https://quartzpay.io/)
