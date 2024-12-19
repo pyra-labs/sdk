@@ -1,10 +1,10 @@
-import { DriftUser } from "./model/driftUser.js";
+import { DriftUser } from "./types/classes/driftUser.class.js";
 import type { DriftClient, QuoteResponse, UserAccount } from "@drift-labs/sdk";
 import { BN, DRIFT_PROGRAM_ID } from "@drift-labs/sdk";
 import { getDriftSpotMarketPublicKey, getDriftStatePublicKey, getVaultPublicKey, getVaultSplPublicKey, } from "./utils/helpers.js";
 import type { Connection, AddressLookupTableAccount, TransactionInstruction } from "@solana/web3.js";
 import { DRIFT_MARKET_INDEX_SOL, DRIFT_MARKET_INDEX_USDC, QUARTZ_HEALTH_BUFFER, USDC_MINT, WSOL_MINT } from "./config/constants.js";
-import type { Quartz } from "./types/quartz.js";
+import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import { ASSOCIATED_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from "@solana/spl-token";

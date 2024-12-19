@@ -1,7 +1,6 @@
 import { ComputeBudgetProgram, PublicKey, } from "@solana/web3.js";
 import { QUARTZ_PROGRAM_ID } from "../config/constants.js";
-import pkg from "@coral-xyz/anchor";
-const { BN } = pkg;
+import { BN } from "@coral-xyz/anchor";
 import { DRIFT_PROGRAM_ID } from "@drift-labs/sdk";
 
 export const getVaultPublicKey = (user: PublicKey) => {

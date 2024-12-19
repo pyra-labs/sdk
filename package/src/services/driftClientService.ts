@@ -19,7 +19,7 @@ export class DriftClientService {
             env: 'mainnet-beta',
             userStats: false,
             perpMarketIndexes: [],
-            spotMarketIndexes: SUPPORTED_DRIFT_MARKETS,
+            spotMarketIndexes: [...SUPPORTED_DRIFT_MARKETS],
             accountSubscription: {
                 type: 'websocket',
                 commitment: "confirmed"

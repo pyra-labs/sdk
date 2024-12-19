@@ -1,7 +1,7 @@
 import { AMM_RESERVE_PRECISION, AMM_RESERVE_PRECISION_EXP, BN, calculateAssetWeight, calculateLiabilityWeight, calculateLiveOracleTwap, calculateMarketMarginRatio, calculateMarketOpenBidAsk, calculatePerpLiabilityValue, calculatePositionPNL, calculateUnrealizedAssetWeight, calculateUnsettledFundingPnl, calculateWithdrawLimit, calculateWorstCasePerpLiabilityValue, type DriftClient, FIVE_MINUTE, getSignedTokenAmount, getStrictTokenValue, getTokenAmount, getWorstCaseTokenAmounts, isSpotPositionAvailable, isVariant, MARGIN_PRECISION, type MarginCategory, ONE, OPEN_ORDER_MARGIN_REQUIREMENT, type PerpPosition, PRICE_PRECISION, QUOTE_PRECISION, QUOTE_SPOT_MARKET_INDEX, SPOT_MARKET_WEIGHT_PRECISION, SpotBalanceType, StrictOraclePrice, type UserAccount, UserStatus, ZERO, TEN, divCeil, type SpotMarketAccount } from "@drift-labs/sdk";
 import type { Connection, PublicKey } from "@solana/web3.js";
-import { getDriftUserPublicKey, getDriftUserStatsPublicKey } from "../utils/helpers.js";
-import { QUARTZ_HEALTH_BUFFER } from "../config/constants.js";
+import { getDriftUserPublicKey, getDriftUserStatsPublicKey } from "../../utils/helpers.js";
+import { QUARTZ_HEALTH_BUFFER } from "../../config/constants.js";
 
 export class DriftUser {
     private authority: PublicKey;

@@ -1,19 +1,18 @@
 import type { DriftClient } from "@drift-labs/sdk";
 import { calculateBorrowRate, calculateDepositRate, DRIFT_PROGRAM_ID, fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
 import { QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID } from "./config/constants.js";
-import { IDL, type Quartz } from "./types/quartz.js";
+import { IDL, type Quartz } from "./types/idl/quartz.js";
 import { AnchorProvider, BorshInstructionCoder, Program, setProvider } from "@coral-xyz/anchor";
-import type { Wallet } from "@coral-xyz/anchor";
 import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledInstruction, Logs, TransactionInstruction } from "@solana/web3.js";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import { QuartzUser } from "./user.js";
 import { getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getVaultPublicKey } from "./utils/helpers.js";
 import { DriftClientService } from "./services/driftClientService.js";
-import { SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
+import { Keypair, SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
+import { DummyWallet } from "./types/classes/dummyWallet.class.js";
 
 export class QuartzClient {
     private connection: Connection;
-    private wallet: Wallet;
     private program: Program<Quartz>;
     private quartzLookupTable: AddressLookupTableAccount;
 
@@ -22,14 +21,12 @@ export class QuartzClient {
 
     constructor(
         connection: Connection,
-        wallet: Wallet,
         program: Program<Quartz>,
         quartzAddressTable: AddressLookupTableAccount,
         driftClient: DriftClient,
         oracles: Map<string, PublicKey>
     ) {
         this.connection = connection;
-        this.wallet = wallet;
         this.program = program;
         this.quartzLookupTable = quartzAddressTable;
         this.driftClient = driftClient;
@@ -37,9 +34,10 @@ export class QuartzClient {
     }
 
     static async fetchClient(
-        connection: Connection, 
-        wallet: Wallet
+        connection: Connection
     ) {
+        const wallet = new DummyWallet(Keypair.generate());
+
         const provider = new AnchorProvider(connection, wallet, { commitment: "confirmed" });
         setProvider(provider);
         const program = new Program(IDL, QUARTZ_PROGRAM_ID, provider) as unknown as Program<Quartz>;
@@ -59,7 +57,6 @@ export class QuartzClient {
 
         return new QuartzClient(
             connection, 
-            wallet, 
             program, 
             quartzLookupTable,
             driftClient,
@@ -113,7 +110,7 @@ export class QuartzClient {
         if (!driftUserAccount) throw Error("Drift user not found");
 
         return new QuartzUser(
-            vault, 
+            owner, 
             this.connection, 
             this.program, 
             this.quartzLookupTable, 
@@ -146,9 +143,9 @@ export class QuartzClient {
 
         return driftUsers.map((driftUser, index) => {
             if (driftUser === undefined) return null;
-            if (vaults[index] === undefined) throw Error("Missing pubkey in vaults array");
+            if (owners[index] === undefined) throw Error("Missing pubkey in owners array");
             return new QuartzUser(
-                vaults[index], 
+                owners[index], 
                 this.connection, 
                 this.program, 
                 this.quartzLookupTable, 
