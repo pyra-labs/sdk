@@ -48,15 +48,12 @@ export class QuartzUser {
         if (protocolHealth <= 0) return 0;
         if (protocolHealth >= 100) return 100;
 
-        const protocolHealthDecimal = protocolHealth / 100;
-        const healthBufferDecimal = QUARTZ_HEALTH_BUFFER / 100;
-
         return Math.floor(
             Math.min(
                 100,
                 Math.max(
                     0,
-                    (protocolHealthDecimal - healthBufferDecimal) / (1 - healthBufferDecimal)
+                    ((protocolHealth - QUARTZ_HEALTH_BUFFER) / (100 - QUARTZ_HEALTH_BUFFER)) * 100
                 )
             )
         );
