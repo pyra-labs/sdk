@@ -48,12 +48,15 @@ export class QuartzUser {
         if (protocolHealth <= 0) return 0;
         if (protocolHealth >= 100) return 100;
 
+        const protocolHealthDecimal = protocolHealth / 100;
+        const healthBufferDecimal = QUARTZ_HEALTH_BUFFER / 100;
+
         return Math.floor(
             Math.min(
                 100,
                 Math.max(
                     0,
-                    (protocolHealth - QUARTZ_HEALTH_BUFFER) / (1 - QUARTZ_HEALTH_BUFFER)
+                    (protocolHealthDecimal - healthBufferDecimal) / (1 - healthBufferDecimal)
                 )
             )
         );
@@ -84,12 +87,13 @@ export class QuartzUser {
         const currentWeightedCollateral = this.getTotalWeightedCollateralValue();
         const loanValue = this.getMaintenanceMarginRequirement();
         const targetHealthDecimal = targetHealth / 100;
+        const healthBufferDecimal = QUARTZ_HEALTH_BUFFER / 100;
 
         return Math.round(
             (
-                loanValue - currentWeightedCollateral * (1 - QUARTZ_HEALTH_BUFFER) * (1 - targetHealthDecimal)
+                loanValue - currentWeightedCollateral * (1 - healthBufferDecimal) * (1 - targetHealthDecimal)
             ) / (
-                1 - repayCollateralWeight * (1 - QUARTZ_HEALTH_BUFFER) * (1 - targetHealthDecimal)
+                1 - repayCollateralWeight * (1 - healthBufferDecimal) * (1 - targetHealthDecimal)
             )
         );
     }
