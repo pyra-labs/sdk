@@ -1,6 +1,6 @@
 import { ComputeBudgetProgram, PublicKey, } from "@solana/web3.js";
 import { QUARTZ_PROGRAM_ID } from "../config/constants.js";
-import { BN } from "@coral-xyz/anchor";
+import { BN } from "bn.js";
 import { DRIFT_PROGRAM_ID } from "@drift-labs/sdk";
 
 export const getVaultPublicKey = (user: PublicKey) => {
@@ -68,4 +68,12 @@ export const createPriorityFeeInstructions = async (computeBudget: number) => {
         microLamports: 1_000_000, // TODO: Calculate priority fee based on tx accounts
     });
     return [computeLimitIx, computePriceIx];
+}
+
+export const toRemainingAccount = (pubkey: PublicKey, isSigner: boolean, isWritable: boolean) => {
+    return {
+        pubkey: pubkey,
+        isSigner: isSigner,
+        isWritable: isWritable,
+    }
 }

@@ -1,9 +1,10 @@
 import { DriftUser } from "./types/classes/driftUser.class.js";
 import type { DriftClient, QuoteResponse, UserAccount } from "@drift-labs/sdk";
-import { BN, DRIFT_PROGRAM_ID } from "@drift-labs/sdk";
-import { getDriftSpotMarketPublicKey, getDriftStatePublicKey, getVaultPublicKey, getVaultSplPublicKey, } from "./utils/helpers.js";
+import { DRIFT_PROGRAM_ID } from "@drift-labs/sdk";
+import { BN } from "bn.js";
+import { getDriftSpotMarketPublicKey, getDriftStatePublicKey, getVaultPublicKey, getVaultSplPublicKey, toRemainingAccount, } from "./utils/helpers.js";
 import type { Connection, AddressLookupTableAccount, TransactionInstruction } from "@solana/web3.js";
-import { DRIFT_MARKET_INDEX_SOL, DRIFT_MARKET_INDEX_USDC, QUARTZ_HEALTH_BUFFER, USDC_MINT, WSOL_MINT } from "./config/constants.js";
+import { DRIFT_MARKET_INDEX_SOL, DRIFT_MARKET_INDEX_USDC, DRIFT_ORACLE_1, DRIFT_ORACLE_2, DRIFT_SPOT_MARKET_SOL, DRIFT_SPOT_MARKET_USDC, QUARTZ_HEALTH_BUFFER, USDC_MINT, WSOL_MINT } from "./config/constants.js";
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import { ASSOCIATED_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token.js";
@@ -82,12 +83,13 @@ export class QuartzUser {
 
         const currentWeightedCollateral = this.getTotalWeightedCollateralValue();
         const loanValue = this.getMaintenanceMarginRequirement();
+        const targetHealthDecimal = targetHealth / 100;
 
         return Math.round(
             (
-                loanValue - currentWeightedCollateral * (1 - QUARTZ_HEALTH_BUFFER) * (1 - targetHealth)
+                loanValue - currentWeightedCollateral * (1 - QUARTZ_HEALTH_BUFFER) * (1 - targetHealthDecimal)
             ) / (
-                1 - repayCollateralWeight * (1 - QUARTZ_HEALTH_BUFFER) * (1 - targetHealth)
+                1 - repayCollateralWeight * (1 - QUARTZ_HEALTH_BUFFER) * (1 - targetHealthDecimal)
             )
         );
     }
@@ -151,7 +153,7 @@ export class QuartzUser {
             .deposit(new BN(amountBaseUnits), marketIndex, reduceOnly)
             .accounts({
                 vault: this.vaultPubkey,
-                vaultSpl: getVaultSplPublicKey(this.vaultPubkey, mint),
+                vaultSpl: getVaultSplPublicKey(this.pubkey, mint),
                 owner: this.pubkey,
                 ownerSpl: ownerSpl,
                 splMint: mint,
@@ -164,13 +166,10 @@ export class QuartzUser {
                 driftProgram: DRIFT_PROGRAM_ID,
                 systemProgram: SystemProgram.programId
             })
-            .remainingAccounts(
-                this.driftClient.getRemainingAccounts({
-                    userAccounts: [this.driftUser.getDriftUserAccount()],
-                    useMarketLastSlotCache: true,
-                    writableSpotMarketIndexes: [marketIndex],
-                })
-            )
+            .remainingAccounts([
+                toRemainingAccount(DRIFT_ORACLE_1, false, false),
+                toRemainingAccount(DRIFT_ORACLE_2, false, false),
+            ])
             .instruction();
 
         return ix;
@@ -188,7 +187,7 @@ export class QuartzUser {
             .withdraw(new BN(amountBaseUnits), marketIndex, reduceOnly)
             .accounts({
                 vault: this.vaultPubkey,
-                vaultSpl: getVaultSplPublicKey(this.vaultPubkey, mint),
+                vaultSpl: getVaultSplPublicKey(this.pubkey, mint),
                 owner: this.pubkey,
                 ownerSpl: ownerSpl,
                 splMint: mint,
@@ -202,14 +201,10 @@ export class QuartzUser {
                 driftProgram: DRIFT_PROGRAM_ID,
                 systemProgram: SystemProgram.programId
             })
-            .remainingAccounts(
-                this.driftClient.getRemainingAccounts({
-                    userAccounts: [this.driftUser.getDriftUserAccount()],
-                    useMarketLastSlotCache: true,
-                    writableSpotMarketIndexes: [marketIndex],
-                    readableSpotMarketIndexes: [DRIFT_MARKET_INDEX_USDC], // Quote is in USDC
-                })
-            )
+            .remainingAccounts([
+                toRemainingAccount(DRIFT_ORACLE_1, false, false),
+                toRemainingAccount(DRIFT_ORACLE_2, false, false),
+            ])
             .instruction();
 
         return ix;
@@ -245,7 +240,7 @@ export class QuartzUser {
                 callerWithdrawSpl: callerWithdrawSpl,
                 withdrawMint: withdrawMint,
                 vault: this.vaultPubkey,
-                vaultWithdrawSpl: getVaultSplPublicKey(this.vaultPubkey, withdrawMint),
+                vaultWithdrawSpl: getVaultSplPublicKey(this.pubkey, withdrawMint),
                 owner: this.pubkey,
                 tokenProgram: TOKEN_PROGRAM_ID,
                 associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -260,7 +255,7 @@ export class QuartzUser {
             .collateralRepayDeposit(depositMarketIndex)
             .accounts({
                 vault: this.vaultPubkey,
-                vaultSpl: getVaultSplPublicKey(this.vaultPubkey, depositMint),
+                vaultSpl: getVaultSplPublicKey(this.pubkey, depositMint),
                 owner: this.pubkey,
                 caller: caller,
                 callerSpl: callerDepositSpl,
@@ -275,20 +270,19 @@ export class QuartzUser {
                 systemProgram: SystemProgram.programId,
                 instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
             })
-            .remainingAccounts(
-                this.driftClient.getRemainingAccounts({
-                    userAccounts: [this.driftUser.getDriftUserAccount()],
-                    useMarketLastSlotCache: true,
-                    writableSpotMarketIndexes: [depositMarketIndex],
-                })
-            )
+            .remainingAccounts([
+                toRemainingAccount(DRIFT_ORACLE_1, false, false),
+                toRemainingAccount(DRIFT_ORACLE_2, false, false),
+                toRemainingAccount(DRIFT_SPOT_MARKET_SOL, false, true),
+                toRemainingAccount(DRIFT_SPOT_MARKET_USDC, false, true),
+            ])
             .instruction();
 
         const collateralRepayWithdrawPromise = this.program.methods
             .collateralRepayWithdraw(withdrawMarketIndex)
             .accounts({
                 vault: this.vaultPubkey,
-                vaultSpl: getVaultSplPublicKey(this.vaultPubkey, withdrawMint),
+                vaultSpl: getVaultSplPublicKey(this.pubkey, withdrawMint),
                 owner: this.pubkey,
                 caller: caller,
                 callerSpl: callerWithdrawSpl,
@@ -305,14 +299,12 @@ export class QuartzUser {
                 withdrawPriceUpdate: this.oracles.get("SOL/USD"),
                 instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
             })
-            .remainingAccounts(
-                this.driftClient.getRemainingAccounts({
-                    userAccounts: [this.driftUser.getDriftUserAccount()],
-                    useMarketLastSlotCache: true,
-                    writableSpotMarketIndexes: [withdrawMarketIndex],
-                    readableSpotMarketIndexes: [DRIFT_MARKET_INDEX_USDC], // Quote is in USDC
-                })
-            )
+            .remainingAccounts([
+                toRemainingAccount(DRIFT_ORACLE_1, false, false),
+                toRemainingAccount(DRIFT_ORACLE_2, false, false),
+                toRemainingAccount(DRIFT_SPOT_MARKET_SOL, false, true),
+                toRemainingAccount(DRIFT_SPOT_MARKET_USDC, false, true),
+            ])
             .instruction();
 
         const [

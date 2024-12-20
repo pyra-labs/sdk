@@ -7,7 +7,6 @@ describe("PDAs", () => {
 
     it("Should get user vault", () => {
         const vault = getVaultPublicKey(testAddress);
-        
         expect(vault).toStrictEqual(new PublicKey("D9RiL1Hs2mZs8VWT2vAbYBfspxk2j3iY51VDfeFooDqL"));
     });
 
