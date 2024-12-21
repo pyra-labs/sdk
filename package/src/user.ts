@@ -4,7 +4,7 @@ import { DRIFT_PROGRAM_ID } from "@drift-labs/sdk";
 import { BN } from "bn.js";
 import { getDriftSpotMarketPublicKey, getDriftStatePublicKey, getVaultPublicKey, getVaultSplPublicKey, toRemainingAccount, } from "./utils/helpers.js";
 import type { Connection, AddressLookupTableAccount, TransactionInstruction } from "@solana/web3.js";
-import { DRIFT_MARKET_INDEX_SOL, DRIFT_MARKET_INDEX_USDC, DRIFT_ORACLE_1, DRIFT_ORACLE_2, DRIFT_SPOT_MARKET_SOL, DRIFT_SPOT_MARKET_USDC, QUARTZ_HEALTH_BUFFER, USDC_MINT, WSOL_MINT } from "./config/constants.js";
+import { DRIFT_ORACLE_1, DRIFT_ORACLE_2, DRIFT_SPOT_MARKET_SOL, DRIFT_SPOT_MARKET_USDC, QUARTZ_HEALTH_BUFFER, } from "./config/constants.js";
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import { ASSOCIATED_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token.js";
@@ -214,17 +214,18 @@ export class QuartzUser {
     public async makeCollateralRepayIxs(
         caller: PublicKey,
         callerDepositSpl: PublicKey,
+        depositMint: PublicKey,
+        depositMarketIndex: number,
         callerWithdrawSpl: PublicKey,
+        withdrawMint: PublicKey,
+        withdrawMarketIndex: number,
         callerStartingDepositBalance: number,
         jupiterExactOutRouteQuote: QuoteResponse
     ): Promise<{
         ixs: TransactionInstruction[]
         lookupTables: AddressLookupTableAccount[],
     }> {
-        const depositMint = USDC_MINT;
-        const depositMarketIndex = DRIFT_MARKET_INDEX_USDC;
-        const withdrawMint = WSOL_MINT;
-        const withdrawMarketIndex = DRIFT_MARKET_INDEX_SOL;
+        if (jupiterExactOutRouteQuote.swapMode !== SwapMode.ExactOut) throw Error("Jupiter quote must be ExactOutRoute");
 
         if (jupiterExactOutRouteQuote.swapMode !== SwapMode.ExactOut) throw Error("Jupiter quote must be ExactOutRoute");
         if (jupiterExactOutRouteQuote.inputMint !== withdrawMint.toBase58()) throw Error("Jupiter quote inputMint does not match withdrawMint");
