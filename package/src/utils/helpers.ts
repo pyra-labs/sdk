@@ -48,6 +48,14 @@ export const getDriftStatePublicKey = () => {
     return statePda; 
 }
 
+export const getDriftSignerPublicKey = () => {
+    const [signerPda] = PublicKey.findProgramAddressSync(
+		[Buffer.from("drift_signer")],
+		new PublicKey(DRIFT_PROGRAM_ID)
+	);
+    return signerPda;
+}
+
 export const getDriftSpotMarketPublicKey = (marketIndex: number) => {
     const [spotMarketVaultPda] = PublicKey.findProgramAddressSync(
         [

@@ -1,23 +1,18 @@
 import type { DriftClient } from "@drift-labs/sdk";
-import { calculateBorrowRate, calculateDepositRate, DRIFT_PROGRAM_ID, fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
+import { calculateBorrowRate, calculateDepositRate, fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
 import { QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID } from "./config/constants.js";
 import { IDL, type Quartz } from "./types/idl/quartz.js";
 import { AnchorProvider, BorshInstructionCoder, Program, setProvider } from "@coral-xyz/anchor";
-import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledInstruction, Logs, TransactionInstruction } from "@solana/web3.js";
-import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
+import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledInstruction, Logs, } from "@solana/web3.js";
 import { QuartzUser } from "./user.js";
-import { getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getVaultPublicKey } from "./utils/helpers.js";
+import { getDriftUserPublicKey, getVaultPublicKey } from "./utils/helpers.js";
 import { DriftClientService } from "./services/driftClientService.js";
-import { Keypair, SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
+import { Keypair, } from "@solana/web3.js";
 import { DummyWallet } from "./types/classes/dummyWallet.class.js";
+import { QuartzClientLight } from "./clientLight.js";
 
-export class QuartzClient {
-    private connection: Connection;
-    private program: Program<Quartz>;
-    private quartzLookupTable: AddressLookupTableAccount;
-
+export class QuartzClient extends QuartzClientLight {
     private driftClient: DriftClient;
-    private oracles: Map<string, PublicKey>;
 
     constructor(
         connection: Connection,
@@ -26,14 +21,11 @@ export class QuartzClient {
         driftClient: DriftClient,
         oracles: Map<string, PublicKey>
     ) {
-        this.connection = connection;
-        this.program = program;
-        this.quartzLookupTable = quartzAddressTable;
+        super(connection, program, quartzAddressTable, oracles);
         this.driftClient = driftClient;
-        this.oracles = oracles;
     }
 
-    static async fetchClient(
+    public static async fetchClient(
         connection: Connection
     ) {
         const wallet = new DummyWallet(Keypair.generate());
@@ -46,14 +38,7 @@ export class QuartzClient {
         if (!quartzLookupTable) throw Error("Address Lookup Table account not found");
 
         const driftClient = await DriftClientService.getDriftClient(connection);
-
-        const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
-        const oracles = new Map<string, PublicKey>([
-            ["SOL/USD", pythSolanaReceiver.getPriceFeedAccountAddress(0, 
-                "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d")],
-            ["USDC/USD", pythSolanaReceiver.getPriceFeedAccountAddress(0, 
-                "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a")]
-        ]);
+        const oracles = await QuartzClient.fetchOracles(connection, wallet);
 
         return new QuartzClient(
             connection, 
@@ -62,40 +47,6 @@ export class QuartzClient {
             driftClient,
             oracles
         );
-    }
-
-    public async makeInitQuartzUserIxs(owner: PublicKey): Promise<TransactionInstruction[]> {
-        const vault = getVaultPublicKey(owner);
-        const ix_initUser = await this.program.methods
-            .initUser()
-            .accounts({
-                vault: vault,
-                owner: owner,
-                systemProgram: SystemProgram.programId,
-            })
-            .instruction();
-
-        const ix_initVaultDriftAccount = await this.program.methods
-            .initDriftAccount()
-            .accounts({
-                vault: vault,
-                owner: owner,
-                driftUser: getDriftUserPublicKey(vault),
-                driftUserStats: getDriftUserStatsPublicKey(vault),
-                driftState: getDriftStatePublicKey(),
-                driftProgram: DRIFT_PROGRAM_ID,
-                rent: SYSVAR_RENT_PUBKEY,
-                systemProgram: SystemProgram.programId,
-            })
-            .instruction(); 
-
-        return [ix_initUser, ix_initVaultDriftAccount];
-    }
-
-    public async getAllQuartzAccountOwnerPubkeys(): Promise<PublicKey[]> {
-        return (
-            await this.program.account.vault.all()
-        ).map((vault) => vault.account.owner);
     }
 
     public async getQuartzAccount(owner: PublicKey): Promise<QuartzUser> {
