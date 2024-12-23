@@ -3,17 +3,12 @@ import type { Connection, TransactionInstruction } from "@solana/web3.js";
 import { IDL, type Quartz } from "./types/idl/quartz.js";
 import type { AddressLookupTableAccount } from "@solana/web3.js";
 import type { PublicKey } from "@solana/web3.js";
-import { getDriftUserPublicKey, getVaultPublicKey } from "./utils/helpers.js";
-import { getDriftUserStatsPublicKey } from "./utils/helpers.js";
+import { getDriftUserPublicKey, getVaultPublicKey, getDriftUserStatsPublicKey, getDriftStatePublicKey, getPythPriceFeedAccount } from "./utils/helpers.js";
 import { Keypair, SystemProgram } from "@solana/web3.js";
 import { SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
-import { DRIFT_PROGRAM_ID } from "@drift-labs/sdk";
-import { getDriftStatePublicKey } from "./utils/helpers.js";
-import { QuartzUserLight } from "./userLights.js";
-import { QUARTZ_ADDRESS_TABLE } from "./config/constants.js";
+import { QuartzUserLight } from "./userLight.js";
 import { DummyWallet } from "./types/classes/dummyWallet.class.js";
-import { QUARTZ_PROGRAM_ID } from "./config/constants.js";
-import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
+import { QUARTZ_PROGRAM_ID, DRIFT_PROGRAM_ID, QUARTZ_ADDRESS_TABLE } from "./config/constants.js";
 
 export class QuartzClientLight {
     protected connection: Connection;
@@ -45,7 +40,7 @@ export class QuartzClientLight {
         const quartzLookupTable = await connection.getAddressLookupTable(QUARTZ_ADDRESS_TABLE).then((res) => res.value);
         if (!quartzLookupTable) throw Error("Address Lookup Table account not found");
 
-        const oracles = await QuartzClientLight.fetchOracles(connection, wallet);
+        const oracles = await QuartzClientLight.fetchOracles();
 
         return new QuartzClientLight(
             connection, 
@@ -55,12 +50,11 @@ export class QuartzClientLight {
         );
     }
 
-    protected static async fetchOracles(connection: Connection, wallet: DummyWallet) {
-        const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
+    protected static async fetchOracles() {
         const oracles = new Map<string, PublicKey>([
-            ["SOL/USD", pythSolanaReceiver.getPriceFeedAccountAddress(0, 
+            ["SOL/USD", getPythPriceFeedAccount(0, 
                 "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d")],
-            ["USDC/USD", pythSolanaReceiver.getPriceFeedAccountAddress(0, 
+            ["USDC/USD", getPythPriceFeedAccount(0, 
                 "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a")]
         ]);
         return oracles;

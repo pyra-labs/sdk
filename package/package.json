@@ -20,16 +20,11 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "browser": {
-        "import": "./dist/index.browser.js",
-        "require": "./dist/index.browser.js"
-      },
-      "node": {
-        "import": "./dist/index.js",
-        "require": "./dist/index.js"
-      },
+      "browser": "./dist/index.browser.js",
+      "node": "./dist/index.js",
       "default": "./dist/index.js"
-    }
+    },
+    "./dist/index.browser.js": "./dist/index.browser.js"
   },
   "repository": {
     "type": "git",
@@ -61,7 +56,6 @@
     "@coral-xyz/anchor": "^0.29.0",
     "@drift-labs/sdk": "^2.103.0-beta.9",
     "@jup-ag/api": "^6.0.30",
-    "@pythnetwork/pyth-solana-receiver": "^0.8.2",
     "@solana/spl-token": "^0.4.9",
     "bn.js": "^5.2.1"
   },

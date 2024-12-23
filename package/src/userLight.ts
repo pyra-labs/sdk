@@ -1,16 +1,13 @@
 import type { AddressLookupTableAccount, Connection, PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { getDriftSignerPublicKey, getDriftSpotMarketPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getVaultPublicKey, getVaultSplPublicKey, toRemainingAccount } from "./utils/helpers.js";
-import { BN, DRIFT_PROGRAM_ID, type QuoteResponse } from "@drift-labs/sdk";
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { DRIFT_ORACLE_2, DRIFT_SPOT_MARKET_SOL, DRIFT_SPOT_MARKET_USDC } from "./config/constants.js";
-import { getAssociatedTokenAddress } from "@solana/spl-token";
-import { ASSOCIATED_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token.js";
+import { DRIFT_ORACLE_1, DRIFT_ORACLE_2, DRIFT_SPOT_MARKET_SOL, DRIFT_SPOT_MARKET_USDC, DRIFT_PROGRAM_ID } from "./config/constants.js";
+import { getAssociatedTokenAddress, ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
-import { DRIFT_ORACLE_1 } from "./config/constants.js";
-import { SwapMode } from "@jup-ag/api";
+import { SwapMode, type QuoteResponse } from "@jup-ag/api";
 import { getJupiterSwapIx } from "./utils/jupiter.js";
+import { BN } from "bn.js";
 
 export class QuartzUserLight {
     public readonly pubkey: PublicKey;
@@ -89,7 +86,7 @@ export class QuartzUserLight {
                 driftState: getDriftStatePublicKey(),
                 spotMarketVault: getDriftSpotMarketPublicKey(marketIndex),
                 tokenProgram: TOKEN_PROGRAM_ID,
-                associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
                 driftProgram: DRIFT_PROGRAM_ID,
                 systemProgram: SystemProgram.programId
             })
@@ -126,7 +123,7 @@ export class QuartzUserLight {
                 spotMarketVault: getDriftSpotMarketPublicKey(marketIndex),
                 driftSigner: this.driftSigner,
                 tokenProgram: TOKEN_PROGRAM_ID,
-                associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
                 driftProgram: DRIFT_PROGRAM_ID,
                 systemProgram: SystemProgram.programId
             })

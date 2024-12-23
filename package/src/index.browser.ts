@@ -1,6 +1,6 @@
-export type { BN } from "@coral-xyz/anchor";
-export { QuartzClient } from "./client.js";
-export { QuartzUser } from "./user.js";
+export type { BN } from "bn.js";
+export { QuartzClientLight } from "./clientLight.js";
+export { QuartzUserLight } from "./userLight.js";
 export * from "./config/constants.js";
 export * from "./utils/helpers.js";
 

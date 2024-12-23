@@ -1,7 +1,6 @@
 import { ComputeBudgetProgram, PublicKey, } from "@solana/web3.js";
-import { QUARTZ_PROGRAM_ID } from "../config/constants.js";
+import { QUARTZ_PROGRAM_ID, DRIFT_PROGRAM_ID, PYTH_ORACLE_PROGRAM_ID } from "../config/constants.js";
 import { BN } from "bn.js";
-import { DRIFT_PROGRAM_ID } from "@drift-labs/sdk";
 
 export const getVaultPublicKey = (user: PublicKey) => {
     const [vaultPda] = PublicKey.findProgramAddressSync(
@@ -65,6 +64,21 @@ export const getDriftSpotMarketPublicKey = (marketIndex: number) => {
         new PublicKey(DRIFT_PROGRAM_ID)
     );
     return spotMarketVaultPda;
+}
+
+export const getPythPriceFeedAccount = (shardId: number, priceFeedId: string) => {
+    let priceFeedIdBuffer: Buffer;
+    if (priceFeedId.startsWith("0x")) {
+        priceFeedIdBuffer = Buffer.from(priceFeedId.slice(2), "hex");
+    } else {
+        priceFeedIdBuffer = Buffer.from(priceFeedId, "hex");
+    }
+    if (priceFeedIdBuffer.length !== 32) {
+        throw new Error("Feed ID should be 32 bytes long");
+    }
+    const shardBuffer = Buffer.alloc(2);
+    shardBuffer.writeUint16LE(shardId, 0);
+    return PublicKey.findProgramAddressSync([shardBuffer, priceFeedIdBuffer], PYTH_ORACLE_PROGRAM_ID)[0];
 }
 
 export const createPriorityFeeInstructions = async (computeBudget: number) => {

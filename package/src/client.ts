@@ -38,7 +38,7 @@ export class QuartzClient extends QuartzClientLight {
         if (!quartzLookupTable) throw Error("Address Lookup Table account not found");
 
         const driftClient = await DriftClientService.getDriftClient(connection);
-        const oracles = await QuartzClient.fetchOracles(connection, wallet);
+        const oracles = await QuartzClient.fetchOracles();
 
         return new QuartzClient(
             connection, 

@@ -5,7 +5,7 @@ import { QUARTZ_HEALTH_BUFFER, } from "./config/constants.js";
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
-import { QuartzUserLight } from "./userLights.js";
+import { QuartzUserLight } from "./userLight.js";
 
 export class QuartzUser extends QuartzUserLight {
     private driftClient: DriftClient;
