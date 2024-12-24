@@ -1,6 +1,8 @@
 import { ComputeBudgetProgram, PublicKey, } from "@solana/web3.js";
 import { QUARTZ_PROGRAM_ID, DRIFT_PROGRAM_ID, PYTH_ORACLE_PROGRAM_ID } from "../config/constants.js";
 import { BN } from "bn.js";
+import { getToken, TOKENS } from "../index.browser.js";
+import type { RemainingAccount } from "../types/interfaces/remainingAccount.interface.js";
 
 export const getVaultPublicKey = (user: PublicKey) => {
     const [vaultPda] = PublicKey.findProgramAddressSync(
@@ -26,7 +28,7 @@ export const getDriftUserPublicKey = (vaultPda: PublicKey) => {
 			vaultPda.toBuffer(),
 			new BN(0).toArrayLike(Buffer, 'le', 2),
 		],
-		new PublicKey(DRIFT_PROGRAM_ID)
+		DRIFT_PROGRAM_ID
     );
     return userPda;
 }
@@ -34,7 +36,7 @@ export const getDriftUserPublicKey = (vaultPda: PublicKey) => {
 export const getDriftUserStatsPublicKey = (vaultPda: PublicKey) => {
     const [userStatsPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("user_stats"), vaultPda.toBuffer()],
-        new PublicKey(DRIFT_PROGRAM_ID)
+        DRIFT_PROGRAM_ID
     );
     return userStatsPda;
 }
@@ -42,7 +44,7 @@ export const getDriftUserStatsPublicKey = (vaultPda: PublicKey) => {
 export const getDriftStatePublicKey = () => {
     const [statePda] = PublicKey.findProgramAddressSync(
         [Buffer.from("drift_state")],
-        new PublicKey(DRIFT_PROGRAM_ID)
+        DRIFT_PROGRAM_ID
     );
     return statePda; 
 }
@@ -50,20 +52,31 @@ export const getDriftStatePublicKey = () => {
 export const getDriftSignerPublicKey = () => {
     const [signerPda] = PublicKey.findProgramAddressSync(
 		[Buffer.from("drift_signer")],
-		new PublicKey(DRIFT_PROGRAM_ID)
+		DRIFT_PROGRAM_ID
 	);
     return signerPda;
 }
 
-export const getDriftSpotMarketPublicKey = (marketIndex: number) => {
+export const getDriftSpotMarketVaultPublicKey = (marketIndex: number) => {
     const [spotMarketVaultPda] = PublicKey.findProgramAddressSync(
         [
             Buffer.from("spot_market_vault"), 
             new BN(marketIndex).toArrayLike(Buffer, 'le', 2)    
         ],
-        new PublicKey(DRIFT_PROGRAM_ID)
+        DRIFT_PROGRAM_ID
     );
     return spotMarketVaultPda;
+}
+
+export const getDriftSpotMarketPublicKey = (marketIndex: number) => {
+    const [spotMarketPda] = PublicKey.findProgramAddressSync(
+        [
+            Buffer.from("spot_market"), 
+            new BN(marketIndex).toArrayLike(Buffer, 'le', 2)    
+        ],
+        DRIFT_PROGRAM_ID
+    );
+    return spotMarketPda;
 }
 
 export const getPythPriceFeedAccount = (shardId: number, priceFeedId: string) => {
@@ -81,6 +94,11 @@ export const getPythPriceFeedAccount = (shardId: number, priceFeedId: string) =>
     return PublicKey.findProgramAddressSync([shardBuffer, priceFeedIdBuffer], PYTH_ORACLE_PROGRAM_ID)[0];
 }
 
+export const getPythOracle = (marketIndex: number) => {
+    const priceFeedId = getToken(marketIndex).pythPriceFeedId;
+    return getPythPriceFeedAccount(0, priceFeedId);
+}
+
 export const createPriorityFeeInstructions = async (computeBudget: number) => {
     const computeLimitIx = ComputeBudgetProgram.setComputeUnitLimit({
         units: computeBudget,
@@ -92,10 +110,30 @@ export const createPriorityFeeInstructions = async (computeBudget: number) => {
     return [computeLimitIx, computePriceIx];
 }
 
-export const toRemainingAccount = (pubkey: PublicKey, isSigner: boolean, isWritable: boolean) => {
+export const toRemainingAccount = (pubkey: PublicKey, isSigner: boolean, isWritable: boolean): RemainingAccount => {
     return {
         pubkey: pubkey,
         isSigner: isSigner,
         isWritable: isWritable,
     }
 }
+
+export const getRemainingDriftAccounts = (marketIndex: number) => {
+    // TODO: Calculate only required remaining accounts (like Drift SDK) instead of just returning all
+    const remainingAccounts: RemainingAccount[] = [];
+
+    for (const market of TOKENS) {
+        const spotMarket = getDriftSpotMarketPublicKey(market.marketIndex);
+        const driftOracle = market.driftOracle;
+        remainingAccounts.push(
+            toRemainingAccount(spotMarket, true, false),
+            toRemainingAccount(driftOracle, false, false)
+        );
+    }
+
+    remainingAccounts.push(
+        toRemainingAccount(getToken(marketIndex).mint, false, false)
+    );
+
+    return remainingAccounts;
+} 

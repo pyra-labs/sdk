@@ -1,6 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import { getDriftSpotMarketPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getVaultPublicKey, getVaultSplPublicKey } from "../utils/helpers.js";
-import { DRIFT_MARKET_INDEX_SOL, DRIFT_MARKET_INDEX_USDC, USDC_MINT, WSOL_MINT } from "../config/constants.js";
+import { getToken } from "../config/tokens.js";
 
 describe("PDAs", () => {
     const testAddress = new PublicKey("DcJpAhpbhwgXF5UBJP1KN6ub4GS61TmAb32LtoB57pAf");
@@ -11,12 +11,12 @@ describe("PDAs", () => {
     });
 
     it("Should get user USDC vault", () => {
-        const vaultSpl = getVaultSplPublicKey(testAddress, USDC_MINT);
+        const vaultSpl = getVaultSplPublicKey(testAddress, getToken(0).mint);
         expect(vaultSpl).toStrictEqual(new PublicKey("HWaxYwwvUtT7zYXkCn1GfpsjX8hgdVv6i4mWxpPbLMgn"));
     });
 
     it("Should get user wSOL vault", () => {
-        const vaultSpl = getVaultSplPublicKey(testAddress, WSOL_MINT);
+        const vaultSpl = getVaultSplPublicKey(testAddress, getToken(1).mint);
         expect(vaultSpl).toStrictEqual(new PublicKey("A8ZVAarQAQWTbnQdnmhiEbpewDZYnTUrMWivz55L6LCP"));
     });
 
@@ -36,12 +36,12 @@ describe("PDAs", () => {
     })
 
     it("Should get drift spot market USDC vault", () => {
-        const driftSpotMarketVault = getDriftSpotMarketPublicKey(DRIFT_MARKET_INDEX_USDC);
+        const driftSpotMarketVault = getDriftSpotMarketPublicKey(getToken(0).marketIndex);
         expect(driftSpotMarketVault).toStrictEqual(new PublicKey("GXWqPpjQpdz7KZw9p7f5PX2eGxHAhvpNXiviFkAB8zXg"));
     })
 
     it("Should get drift spot market SOL vault", () => {
-        const driftSpotMarketVault = getDriftSpotMarketPublicKey(DRIFT_MARKET_INDEX_SOL);
+        const driftSpotMarketVault = getDriftSpotMarketPublicKey(getToken(1).marketIndex);
         expect(driftSpotMarketVault).toStrictEqual(new PublicKey("DfYCNezifxAEsQbAJ1b3j6PX3JVBe8fu11KBhxsbw5d2"));
     })
 });

@@ -1,13 +1,14 @@
 import type { AddressLookupTableAccount, Connection, PublicKey, TransactionInstruction } from "@solana/web3.js";
-import { getDriftSignerPublicKey, getDriftSpotMarketPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getVaultPublicKey, getVaultSplPublicKey, toRemainingAccount } from "./utils/helpers.js";
+import { getDriftSignerPublicKey, getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getRemainingDriftAccounts, getVaultPublicKey, getVaultSplPublicKey, toRemainingAccount } from "./utils/helpers.js";
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
-import { DRIFT_ORACLE_1, DRIFT_ORACLE_2, DRIFT_SPOT_MARKET_SOL, DRIFT_SPOT_MARKET_USDC, DRIFT_PROGRAM_ID } from "./config/constants.js";
+import { DRIFT_PROGRAM_ID } from "./config/constants.js";
 import { getAssociatedTokenAddress, ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
 import { SwapMode, type QuoteResponse } from "@jup-ag/api";
 import { getJupiterSwapIx } from "./utils/jupiter.js";
 import { BN } from "bn.js";
+import { getPythOracle } from "./index.browser.js";
 
 export class QuartzUserLight {
     public readonly pubkey: PublicKey;
@@ -16,24 +17,21 @@ export class QuartzUserLight {
     protected connection: Connection;
     protected program: Program<Quartz>;
     protected quartzLookupTable: AddressLookupTableAccount;
-    protected oracles: Map<string, PublicKey>;
-    protected driftSigner: PublicKey;
-
+    
     private driftUserPubkey: PublicKey;
     private driftUserStatsPubkey: PublicKey;
+    protected driftSigner: PublicKey;
 
     constructor(
         pubkey: PublicKey,
         connection: Connection,
         program: Program<Quartz>,
-        quartzLookupTable: AddressLookupTableAccount,
-        oracles: Map<string, PublicKey>
+        quartzLookupTable: AddressLookupTableAccount
     ) {
         this.pubkey = pubkey;
         this.connection = connection;
         this.program = program;
         this.quartzLookupTable = quartzLookupTable;
-        this.oracles = oracles;
 
         this.driftSigner = getDriftSignerPublicKey();
         this.vaultPubkey = getVaultPublicKey(pubkey);
@@ -73,6 +71,8 @@ export class QuartzUserLight {
     ) {
         const ownerSpl = await getAssociatedTokenAddress(mint, this.pubkey);
         
+        const remainingAccounts = await getRemainingDriftAccounts(marketIndex);
+
         const ix = await this.program.methods
             .deposit(new BN(amountBaseUnits), marketIndex, reduceOnly)
             .accounts({
@@ -84,18 +84,13 @@ export class QuartzUserLight {
                 driftUser: this.driftUserPubkey,
                 driftUserStats: this.driftUserStatsPubkey,
                 driftState: getDriftStatePublicKey(),
-                spotMarketVault: getDriftSpotMarketPublicKey(marketIndex),
+                spotMarketVault: getDriftSpotMarketVaultPublicKey(marketIndex),
                 tokenProgram: TOKEN_PROGRAM_ID,
                 associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
                 driftProgram: DRIFT_PROGRAM_ID,
                 systemProgram: SystemProgram.programId
             })
-            .remainingAccounts([
-                toRemainingAccount(DRIFT_ORACLE_1, false, false),
-                toRemainingAccount(DRIFT_ORACLE_2, false, false),
-                toRemainingAccount(DRIFT_SPOT_MARKET_SOL, false, true),
-                toRemainingAccount(DRIFT_SPOT_MARKET_USDC, false, true),
-            ])
+            .remainingAccounts(remainingAccounts)
             .instruction();
 
         return ix;
@@ -108,6 +103,8 @@ export class QuartzUserLight {
         reduceOnly: boolean
     ) {
         const ownerSpl = await getAssociatedTokenAddress(mint, this.pubkey);
+
+        const remainingAccounts = await getRemainingDriftAccounts(marketIndex);
         
         const ix = await this.program.methods
             .withdraw(new BN(amountBaseUnits), marketIndex, reduceOnly)
@@ -120,19 +117,14 @@ export class QuartzUserLight {
                 driftUser: this.driftUserPubkey,
                 driftUserStats: this.driftUserStatsPubkey,
                 driftState: getDriftStatePublicKey(),
-                spotMarketVault: getDriftSpotMarketPublicKey(marketIndex),
+                spotMarketVault: getDriftSpotMarketVaultPublicKey(marketIndex),
                 driftSigner: this.driftSigner,
                 tokenProgram: TOKEN_PROGRAM_ID,
                 associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
                 driftProgram: DRIFT_PROGRAM_ID,
                 systemProgram: SystemProgram.programId
             })
-            .remainingAccounts([
-                toRemainingAccount(DRIFT_ORACLE_1, false, false),
-                toRemainingAccount(DRIFT_ORACLE_2, false, false),
-                toRemainingAccount(DRIFT_SPOT_MARKET_SOL, false, true),
-                toRemainingAccount(DRIFT_SPOT_MARKET_USDC, false, true),
-            ])
+            .remainingAccounts(remainingAccounts)
             .instruction();
 
         return ix;
@@ -159,8 +151,8 @@ export class QuartzUserLight {
         if (jupiterExactOutRouteQuote.outputMint !== depositMint.toBase58()) throw Error("Jupiter quote outputMint does not match depositMint");
 
         const driftState = getDriftStatePublicKey();
-        const driftSpotMarketDeposit = getDriftSpotMarketPublicKey(depositMarketIndex);
-        const driftSpotMarketWithdraw = getDriftSpotMarketPublicKey(withdrawMarketIndex);
+        const driftSpotMarketDeposit = getDriftSpotMarketVaultPublicKey(depositMarketIndex);
+        const driftSpotMarketWithdraw = getDriftSpotMarketVaultPublicKey(withdrawMarketIndex);
 
         const collateralRepayStartPromise = this.program.methods
             .collateralRepayStart(new BN(callerWithdrawSplStartBalance))
@@ -199,12 +191,9 @@ export class QuartzUserLight {
                 systemProgram: SystemProgram.programId,
                 instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
             })
-            .remainingAccounts([
-                toRemainingAccount(DRIFT_ORACLE_1, false, false),
-                toRemainingAccount(DRIFT_ORACLE_2, false, false),
-                toRemainingAccount(DRIFT_SPOT_MARKET_SOL, false, true),
-                toRemainingAccount(DRIFT_SPOT_MARKET_USDC, false, true),
-            ])
+            .remainingAccounts(
+                getRemainingDriftAccounts(depositMarketIndex)
+            )
             .instruction();
 
         const collateralRepayWithdrawPromise = this.program.methods
@@ -224,16 +213,13 @@ export class QuartzUserLight {
                 tokenProgram: TOKEN_PROGRAM_ID,
                 driftProgram: DRIFT_PROGRAM_ID,
                 systemProgram: SystemProgram.programId,
-                depositPriceUpdate: this.oracles.get("USDC/USD"),
-                withdrawPriceUpdate: this.oracles.get("SOL/USD"),
+                depositPriceUpdate: getPythOracle(depositMarketIndex),
+                withdrawPriceUpdate: getPythOracle(withdrawMarketIndex),
                 instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
             })
-            .remainingAccounts([
-                toRemainingAccount(DRIFT_ORACLE_1, false, false),
-                toRemainingAccount(DRIFT_ORACLE_2, false, false),
-                toRemainingAccount(DRIFT_SPOT_MARKET_SOL, false, true),
-                toRemainingAccount(DRIFT_SPOT_MARKET_USDC, false, true),
-            ])
+            .remainingAccounts(
+                getRemainingDriftAccounts(withdrawMarketIndex)
+            )
             .instruction();
 
         const [

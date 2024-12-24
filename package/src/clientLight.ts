@@ -1,4 +1,4 @@
-import { AnchorProvider, Program, setProvider } from "@coral-xyz/anchor";
+import { AnchorProvider, Program, setProvider, type ProgramAccount } from "@coral-xyz/anchor";
 import type { Connection, TransactionInstruction } from "@solana/web3.js";
 import { IDL, type Quartz } from "./types/idl/quartz.js";
 import type { AddressLookupTableAccount } from "@solana/web3.js";
@@ -14,18 +14,15 @@ export class QuartzClientLight {
     protected connection: Connection;
     protected program: Program<Quartz>;
     protected quartzLookupTable: AddressLookupTableAccount;
-    protected oracles: Map<string, PublicKey>;
 
     constructor(
         connection: Connection,
         program: Program<Quartz>,
-        quartzAddressTable: AddressLookupTableAccount,
-        oracles: Map<string, PublicKey>
+        quartzAddressTable: AddressLookupTableAccount
     ) {
         this.connection = connection;
         this.program = program;
         this.quartzLookupTable = quartzAddressTable;
-        this.oracles = oracles;
     }
 
     public static async fetchClientLight(
@@ -40,24 +37,11 @@ export class QuartzClientLight {
         const quartzLookupTable = await connection.getAddressLookupTable(QUARTZ_ADDRESS_TABLE).then((res) => res.value);
         if (!quartzLookupTable) throw Error("Address Lookup Table account not found");
 
-        const oracles = await QuartzClientLight.fetchOracles();
-
         return new QuartzClientLight(
             connection, 
             program, 
-            quartzLookupTable, 
-            oracles
+            quartzLookupTable
         );
-    }
-
-    protected static async fetchOracles() {
-        const oracles = new Map<string, PublicKey>([
-            ["SOL/USD", getPythPriceFeedAccount(0, 
-                "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d")],
-            ["USDC/USD", getPythPriceFeedAccount(0, 
-                "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a")]
-        ]);
-        return oracles;
     }
 
     public async makeInitQuartzUserIxs(owner: PublicKey): Promise<TransactionInstruction[]> {
@@ -99,8 +83,7 @@ export class QuartzClientLight {
             pubkey,
             this.connection,
             this.program,
-            this.quartzLookupTable,
-            this.oracles
+            this.quartzLookupTable
         );
     }
 }

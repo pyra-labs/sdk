@@ -18,10 +18,9 @@ export class QuartzClient extends QuartzClientLight {
         connection: Connection,
         program: Program<Quartz>,
         quartzAddressTable: AddressLookupTableAccount,
-        driftClient: DriftClient,
-        oracles: Map<string, PublicKey>
+        driftClient: DriftClient
     ) {
-        super(connection, program, quartzAddressTable, oracles);
+        super(connection, program, quartzAddressTable);
         this.driftClient = driftClient;
     }
 
@@ -38,14 +37,12 @@ export class QuartzClient extends QuartzClientLight {
         if (!quartzLookupTable) throw Error("Address Lookup Table account not found");
 
         const driftClient = await DriftClientService.getDriftClient(connection);
-        const oracles = await QuartzClient.fetchOracles();
 
         return new QuartzClient(
             connection, 
             program, 
             quartzLookupTable,
-            driftClient,
-            oracles
+            driftClient
         );
     }
 
@@ -65,7 +62,6 @@ export class QuartzClient extends QuartzClientLight {
             this.connection, 
             this.program, 
             this.quartzLookupTable, 
-            this.oracles, 
             this.driftClient,
             driftUserAccount
         );
@@ -99,8 +95,7 @@ export class QuartzClient extends QuartzClientLight {
                 owners[index], 
                 this.connection, 
                 this.program, 
-                this.quartzLookupTable, 
-                this.oracles, 
+                this.quartzLookupTable,
                 this.driftClient,
                 driftUser
             )

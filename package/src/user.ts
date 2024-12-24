@@ -8,7 +8,6 @@ import type { PublicKey, } from "@solana/web3.js";
 import { QuartzUserLight } from "./userLight.js";
 
 export class QuartzUser extends QuartzUserLight {
-    private driftClient: DriftClient;
     private driftUser: DriftUser;
 
     constructor(
@@ -16,7 +15,6 @@ export class QuartzUser extends QuartzUserLight {
         connection: Connection,
         program: Program<Quartz>,
         quartzLookupTable: AddressLookupTableAccount,
-        oracles: Map<string, PublicKey>,
         driftClient: DriftClient,
         driftUserAccount: UserAccount
     ) {
@@ -24,11 +22,13 @@ export class QuartzUser extends QuartzUserLight {
             pubkey, 
             connection, 
             program, 
-            quartzLookupTable, 
-            oracles
+            quartzLookupTable
         );
-        this.driftClient = driftClient;
-        this.driftUser = new DriftUser(this.vaultPubkey, connection, driftClient, driftUserAccount);
+        this.driftUser = new DriftUser(
+            this.vaultPubkey,
+            driftClient, 
+            driftUserAccount
+        );
     }
 
     private convertToQuartzHealth(protocolHealth: number): number {

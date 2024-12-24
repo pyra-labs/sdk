@@ -1,5 +1,5 @@
 export type Quartz = {
-  "version": "0.1.22",
+  "version": "0.2.0",
   "name": "quartz",
   "instructions": [
     {
@@ -564,7 +564,7 @@ export type Quartz = {
     },
     {
       "code": 6001,
-      "name": "InvalidRepayMint",
+      "name": "InvalidMint",
       "msg": "Invalid mint provided"
     },
     {
@@ -604,8 +604,8 @@ export type Quartz = {
     },
     {
       "code": 6009,
-      "name": "UnsupportedDriftMarketIndex",
-      "msg": "Unsupported Drift market index"
+      "name": "InvalidMarketIndex",
+      "msg": "Invalid market index"
     },
     {
       "code": 6010,
@@ -634,19 +634,24 @@ export type Quartz = {
     },
     {
       "code": 6015,
-      "name": "CollateralRepayHealthTooLow",
-      "msg": "Not enough collateral sold in collateral_repay"
+      "name": "CollateralRepayHealthTooHigh",
+      "msg": "Too much collateral sold in collateral_repay"
     },
     {
       "code": 6016,
-      "name": "CollateralRepayHealthTooHigh",
-      "msg": "Too much collateral sold in collateral_repay"
+      "name": "CollateralRepayHealthTooLow",
+      "msg": "User health is still zero after collateral_repay"
+    },
+    {
+      "code": 6017,
+      "name": "IdenticalCollateralRepayMarkets",
+      "msg": "Collateral repay deposit and withdraw markets must be different"
     }
   ]
 };
 
 export const IDL: Quartz = {
-  "version": "0.1.22",
+  "version": "0.2.0",
   "name": "quartz",
   "instructions": [
     {
@@ -1211,7 +1216,7 @@ export const IDL: Quartz = {
     },
     {
       "code": 6001,
-      "name": "InvalidRepayMint",
+      "name": "InvalidMint",
       "msg": "Invalid mint provided"
     },
     {
@@ -1251,8 +1256,8 @@ export const IDL: Quartz = {
     },
     {
       "code": 6009,
-      "name": "UnsupportedDriftMarketIndex",
-      "msg": "Unsupported Drift market index"
+      "name": "InvalidMarketIndex",
+      "msg": "Invalid market index"
     },
     {
       "code": 6010,
@@ -1281,13 +1286,18 @@ export const IDL: Quartz = {
     },
     {
       "code": 6015,
-      "name": "CollateralRepayHealthTooLow",
-      "msg": "Not enough collateral sold in collateral_repay"
+      "name": "CollateralRepayHealthTooHigh",
+      "msg": "Too much collateral sold in collateral_repay"
     },
     {
       "code": 6016,
-      "name": "CollateralRepayHealthTooHigh",
-      "msg": "Too much collateral sold in collateral_repay"
+      "name": "CollateralRepayHealthTooLow",
+      "msg": "User health is still zero after collateral_repay"
+    },
+    {
+      "code": 6017,
+      "name": "IdenticalCollateralRepayMarkets",
+      "msg": "Collateral repay deposit and withdraw markets must be different"
     }
   ]
 };

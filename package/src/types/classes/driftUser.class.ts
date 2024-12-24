@@ -1,11 +1,10 @@
 import { AMM_RESERVE_PRECISION, AMM_RESERVE_PRECISION_EXP, BN, calculateAssetWeight, calculateLiabilityWeight, calculateLiveOracleTwap, calculateMarketMarginRatio, calculateMarketOpenBidAsk, calculatePerpLiabilityValue, calculatePositionPNL, calculateUnrealizedAssetWeight, calculateUnsettledFundingPnl, calculateWithdrawLimit, calculateWorstCasePerpLiabilityValue, type DriftClient, FIVE_MINUTE, getSignedTokenAmount, getStrictTokenValue, getTokenAmount, getWorstCaseTokenAmounts, isSpotPositionAvailable, isVariant, MARGIN_PRECISION, type MarginCategory, ONE, OPEN_ORDER_MARGIN_REQUIREMENT, type PerpPosition, PRICE_PRECISION, QUOTE_PRECISION, QUOTE_SPOT_MARKET_INDEX, SPOT_MARKET_WEIGHT_PRECISION, SpotBalanceType, StrictOraclePrice, type UserAccount, UserStatus, ZERO, TEN, divCeil, type SpotMarketAccount } from "@drift-labs/sdk";
-import type { Connection, PublicKey } from "@solana/web3.js";
+import type { PublicKey } from "@solana/web3.js";
 import { getDriftUserPublicKey, getDriftUserStatsPublicKey } from "../../utils/helpers.js";
 import { QUARTZ_HEALTH_BUFFER } from "../../config/constants.js";
 
 export class DriftUser {
     private authority: PublicKey;
-    private connection: Connection;
     private driftClient: DriftClient;
 
     private userAccount: UserAccount | undefined;
@@ -14,12 +13,10 @@ export class DriftUser {
 
     constructor (
         authority: PublicKey,
-        connection: Connection, 
         driftClient: DriftClient,
 		userAccount: UserAccount
     ) {
         this.authority = authority;
-        this.connection = connection;
         this.driftClient = driftClient;
 
 		this.pubkey = getDriftUserPublicKey(this.authority);
@@ -91,7 +88,7 @@ export class DriftUser {
 			nowTs
 		);
 
-		const freeCollateral = this.getFreeCollateral("Initial");
+		const freeCollateral = this.getFreeCollateral("Initial", adjustForAutoRepayLimit);
 		const initialMarginRequirement = this.getMarginRequirement('Initial', undefined, false, true);
 		const oracleData = this.driftClient.getOracleDataForSpotMarket(marketIndex);
 		const precisionIncrease = TEN.pow(new BN(spotMarket.decimals - 6));
@@ -139,19 +136,13 @@ export class DriftUser {
 		const freeCollatAfterWithdraw = userDepositAmount.gt(ZERO)
 			? freeCollateral.sub(weightedAssetValue)
 			: freeCollateral;
-		
-		const borrowLimitScale = adjustForAutoRepayLimit
-			? new BN(100 - QUARTZ_HEALTH_BUFFER)
-			: new BN(100);
 
 		const maxLiabilityAllowed = freeCollatAfterWithdraw
 			.mul(MARGIN_PRECISION)
 			.div(new BN(spotMarket.initialLiabilityWeight))
 			.mul(PRICE_PRECISION)
 			.div(oracleData.price)
-			.mul(precisionIncrease)
-			.mul(borrowLimitScale)
-			.div(new BN(100));
+			.mul(precisionIncrease);
 
 		const maxBorrowValue = BN.min(
 			maxWithdrawValue.add(maxLiabilityAllowed),
@@ -161,8 +152,15 @@ export class DriftUser {
 		return BN.max(maxBorrowValue, ZERO);
 	}
 
-	private getFreeCollateral(marginCategory: MarginCategory = 'Initial'): BN {
-		const totalCollateral = this.getTotalCollateralValue(marginCategory, true);
+	private getFreeCollateral(marginCategory: MarginCategory = 'Initial', adjustForAutoRepayLimit: boolean = false): BN {
+		const borrowLimitScale = adjustForAutoRepayLimit
+			? new BN(100 - QUARTZ_HEALTH_BUFFER)
+			: new BN(100);
+		
+		const totalCollateral = this.getTotalCollateralValue(marginCategory, true)
+			.mul(borrowLimitScale)
+			.div(new BN(100));
+
 		const marginRequirement =
 			marginCategory === 'Initial'
 				? this.getMarginRequirement('Initial', undefined, false, true)
