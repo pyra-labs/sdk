@@ -2,6 +2,8 @@ import { AMM_RESERVE_PRECISION, AMM_RESERVE_PRECISION_EXP, BN, calculateAssetWei
 import type { PublicKey } from "@solana/web3.js";
 import { getDriftUserPublicKey, getDriftUserStatsPublicKey } from "../../utils/helpers.js";
 import { QUARTZ_HEALTH_BUFFER } from "../../config/constants.js";
+import type { AccountMeta } from "../interfaces/accountMeta.interface.js";
+import { MarketIndex } from "../../config/tokens.js";
 
 export class DriftUser {
     private authority: PublicKey;
@@ -27,6 +29,21 @@ export class DriftUser {
 	public getDriftUserAccount(): UserAccount {
 		if (!this.userAccount) throw new Error("DriftUser not initialized");
 		return this.userAccount;
+	}
+
+	public getRemainingAccounts(marketIndex: MarketIndex): AccountMeta[] {
+		const remainingAccounts = this.driftClient.getRemainingAccounts({
+			userAccounts: [this.getDriftUserAccount()],
+			useMarketLastSlotCache: true,
+			writableSpotMarketIndexes: [marketIndex],
+			readableSpotMarketIndexes: [QUOTE_SPOT_MARKET_INDEX]
+		})
+
+		const spotMarketAccount = this.driftClient.getSpotMarketAccount(marketIndex);
+		if (!spotMarketAccount) throw new Error("Spot market not found");
+		this.driftClient.addTokenMintToRemainingAccounts(spotMarketAccount, remainingAccounts);
+
+		return remainingAccounts;
 	}
 
     public getHealth(): number{

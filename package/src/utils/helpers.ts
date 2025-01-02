@@ -2,7 +2,7 @@ import { ComputeBudgetProgram, PublicKey, } from "@solana/web3.js";
 import { QUARTZ_PROGRAM_ID, DRIFT_PROGRAM_ID, PYTH_ORACLE_PROGRAM_ID } from "../config/constants.js";
 import { BN } from "bn.js";
 import { getToken, TOKENS } from "../index.browser.js";
-import type { RemainingAccount } from "../types/interfaces/remainingAccount.interface.js";
+import type { AccountMeta } from "../types/interfaces/accountMeta.interface.js";
 
 export const getVaultPublicKey = (user: PublicKey) => {
     const [vaultPda] = PublicKey.findProgramAddressSync(
@@ -110,30 +110,10 @@ export const createPriorityFeeInstructions = async (computeBudget: number) => {
     return [computeLimitIx, computePriceIx];
 }
 
-export const toRemainingAccount = (pubkey: PublicKey, isSigner: boolean, isWritable: boolean): RemainingAccount => {
+export const toRemainingAccount = (pubkey: PublicKey, isSigner: boolean, isWritable: boolean): AccountMeta => {
     return {
         pubkey: pubkey,
         isSigner: isSigner,
         isWritable: isWritable,
     }
 }
-
-export const getRemainingDriftAccounts = (marketIndex: number) => {
-    // TODO: Calculate only required remaining accounts (like Drift SDK) instead of just returning all
-    const remainingAccounts: RemainingAccount[] = [];
-
-    for (const market of TOKENS) {
-        const spotMarket = getDriftSpotMarketPublicKey(market.marketIndex);
-        const driftOracle = market.driftOracle;
-        remainingAccounts.push(
-            toRemainingAccount(spotMarket, true, false),
-            toRemainingAccount(driftOracle, false, false)
-        );
-    }
-
-    remainingAccounts.push(
-        toRemainingAccount(getToken(marketIndex).mint, false, false)
-    );
-
-    return remainingAccounts;
-} 

@@ -2,7 +2,7 @@ import type { Connection, AccountInfo } from "@solana/web3.js";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import type { QuoteResponse } from "@jup-ag/api";
 import { AddressLookupTableAccount } from "@solana/web3.js";
-import type { RemainingAccount } from "../types/interfaces/remainingAccount.interface.js";
+import type { AccountMeta } from "../types/interfaces/accountMeta.interface.js";
 
 export async function getJupiterSwapIx(
   walletPubkey: PublicKey, 
@@ -61,7 +61,7 @@ export async function getJupiterSwapIx(
 
     const ix_jupiterSwap =  new TransactionInstruction({
         programId: new PublicKey(swapInstruction.programId),
-        keys: swapInstruction.accounts.map((key: RemainingAccount) => ({
+        keys: swapInstruction.accounts.map((key: AccountMeta) => ({
           pubkey: new PublicKey(key.pubkey),
           isSigner: key.isSigner,
           isWritable: key.isWritable,

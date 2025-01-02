@@ -1,17 +1,20 @@
 import type { DriftClient } from "@drift-labs/sdk";
-import { calculateBorrowRate, calculateDepositRate, fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
+import { calculateBorrowRate, calculateDepositRate, DRIFT_PROGRAM_ID, fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
 import { QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID } from "./config/constants.js";
 import { IDL, type Quartz } from "./types/idl/quartz.js";
 import { AnchorProvider, BorshInstructionCoder, Program, setProvider } from "@coral-xyz/anchor";
 import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledInstruction, Logs, } from "@solana/web3.js";
 import { QuartzUser } from "./user.js";
-import { getDriftUserPublicKey, getVaultPublicKey } from "./utils/helpers.js";
+import { getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getVaultPublicKey } from "./utils/helpers.js";
 import { DriftClientService } from "./services/driftClientService.js";
-import { Keypair, } from "@solana/web3.js";
+import { Keypair, SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
 import { DummyWallet } from "./types/classes/dummyWallet.class.js";
-import { QuartzClientLight } from "./clientLight.js";
+import type { TransactionInstruction } from "@solana/web3.js";
 
-export class QuartzClient extends QuartzClientLight {
+export class QuartzClient {
+    private connection: Connection;
+    private program: Program<Quartz>;
+    private quartzLookupTable: AddressLookupTableAccount;
     private driftClient: DriftClient;
 
     constructor(
@@ -20,7 +23,9 @@ export class QuartzClient extends QuartzClientLight {
         quartzAddressTable: AddressLookupTableAccount,
         driftClient: DriftClient
     ) {
-        super(connection, program, quartzAddressTable);
+        this.connection = connection;
+        this.program = program;
+        this.quartzLookupTable = quartzAddressTable;
         this.driftClient = driftClient;
     }
 
@@ -44,6 +49,12 @@ export class QuartzClient extends QuartzClientLight {
             quartzLookupTable,
             driftClient
         );
+    }
+
+    public async getAllQuartzAccountOwnerPubkeys(): Promise<PublicKey[]> {
+        return (
+            await this.program.account.vault.all()
+        ).map((vault) => vault.account.owner);
     }
 
     public async getQuartzAccount(owner: PublicKey): Promise<QuartzUser> {
@@ -149,5 +160,36 @@ export class QuartzClient extends QuartzClientLight {
             },
             "confirmed"
         )
+    }
+
+
+    // --- Instructions ---
+
+    public async makeInitQuartzUserIxs(owner: PublicKey): Promise<TransactionInstruction[]> {
+        const vault = getVaultPublicKey(owner);
+        const ix_initUser = await this.program.methods
+            .initUser()
+            .accounts({
+                vault: vault,
+                owner: owner,
+                systemProgram: SystemProgram.programId,
+            })
+            .instruction();
+
+        const ix_initVaultDriftAccount = await this.program.methods
+            .initDriftAccount()
+            .accounts({
+                vault: vault,
+                owner: owner,
+                driftUser: getDriftUserPublicKey(vault),
+                driftUserStats: getDriftUserStatsPublicKey(vault),
+                driftState: getDriftStatePublicKey(),
+                driftProgram: DRIFT_PROGRAM_ID,
+                rent: SYSVAR_RENT_PUBKEY,
+                systemProgram: SystemProgram.programId,
+            })
+            .instruction(); 
+
+        return [ix_initUser, ix_initVaultDriftAccount];
     }
 }
