@@ -3,7 +3,7 @@ import type { PublicKey } from "@solana/web3.js";
 import { getDriftUserPublicKey, getDriftUserStatsPublicKey } from "../../utils/helpers.js";
 import { QUARTZ_HEALTH_BUFFER } from "../../config/constants.js";
 import type { AccountMeta } from "../interfaces/accountMeta.interface.js";
-import { MarketIndex } from "../../config/tokens.js";
+import type { MarketIndex } from "../../config/tokens.js";
 
 export class DriftUser {
     private authority: PublicKey;
@@ -169,7 +169,7 @@ export class DriftUser {
 		return BN.max(maxBorrowValue, ZERO);
 	}
 
-	private getFreeCollateral(marginCategory: MarginCategory = 'Initial', adjustForAutoRepayLimit: boolean = false): BN {
+	private getFreeCollateral(marginCategory: MarginCategory = 'Initial', adjustForAutoRepayLimit = false): BN {
 		const borrowLimitScale = adjustForAutoRepayLimit
 			? new BN(100 - QUARTZ_HEALTH_BUFFER)
 			: new BN(100);

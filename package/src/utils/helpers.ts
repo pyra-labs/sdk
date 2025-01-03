@@ -1,8 +1,8 @@
 import { ComputeBudgetProgram, PublicKey, } from "@solana/web3.js";
 import { QUARTZ_PROGRAM_ID, DRIFT_PROGRAM_ID, PYTH_ORACLE_PROGRAM_ID } from "../config/constants.js";
 import { BN } from "bn.js";
-import { getToken, TOKENS } from "../index.browser.js";
 import type { AccountMeta } from "../types/interfaces/accountMeta.interface.js";
+import { getToken } from "../config/tokens.js";
 
 export const getVaultPublicKey = (user: PublicKey) => {
     const [vaultPda] = PublicKey.findProgramAddressSync(
