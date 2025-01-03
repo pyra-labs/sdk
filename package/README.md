@@ -23,6 +23,14 @@ There is currently an issue with dependancy resolutions, so add the following to
 }
 ```
 
+If you want to use this SDK in a front-end, note that some Node modules don't work in the browser. Because of this, you'll normally want to import the SDK in your client side code like this:
+
+```javascript
+import * from "@quartz-labs/sdk/browser";
+```
+
+Server-side code can still be imported without the /browser path at the end, but you may need to set up your config so your web app doesn't try to bundle the server and client side code together. To do this in NextJS, see [here](https://nextjs.org/docs/app/api-reference/config/next-config-js/serverExternalPackages).
+
 ## Links
 
 Website and waitlist: [quartzpay.io](https://quartzpay.io/)

@@ -1,7 +1,7 @@
 import { DriftClient, Wallet } from "@drift-labs/sdk";
 import type { Connection } from "@solana/web3.js";
 import { Keypair } from "@solana/web3.js";
-import { TOKENS } from "../config/tokens.js";
+import { MarketIndex, } from "../config/tokens.js";
 
 export class DriftClientService {
     private static instance: DriftClientService;
@@ -13,15 +13,13 @@ export class DriftClientService {
     ) {
         const wallet = new Wallet(Keypair.generate());
 
-        const supportedDriftMarkets = TOKENS.map((token) => token.marketIndex);
-
         this.driftClient = new DriftClient({
             connection: connection,
             wallet: wallet,
             env: 'mainnet-beta',
             userStats: false,
             perpMarketIndexes: [],
-            spotMarketIndexes: supportedDriftMarkets,
+            spotMarketIndexes: [...MarketIndex],
             accountSubscription: {
                 type: 'websocket',
                 commitment: "confirmed"

@@ -2,7 +2,7 @@ import { ComputeBudgetProgram, PublicKey, } from "@solana/web3.js";
 import { QUARTZ_PROGRAM_ID, DRIFT_PROGRAM_ID, PYTH_ORACLE_PROGRAM_ID } from "../config/constants.js";
 import { BN } from "bn.js";
 import type { AccountMeta } from "../types/interfaces/accountMeta.interface.js";
-import { getToken } from "../config/tokens.js";
+import { type MarketIndex, TOKENS } from "../config/tokens.js";
 
 export const getVaultPublicKey = (user: PublicKey) => {
     const [vaultPda] = PublicKey.findProgramAddressSync(
@@ -94,8 +94,8 @@ export const getPythPriceFeedAccount = (shardId: number, priceFeedId: string) =>
     return PublicKey.findProgramAddressSync([shardBuffer, priceFeedIdBuffer], PYTH_ORACLE_PROGRAM_ID)[0];
 }
 
-export const getPythOracle = (marketIndex: number) => {
-    const priceFeedId = getToken(marketIndex).pythPriceFeedId;
+export const getPythOracle = (marketIndex: MarketIndex) => {
+    const priceFeedId = TOKENS[marketIndex].pythPriceFeedId;
     return getPythPriceFeedAccount(0, priceFeedId);
 }
 
