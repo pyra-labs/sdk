@@ -64,6 +64,6 @@
     "@solana/web3.js": "^1.98.0"
   },
   "optionalDependencies": {
-    "rpc-websockets": "^9.0.2"
+    "rpc-websockets": "^9.0.4"
   }
 }

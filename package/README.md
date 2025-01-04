@@ -18,7 +18,7 @@ There is currently an issue with dependancy resolutions, so add the following to
 
 ```json
 "resolutions": {
-  "rpc-websockets": "^9.0.2",
+  "rpc-websockets": "^9.0.4",
   "@solana/web3.js": "^1.95.8"
 }
 ```
@@ -29,7 +29,7 @@ If you want to use this SDK in a front-end, note that some Node modules don't wo
 import * from "@quartz-labs/sdk/browser";
 ```
 
-Server-side code can still be imported without the /browser path at the end, but you may need to set up your config so your web app doesn't try to bundle the server and client side code together. To do this in NextJS, see [here](https://nextjs.org/docs/app/api-reference/config/next-config-js/serverExternalPackages).
+Server-side code can still be imported without the /browser path at the end, but you may need to set up your config so your web app doesn't try to bundle the problematic Node modules with the and client side code.
 
 ## Links
 
