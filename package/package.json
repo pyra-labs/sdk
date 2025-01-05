@@ -1,6 +1,6 @@
 {
   "name": "@quartz-labs/sdk",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "SDK for interacting with the Quartz Protocol",
   "types": "dist/index.d.ts",
   "main": "dist/index.js",
@@ -61,9 +61,7 @@
     "bn.js": "^5.2.1"
   },
   "peerDependencies": {
-    "@solana/web3.js": "^1.98.0"
-  },
-  "optionalDependencies": {
+    "@solana/web3.js": "^1.98.0",
     "rpc-websockets": "^9.0.4"
   }
 }

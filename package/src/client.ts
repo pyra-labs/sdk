@@ -7,7 +7,7 @@ import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledI
 import { QuartzUser } from "./user.js";
 import { getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getVaultPublicKey } from "./utils/helpers.js";
 import { DriftClientService } from "./services/driftClientService.js";
-import { Keypair, SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
+import { SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
 import { DummyWallet } from "./types/classes/dummyWallet.class.js";
 import type { TransactionInstruction } from "@solana/web3.js";
 
@@ -32,8 +32,7 @@ export class QuartzClient {
     public static async fetchClient(
         connection: Connection
     ) {
-        const wallet = new DummyWallet(Keypair.generate());
-
+        const wallet = new DummyWallet();
         const provider = new AnchorProvider(connection, wallet, { commitment: "confirmed" });
         setProvider(provider);
         const program = new Program(IDL, QUARTZ_PROGRAM_ID, provider) as unknown as Program<Quartz>;

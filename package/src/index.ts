@@ -1,5 +1,5 @@
 export * from "./index.browser.js";
 
-export { Wallet } from "@coral-xyz/anchor";
+export { DummyWallet } from "./types/classes/dummyWallet.class.js";
 export { QuartzClient } from "./client.js";
 export { QuartzUser } from "./user.js";

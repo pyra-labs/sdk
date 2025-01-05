@@ -1,7 +1,8 @@
-import { DriftClient, Wallet } from "@drift-labs/sdk";
+import { DriftClient } from "@drift-labs/sdk";
 import type { Connection } from "@solana/web3.js";
-import { Keypair } from "@solana/web3.js";
-import { MarketIndex, } from "../config/tokens.js";
+import { MarketIndex } from "../config/tokens.js";
+import { DummyWallet } from "../types/classes/dummyWallet.class.js";
+import { QUARTZ_DRIFT_ACCOUNT } from "../config/constants.js";
 
 export class DriftClientService {
     private static instance: DriftClientService;
@@ -11,7 +12,7 @@ export class DriftClientService {
     constructor(
         connection: Connection
     ) {
-        const wallet = new Wallet(Keypair.generate());
+        const wallet = new DummyWallet(QUARTZ_DRIFT_ACCOUNT);
 
         this.driftClient = new DriftClient({
             connection: connection,
