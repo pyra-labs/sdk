@@ -5,9 +5,9 @@ import { DRIFT_PROGRAM_ID, QUARTZ_HEALTH_BUFFER, } from "./config/constants.js";
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
-import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getVaultPublicKey, getVaultSplPublicKey } from "./utils/helpers.js";
+import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getTokenProgram, getVaultPublicKey, getVaultSplPublicKey } from "./utils/helpers.js";
 import { getDriftSignerPublicKey } from "./utils/helpers.js";
-import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { getAssociatedTokenAddress, } from "@solana/spl-token";
 import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { BN } from "bn.js";
@@ -153,7 +153,8 @@ export class QuartzUser {
         marketIndex: MarketIndex,
         reduceOnly: boolean
     ) {
-        const ownerSpl = await getAssociatedTokenAddress(mint, this.pubkey);
+        const tokenProgram = await getTokenProgram(this.connection, mint);
+        const ownerSpl = await getAssociatedTokenAddress(mint, this.pubkey, false, tokenProgram);
 
         const ix = await this.program.methods
             .deposit(new BN(amountBaseUnits), marketIndex, reduceOnly)
@@ -167,7 +168,7 @@ export class QuartzUser {
                 driftUserStats: this.driftUser.statsPubkey,
                 driftState: getDriftStatePublicKey(),
                 spotMarketVault: getDriftSpotMarketVaultPublicKey(marketIndex),
-                tokenProgram: TOKEN_PROGRAM_ID,
+                tokenProgram: tokenProgram,
                 associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
                 driftProgram: DRIFT_PROGRAM_ID,
                 systemProgram: SystemProgram.programId
@@ -186,7 +187,8 @@ export class QuartzUser {
         marketIndex: MarketIndex,
         reduceOnly: boolean
     ) {
-        const ownerSpl = await getAssociatedTokenAddress(mint, this.pubkey);
+        const tokenProgram = await getTokenProgram(this.connection, mint);
+        const ownerSpl = await getAssociatedTokenAddress(mint, this.pubkey, false, tokenProgram);
         
         const ix = await this.program.methods
             .withdraw(new BN(amountBaseUnits), marketIndex, reduceOnly)
@@ -201,7 +203,7 @@ export class QuartzUser {
                 driftState: getDriftStatePublicKey(),
                 spotMarketVault: getDriftSpotMarketVaultPublicKey(marketIndex),
                 driftSigner: this.driftSigner,
-                tokenProgram: TOKEN_PROGRAM_ID,
+                tokenProgram: tokenProgram,
                 associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
                 driftProgram: DRIFT_PROGRAM_ID,
                 systemProgram: SystemProgram.programId
@@ -216,10 +218,8 @@ export class QuartzUser {
 
     public async makeCollateralRepayIxs(
         caller: PublicKey,
-        callerDepositSpl: PublicKey,
         depositMint: PublicKey,
         depositMarketIndex: MarketIndex,
-        callerWithdrawSpl: PublicKey,
         withdrawMint: PublicKey,
         withdrawMarketIndex: MarketIndex,
         callerWithdrawSplStartBalance: number,
@@ -229,10 +229,14 @@ export class QuartzUser {
         lookupTables: AddressLookupTableAccount[],
     }> {
         if (jupiterExactOutRouteQuote.swapMode !== SwapMode.ExactOut) throw Error("Jupiter quote must be ExactOutRoute");
-
-        if (jupiterExactOutRouteQuote.swapMode !== SwapMode.ExactOut) throw Error("Jupiter quote must be ExactOutRoute");
         if (jupiterExactOutRouteQuote.inputMint !== withdrawMint.toBase58()) throw Error("Jupiter quote inputMint does not match withdrawMint");
         if (jupiterExactOutRouteQuote.outputMint !== depositMint.toBase58()) throw Error("Jupiter quote outputMint does not match depositMint");
+
+        const depositTokenProgram = await getTokenProgram(this.connection, depositMint);
+        const callerDepositSpl = await getAssociatedTokenAddress(depositMint, caller, false, depositTokenProgram);
+        
+        const withdrawTokenProgram = await getTokenProgram(this.connection, withdrawMint);
+        const callerWithdrawSpl = await getAssociatedTokenAddress(withdrawMint, caller, false, withdrawTokenProgram);
 
         const driftState = getDriftStatePublicKey();
         const driftSpotMarketDeposit = getDriftSpotMarketVaultPublicKey(depositMarketIndex);
@@ -247,7 +251,7 @@ export class QuartzUser {
                 vault: this.vaultPubkey,
                 vaultWithdrawSpl: getVaultSplPublicKey(this.pubkey, withdrawMint),
                 owner: this.pubkey,
-                tokenProgram: TOKEN_PROGRAM_ID,
+                tokenProgram: withdrawTokenProgram,
                 associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
                 systemProgram: SystemProgram.programId,
                 instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
@@ -269,7 +273,7 @@ export class QuartzUser {
                 driftUserStats: this.driftUser.statsPubkey,
                 driftState: driftState,
                 spotMarketVault: driftSpotMarketDeposit,
-                tokenProgram: TOKEN_PROGRAM_ID,
+                tokenProgram: depositTokenProgram,
                 associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
                 driftProgram: DRIFT_PROGRAM_ID,
                 systemProgram: SystemProgram.programId,
@@ -294,7 +298,7 @@ export class QuartzUser {
                 driftState: driftState,
                 spotMarketVault: driftSpotMarketWithdraw,
                 driftSigner: this.driftSigner,
-                tokenProgram: TOKEN_PROGRAM_ID,
+                tokenProgram: withdrawTokenProgram,
                 driftProgram: DRIFT_PROGRAM_ID,
                 systemProgram: SystemProgram.programId,
                 depositPriceUpdate: getPythOracle(depositMarketIndex),
