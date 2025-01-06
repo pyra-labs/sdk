@@ -8,3 +8,5 @@ export const DRIFT_PROGRAM_ID = new PublicKey("dRiftyHA39MWEi3m9aunc5MzRF1JYuBsb
 export const PYTH_ORACLE_PROGRAM_ID = new PublicKey("pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT");
 
 export const QUARTZ_HEALTH_BUFFER = 10;
+
+export const WSOL_MINT = new PublicKey("So11111111111111111111111111111111111111112");

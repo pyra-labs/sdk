@@ -1,9 +1,9 @@
-import { ComputeBudgetProgram, type Connection, PublicKey, } from "@solana/web3.js";
+import { ComputeBudgetProgram, type Connection, PublicKey, type TransactionInstruction, } from "@solana/web3.js";
 import { QUARTZ_PROGRAM_ID, DRIFT_PROGRAM_ID, PYTH_ORACLE_PROGRAM_ID } from "../config/constants.js";
 import { BN } from "bn.js";
 import type { AccountMeta } from "../types/interfaces/accountMeta.interface.js";
 import { type MarketIndex, TOKENS } from "../config/tokens.js";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { createAssociatedTokenAccountInstruction, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 export const getVaultPublicKey = (user: PublicKey) => {
     const [vaultPda] = PublicKey.findProgramAddressSync(
@@ -122,4 +122,37 @@ export const toRemainingAccount = (pubkey: PublicKey, isSigner: boolean, isWrita
 export const getTokenProgram = async (connection: Connection, mint: PublicKey) => {
     const mintAccount = await connection.getAccountInfo(mint);
     return mintAccount?.owner || TOKEN_PROGRAM_ID;
+}
+
+export async function makeCreateAtaIxIfNeeded(
+    connection: Connection,
+    ata: PublicKey,
+    authority: PublicKey,
+    mint: PublicKey,
+    tokenProgramId: PublicKey
+) {
+    const oix_createAta: TransactionInstruction[] = [];
+    const ataInfo = await connection.getAccountInfo(ata);
+    if (ataInfo === null) {
+        oix_createAta.push(
+            createAssociatedTokenAccountInstruction(
+                authority,
+                ata,
+                authority,
+                mint,
+                tokenProgramId
+            )
+        );
+    }
+    return oix_createAta;
+}
+
+export function baseUnitToDecimal(baseUnits: number, marketIndex: MarketIndex): number {
+    const token = TOKENS[marketIndex];
+    return baseUnits / (10 ** token.decimalPrecision.toNumber());
+}
+
+export function decimalToBaseUnit(decimal: number, marketIndex: MarketIndex): number {
+    const token = TOKENS[marketIndex];
+    return Math.trunc(decimal * (10 ** token.decimalPrecision.toNumber()));
 }

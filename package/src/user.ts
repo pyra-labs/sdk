@@ -13,7 +13,7 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { BN } from "bn.js";
 import { getJupiterSwapIx } from "./utils/jupiter.js";
 import { SwapMode } from "@jup-ag/api";
-import type { MarketIndex } from "./config/tokens.js";
+import { TOKENS, type MarketIndex } from "./config/tokens.js";
 
 export class QuartzUser {
     public readonly pubkey: PublicKey;
@@ -75,13 +75,13 @@ export class QuartzUser {
     ): number {
         // New Quartz health after repayment is given as:
         // 
-        //                                           loanValue - repayAmount                     
-        //                  1 - ----------------------------------------------------------------- - quartzHealthBuffer
-        //                      currentWeightedCollateral - (repayAmount * repayCollateralWeight)
-        //   targetHealth = -------------------------------------------------------------------------------------------
-        //                                                    1 - quartzHealthBuffer                                  
+        //                                           loanValue - repayValue                     
+        //                  1 - ---------------------------------------------------------------- - quartzHealthBuffer
+        //                      currentWeightedCollateral - (repayValue * repayCollateralWeight)
+        //   targetHealth = -----------------------------------------------------------------------------------------
+        //                                                   1 - quartzHealthBuffer                                  
         //
-        // The following is an algebraicly simplified expression of the above formula, in terms of repayAmount
+        // The following is an algebraicly simplified expression of the above formula, in terms of repayValue
 
         if (targetHealth <= 0 || targetHealth >= 100) throw Error("Target health must be between 0 and 100");
         if (targetHealth <= this.getHealth()) throw Error("Target health must be greater than current health");
@@ -149,10 +149,10 @@ export class QuartzUser {
 
     public async makeDepositIx(
         amountBaseUnits: number,
-        mint: PublicKey,
         marketIndex: MarketIndex,
         reduceOnly: boolean
     ) {
+        const mint = TOKENS[marketIndex].mint;
         const tokenProgram = await getTokenProgram(this.connection, mint);
         const ownerSpl = await getAssociatedTokenAddress(mint, this.pubkey, false, tokenProgram);
 
@@ -183,10 +183,10 @@ export class QuartzUser {
 
     public async makeWithdrawIx(
         amountBaseUnits: number,
-        mint: PublicKey,
         marketIndex: MarketIndex,
         reduceOnly: boolean
     ) {
+        const mint = TOKENS[marketIndex].mint;
         const tokenProgram = await getTokenProgram(this.connection, mint);
         const ownerSpl = await getAssociatedTokenAddress(mint, this.pubkey, false, tokenProgram);
         
@@ -218,9 +218,7 @@ export class QuartzUser {
 
     public async makeCollateralRepayIxs(
         caller: PublicKey,
-        depositMint: PublicKey,
         depositMarketIndex: MarketIndex,
-        withdrawMint: PublicKey,
         withdrawMarketIndex: MarketIndex,
         callerWithdrawSplStartBalance: number,
         jupiterExactOutRouteQuote: QuoteResponse
@@ -228,6 +226,9 @@ export class QuartzUser {
         ixs: TransactionInstruction[]
         lookupTables: AddressLookupTableAccount[],
     }> {
+        const depositMint = TOKENS[depositMarketIndex].mint;
+        const withdrawMint = TOKENS[withdrawMarketIndex].mint;
+
         if (jupiterExactOutRouteQuote.swapMode !== SwapMode.ExactOut) throw Error("Jupiter quote must be ExactOutRoute");
         if (jupiterExactOutRouteQuote.inputMint !== withdrawMint.toBase58()) throw Error("Jupiter quote inputMint does not match withdrawMint");
         if (jupiterExactOutRouteQuote.outputMint !== depositMint.toBase58()) throw Error("Jupiter quote outputMint does not match depositMint");
