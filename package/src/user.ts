@@ -10,7 +10,7 @@ import { getDriftSignerPublicKey } from "./utils/helpers.js";
 import { getAssociatedTokenAddress, } from "@solana/spl-token";
 import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { BN } from "bn.js";
+import BN from "bn.js";
 import { getJupiterSwapIx } from "./utils/jupiter.js";
 import { SwapMode } from "@jup-ag/api";
 import { TOKENS, type MarketIndex } from "./config/tokens.js";
@@ -112,8 +112,23 @@ export class QuartzUser {
         return this.driftUser.getMaintenanceMarginRequirement().toNumber();
     }
 
-    public async getTokenBalance(spotMarketIndex: number): Promise<number> {
-        return this.driftUser.getTokenAmount(spotMarketIndex).toNumber();
+    public async getTokenBalance(spotMarketIndex: number): Promise<BN> {
+        return this.driftUser.getTokenAmount(spotMarketIndex);
+    }
+
+    public async getMultipleTokenBalances(marketIndices: MarketIndex[]): Promise<Record<MarketIndex, BN>> {
+        const balancesArray = await Promise.all(
+            marketIndices.map(async index => ({
+                index,
+                balance: await this.getTokenBalance(index)
+            }))
+        );
+    
+        const balances = balancesArray.reduce((acc, { index, balance }) => 
+            Object.assign(acc, { [index]: balance }
+        ), {} as Record<MarketIndex, BN>);
+    
+        return balances;
     }
 
     public async getWithdrawalLimit(spotMarketIndex: number): Promise<number> {

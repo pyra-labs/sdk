@@ -7,4 +7,5 @@ export interface Token {
     pythPriceFeedId: string;
     decimalPrecision: BN;
     driftCollateralWeight: BN;
+    coingeckoPriceId: string;
 }

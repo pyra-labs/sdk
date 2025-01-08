@@ -3,17 +3,15 @@ import { Keypair, type PublicKey, type Transaction, type VersionedTransaction } 
 export class DummyWallet {
     publicKey: PublicKey;
     payer: Keypair;
-
+    
     constructor(publicKey?: PublicKey) {
         this.payer = Keypair.generate();
         this.publicKey = publicKey ?? this.payer.publicKey;
     }
-
-    signTransaction<T extends Transaction | VersionedTransaction>(_: T): Promise<T> {
-        throw new Error("DummyWallet cannot sign transactions");
+    async signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T> {
+        return tx;
     }
-
-    signAllTransactions<T extends Transaction | VersionedTransaction>(_: T[]): Promise<T[]> {
-        throw new Error("DummyWallet cannot sign transactions");
+    async signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> {
+        return txs;
     }
 }
