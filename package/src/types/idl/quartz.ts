@@ -1,5 +1,5 @@
 export type Quartz = {
-  "version": "0.2.0",
+  "version": "0.2.5",
   "name": "quartz",
   "instructions": [
     {
@@ -295,6 +295,201 @@ export type Quartz = {
       ]
     },
     {
+      "name": "startCollateralRepay",
+      "accounts": [
+        {
+          "name": "caller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "callerSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "splMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftUser",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftUserStats",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "spotMarketVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instructions",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenLedger",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amountDepositBaseUnits",
+          "type": "u64"
+        },
+        {
+          "name": "depositMarketIndex",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "endCollateralRepay",
+      "accounts": [
+        {
+          "name": "caller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "callerSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "splMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftUser",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftUserStats",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "spotMarketVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "depositPriceUpdate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "withdrawPriceUpdate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instructions",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenLedger",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amountWithdrawBaseUnits",
+          "type": "u64"
+        },
+        {
+          "name": "withdrawMarketIndex",
+          "type": "u16"
+        }
+      ]
+    },
+    {
       "name": "collateralRepayStart",
       "accounts": [
         {
@@ -554,6 +749,18 @@ export type Quartz = {
           }
         ]
       }
+    },
+    {
+      "name": "tokenLedger",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "balance",
+            "type": "u64"
+          }
+        ]
+      }
     }
   ],
   "errors": [
@@ -646,12 +853,22 @@ export type Quartz = {
       "code": 6017,
       "name": "IdenticalCollateralRepayMarkets",
       "msg": "Collateral repay deposit and withdraw markets must be different"
+    },
+    {
+      "code": 6018,
+      "name": "InvalidStartingVaultBalance",
+      "msg": "Invalid starting vault balance"
+    },
+    {
+      "code": 6019,
+      "name": "FreshTokenLedgerRequired",
+      "msg": "Provided token ledger is not empty"
     }
   ]
 };
 
 export const IDL: Quartz = {
-  "version": "0.2.0",
+  "version": "0.2.5",
   "name": "quartz",
   "instructions": [
     {
@@ -947,6 +1164,201 @@ export const IDL: Quartz = {
       ]
     },
     {
+      "name": "startCollateralRepay",
+      "accounts": [
+        {
+          "name": "caller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "callerSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "splMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftUser",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftUserStats",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "spotMarketVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instructions",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenLedger",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amountDepositBaseUnits",
+          "type": "u64"
+        },
+        {
+          "name": "depositMarketIndex",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "endCollateralRepay",
+      "accounts": [
+        {
+          "name": "caller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "callerSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "splMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftUser",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftUserStats",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "spotMarketVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "depositPriceUpdate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "withdrawPriceUpdate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instructions",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenLedger",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amountWithdrawBaseUnits",
+          "type": "u64"
+        },
+        {
+          "name": "withdrawMarketIndex",
+          "type": "u16"
+        }
+      ]
+    },
+    {
       "name": "collateralRepayStart",
       "accounts": [
         {
@@ -1206,6 +1618,18 @@ export const IDL: Quartz = {
           }
         ]
       }
+    },
+    {
+      "name": "tokenLedger",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "balance",
+            "type": "u64"
+          }
+        ]
+      }
     }
   ],
   "errors": [
@@ -1298,6 +1722,16 @@ export const IDL: Quartz = {
       "code": 6017,
       "name": "IdenticalCollateralRepayMarkets",
       "msg": "Collateral repay deposit and withdraw markets must be different"
+    },
+    {
+      "code": 6018,
+      "name": "InvalidStartingVaultBalance",
+      "msg": "Invalid starting vault balance"
+    },
+    {
+      "code": 6019,
+      "name": "FreshTokenLedgerRequired",
+      "msg": "Provided token ledger is not empty"
     }
   ]
 };
