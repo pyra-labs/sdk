@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getVaultPublicKey, getVaultSplPublicKey } from "../utils/helpers.js";
+import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getVaultPublicKey, getVaultSplPublicKey } from "../utils/accounts.js";
 import { TOKENS } from "../config/tokens.js";
 
 describe("PDAs", () => {
