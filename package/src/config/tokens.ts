@@ -3,7 +3,7 @@ import type { Token } from "../types/interfaces/token.interface.js";
 import BN from "bn.js";
 
 export const MarketIndex = [
-    1, 0, 5, 22, 28
+    1, 0, 5, 22, 28, 3
 ] as const;
 export type MarketIndex = (typeof MarketIndex)[number];
 
@@ -47,5 +47,13 @@ export const TOKENS: Record<MarketIndex, Token> = {
         decimalPrecision: new BN(6),
         driftCollateralWeight: new BN(95),
         coingeckoPriceId: "usds",
+    },
+    3: {
+        name: "WBTC",
+        mint: new PublicKey("3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh"),
+        pythPriceFeedId: "0xc9d8b075a5c69303365ae23633d4e085199bf5c520a3b90fed1322a0342ffc33",
+        decimalPrecision: new BN(8),
+        driftCollateralWeight: new BN(95),
+        coingeckoPriceId: "wrapped-btc-wormhole",
     }
 };

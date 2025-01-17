@@ -303,6 +303,72 @@ export type Quartz = {
           "isSigner": true
         },
         {
+          "name": "callerDepositSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "callerWithdrawSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintDeposit",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mintWithdraw",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgramDeposit",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgramWithdraw",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instructions",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ledger",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "depositCollateralRepay",
+      "accounts": [
+        {
+          "name": "caller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
           "name": "callerSpl",
           "isMut": true,
           "isSigner": false
@@ -368,16 +434,12 @@ export type Quartz = {
           "isSigner": false
         },
         {
-          "name": "tokenLedger",
+          "name": "ledger",
           "isMut": true,
           "isSigner": false
         }
       ],
       "args": [
-        {
-          "name": "amountDepositBaseUnits",
-          "type": "u64"
-        },
         {
           "name": "depositMarketIndex",
           "type": "u16"
@@ -385,7 +447,7 @@ export type Quartz = {
       ]
     },
     {
-      "name": "endCollateralRepay",
+      "name": "withdrawCollateralRepay",
       "accounts": [
         {
           "name": "caller",
@@ -473,16 +535,12 @@ export type Quartz = {
           "isSigner": false
         },
         {
-          "name": "tokenLedger",
+          "name": "ledger",
           "isMut": true,
           "isSigner": false
         }
       ],
       "args": [
-        {
-          "name": "amountWithdrawBaseUnits",
-          "type": "u64"
-        },
         {
           "name": "withdrawMarketIndex",
           "type": "u16"
@@ -751,12 +809,16 @@ export type Quartz = {
       }
     },
     {
-      "name": "tokenLedger",
+      "name": "collateralRepayLedger",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "balance",
+            "name": "deposit",
+            "type": "u64"
+          },
+          {
+            "name": "withdraw",
             "type": "u64"
           }
         ]
@@ -1172,6 +1234,72 @@ export const IDL: Quartz = {
           "isSigner": true
         },
         {
+          "name": "callerDepositSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "callerWithdrawSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintDeposit",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mintWithdraw",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgramDeposit",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgramWithdraw",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instructions",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ledger",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "depositCollateralRepay",
+      "accounts": [
+        {
+          "name": "caller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
           "name": "callerSpl",
           "isMut": true,
           "isSigner": false
@@ -1237,16 +1365,12 @@ export const IDL: Quartz = {
           "isSigner": false
         },
         {
-          "name": "tokenLedger",
+          "name": "ledger",
           "isMut": true,
           "isSigner": false
         }
       ],
       "args": [
-        {
-          "name": "amountDepositBaseUnits",
-          "type": "u64"
-        },
         {
           "name": "depositMarketIndex",
           "type": "u16"
@@ -1254,7 +1378,7 @@ export const IDL: Quartz = {
       ]
     },
     {
-      "name": "endCollateralRepay",
+      "name": "withdrawCollateralRepay",
       "accounts": [
         {
           "name": "caller",
@@ -1342,16 +1466,12 @@ export const IDL: Quartz = {
           "isSigner": false
         },
         {
-          "name": "tokenLedger",
+          "name": "ledger",
           "isMut": true,
           "isSigner": false
         }
       ],
       "args": [
-        {
-          "name": "amountWithdrawBaseUnits",
-          "type": "u64"
-        },
         {
           "name": "withdrawMarketIndex",
           "type": "u16"
@@ -1620,12 +1740,16 @@ export const IDL: Quartz = {
       }
     },
     {
-      "name": "tokenLedger",
+      "name": "collateralRepayLedger",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "balance",
+            "name": "deposit",
+            "type": "u64"
+          },
+          {
+            "name": "withdraw",
             "type": "u64"
           }
         ]
