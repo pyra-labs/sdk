@@ -231,6 +231,128 @@ export class QuartzUser {
         return ix;
     }
 
+    public async makeLegacyCollateralRepayIxs(
+        caller: PublicKey,
+        depositMarketIndex: MarketIndex,
+        withdrawMarketIndex: MarketIndex,
+        callerWithdrawSplStartBalance: number,
+        jupiterExactOutRouteQuote: QuoteResponse
+    ): Promise<{
+        ixs: TransactionInstruction[]
+        lookupTables: AddressLookupTableAccount[],
+    }> {
+        const depositMint = TOKENS[depositMarketIndex].mint;
+        const withdrawMint = TOKENS[withdrawMarketIndex].mint;
+        
+        if (jupiterExactOutRouteQuote.swapMode !== SwapMode.ExactOut) throw Error("Jupiter quote must be ExactOutRoute");
+        if (jupiterExactOutRouteQuote.inputMint !== withdrawMint.toBase58()) throw Error("Jupiter quote inputMint does not match withdrawMint");
+        if (jupiterExactOutRouteQuote.outputMint !== depositMint.toBase58()) throw Error("Jupiter quote outputMint does not match depositMint");
+        
+        const depositTokenProgram = await getTokenProgram(this.connection, depositMint);
+        const callerDepositSpl = await getAssociatedTokenAddress(depositMint, caller, false, depositTokenProgram);
+        
+        const withdrawTokenProgram = await getTokenProgram(this.connection, withdrawMint);
+        const callerWithdrawSpl = await getAssociatedTokenAddress(withdrawMint, caller, false, withdrawTokenProgram);
+        
+        const driftState = getDriftStatePublicKey();
+        const driftSpotMarketDeposit = getDriftSpotMarketVaultPublicKey(depositMarketIndex);
+        const driftSpotMarketWithdraw = getDriftSpotMarketVaultPublicKey(withdrawMarketIndex);
+        
+        const collateralRepayStartPromise = this.program.methods
+        .collateralRepayStart(new BN(callerWithdrawSplStartBalance))
+        .accounts({
+            caller: caller,
+                callerWithdrawSpl: callerWithdrawSpl,
+                withdrawMint: withdrawMint,
+                vault: this.vaultPubkey,
+                vaultWithdrawSpl: getVaultSplPublicKey(this.pubkey, withdrawMint),
+                owner: this.pubkey,
+                tokenProgram: withdrawTokenProgram,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                systemProgram: SystemProgram.programId,
+                instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+            })
+            .instruction();
+
+        const jupiterSwapPromise = getJupiterSwapIx(caller, this.connection, jupiterExactOutRouteQuote);
+        
+        const collateralRepayDepositPromise = this.program.methods
+            .collateralRepayDeposit(depositMarketIndex)
+            .accounts({
+                vault: this.vaultPubkey,
+                vaultSpl: getVaultSplPublicKey(this.pubkey, depositMint),
+                owner: this.pubkey,
+                caller: caller,
+                callerSpl: callerDepositSpl,
+                splMint: depositMint,
+                driftUser: this.driftUser.pubkey,
+                driftUserStats: this.driftUser.statsPubkey,
+                driftState: driftState,
+                spotMarketVault: driftSpotMarketDeposit,
+                tokenProgram: depositTokenProgram,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                driftProgram: DRIFT_PROGRAM_ID,
+                systemProgram: SystemProgram.programId,
+                instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+            })
+            .remainingAccounts(
+                this.driftUser.getRemainingAccounts(depositMarketIndex)
+            )
+            .instruction();
+            
+        const collateralRepayWithdrawPromise = this.program.methods
+            .collateralRepayWithdraw(withdrawMarketIndex)
+            .accounts({
+                vault: this.vaultPubkey,
+                vaultSpl: getVaultSplPublicKey(this.pubkey, withdrawMint),
+                owner: this.pubkey,
+                caller: caller,
+                callerSpl: callerWithdrawSpl,
+                splMint: withdrawMint,
+                driftUser: this.driftUser.pubkey,
+                driftUserStats: this.driftUser.statsPubkey,
+                driftState: driftState,
+                spotMarketVault: driftSpotMarketWithdraw,
+                driftSigner: this.driftSigner,
+                tokenProgram: withdrawTokenProgram,
+                driftProgram: DRIFT_PROGRAM_ID,
+                systemProgram: SystemProgram.programId,
+                depositPriceUpdate: getPythOracle(depositMarketIndex),
+                withdrawPriceUpdate: getPythOracle(withdrawMarketIndex),
+                instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+            })
+            .remainingAccounts(
+                this.driftUser.getRemainingAccounts(withdrawMarketIndex)
+            )
+            .instruction();
+            
+        
+        const [
+            ix_collateralRepayStart,
+            { ix_jupiterSwap, jupiterLookupTables },
+            ix_collateralRepayDeposit,
+            ix_collateralRepayWithdraw
+        ] = await Promise.all([
+            collateralRepayStartPromise,
+            jupiterSwapPromise,
+            collateralRepayDepositPromise,
+            collateralRepayWithdrawPromise
+        ]);
+
+        return {
+            ixs: [
+                ix_collateralRepayStart,
+                ix_jupiterSwap,
+                ix_collateralRepayDeposit,
+                ix_collateralRepayWithdraw
+            ],
+            lookupTables: [
+                this.quartzLookupTable,
+                ...jupiterLookupTables
+            ],
+        };
+    }
+
     public async makeCollateralRepayIxs(
         caller: PublicKey,
         depositMarketIndex: MarketIndex,

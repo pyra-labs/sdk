@@ -49,7 +49,7 @@ export const TOKENS: Record<MarketIndex, Token> = {
         coingeckoPriceId: "usds",
     },
     3: {
-        name: "WBTC",
+        name: "wBTC",
         mint: new PublicKey("3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh"),
         pythPriceFeedId: "0xc9d8b075a5c69303365ae23633d4e085199bf5c520a3b90fed1322a0342ffc33",
         decimalPrecision: new BN(8),
