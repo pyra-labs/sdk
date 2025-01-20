@@ -31,6 +31,36 @@ import * from "@quartz-labs/sdk/browser";
 
 Server-side code can still be imported without the /browser path at the end, but you may need to set up your config so your web app doesn't try to bundle the problematic Node modules with the and client side code.
 
+## Basic setup
+
+Create a Quartz Client with:
+
+```javascript
+import { QuartzClient } from "@quartz-labs/sdk";
+import { Connection } from "@solana/web3.js";
+
+const connection = new Connection("https://api.mainnet-beta.solana.com");
+const client = QuartzClient.fetchClient(connection);
+```
+
+The majority of this SDK can then be accessed through the client, eg:
+
+```javascript
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+
+const depositApy = client.getDepositRate(marketIndex);
+const createAccountInstructions = client.makeInitQuartzUserIxs(address);
+
+const user = client.getQuartzAccount(address);
+const health = user.getHealth();
+const stablecoinBalances = user.getMultipleTokenBalances(stablecoinIndices);
+const depositInstructions = user.makeDepositIx(
+  LAMPORTS_PER_SOL,
+  marketIndexSol,
+  true // true = can change position from loan <-> collateral, false = will limit amount deposited to prevent this
+);
+```
+
 ## Links
 
 Website and waitlist: [quartzpay.io](https://quartzpay.io/)
