@@ -1,5 +1,5 @@
 export type Quartz = {
-  "version": "0.2.5",
+  "version": "0.2.7",
   "name": "quartz",
   "instructions": [
     {
@@ -930,7 +930,7 @@ export type Quartz = {
 };
 
 export const IDL: Quartz = {
-  "version": "0.2.5",
+  "version": "0.2.7",
   "name": "quartz",
   "instructions": [
     {
