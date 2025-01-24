@@ -131,7 +131,8 @@ export class QuartzUser {
     }
 
     public async getWithdrawalLimit(spotMarketIndex: number): Promise<number> {
-        return this.driftUser.getWithdrawalLimit(spotMarketIndex, false, true).toNumber();
+        const adjustForAutoRepayLimit = (this.getHealth() !== 100); // TODO: Calculations for adjusting could be made more precise
+        return this.driftUser.getWithdrawalLimit(spotMarketIndex, false, adjustForAutoRepayLimit).toNumber();
     }
 
 
