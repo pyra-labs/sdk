@@ -20,8 +20,7 @@ export async function getJupiterSwapIx(
             },
             body: JSON.stringify({
                 quoteResponse,
-                userPublicKey: walletPubkey.toBase58(),
-                useCompression: true,
+                userPublicKey: walletPubkey.toBase58()
             })
         })
     ).json();

@@ -1,18 +1,19 @@
 import { DriftUser } from "./types/classes/driftUser.class.js";
-import type { DriftClient, QuoteResponse, UserAccount } from "@drift-labs/sdk";
+import type { DriftClient, UserAccount } from "@drift-labs/sdk";
 import type { Connection, AddressLookupTableAccount, TransactionInstruction, } from "@solana/web3.js";
 import { DRIFT_PROGRAM_ID, QUARTZ_HEALTH_BUFFER, } from "./config/constants.js";
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
 import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getVaultSplPublicKey, getCollateralRepayLedgerPublicKey } from "./utils/accounts.js";
-import { getTokenProgram } from "./utils/helpers.js";
+import { baseUnitToDecimal, getTokenProgram } from "./utils/helpers.js";
 import { getAssociatedTokenAddress, } from "@solana/spl-token";
 import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import BN from "bn.js";
 import { getJupiterSwapIx } from "./utils/jupiter.js";
 import { TOKENS, type MarketIndex } from "./config/tokens.js";
+import type { QuoteResponse } from "@jup-ag/api";
 
 export class QuartzUser {
     public readonly pubkey: PublicKey;
@@ -68,7 +69,7 @@ export class QuartzUser {
         return this.convertToQuartzHealth(driftHealth);
     }
 
-    public getRepayAmountForTargetHealth(
+    public getRepayValueForTargetHealth(
         targetHealth: number,
         repayCollateralWeight: number
     ): number {
@@ -80,23 +81,33 @@ export class QuartzUser {
         //   targetHealth = -----------------------------------------------------------------------------------------
         //                                                   1 - quartzHealthBuffer                                  
         //
-        // The following is an algebraicly simplified expression of the above formula, in terms of repayValue
+        // Where quartzHealthBuffer, and repayCollateralWeight are both between 0 and 1.
+        // The following is an algebraicly simplified expression of the above formula, in terms of repayValue.
+        // TODO: Note this does not take liability weight into account, so the formula is imprecise for some token pairs.
 
         if (targetHealth <= 0 || targetHealth >= 100) throw Error("Target health must be between 0 and 100");
+        if (repayCollateralWeight <= 0 || repayCollateralWeight >= 100) throw Error("Repay collateral weight must be between 0 and 100");
         if (targetHealth <= this.getHealth()) throw Error("Target health must be greater than current health");
 
         const currentWeightedCollateral = this.getTotalWeightedCollateralValue();
         const loanValue = this.getMaintenanceMarginRequirement();
         const targetHealthDecimal = targetHealth / 100;
         const healthBufferDecimal = QUARTZ_HEALTH_BUFFER / 100;
+        const repayCollateralWeightDecimal = repayCollateralWeight / 100;
 
-        return Math.round(
+        const repayValueUsdcBaseUnits = Math.round(
             (
-                loanValue - currentWeightedCollateral * (1 - healthBufferDecimal) * (1 - targetHealthDecimal)
+                loanValue - currentWeightedCollateral * (healthBufferDecimal - 1) * (targetHealthDecimal - 1) // Any issues try swapping this to 1 - targetHealthDecimal
             ) / (
-                1 - repayCollateralWeight * (1 - healthBufferDecimal) * (1 - targetHealthDecimal)
+                1 - repayCollateralWeightDecimal * (healthBufferDecimal - 1) * (targetHealthDecimal - 1)
             )
         );
+
+        const USDC_INDEX = 0;
+        if (TOKENS[USDC_INDEX].name !== "USDC") throw Error("USDC not found");
+        const repayValue = baseUnitToDecimal(repayValueUsdcBaseUnits, USDC_INDEX);
+
+        return repayValue;
     }
 
     public getTotalCollateralValue(): number {
