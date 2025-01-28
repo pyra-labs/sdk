@@ -145,6 +145,21 @@ export class QuartzUser {
         const adjustForAutoRepayLimit = (this.getHealth() !== 100); // TODO: Calculations for adjusting could be made more precise
         return this.driftUser.getWithdrawalLimit(spotMarketIndex, false, adjustForAutoRepayLimit).toNumber();
     }
+    
+    public async getMultipleWithdrawalLimits(spotMarketIndices: MarketIndex[]): Promise<Record<MarketIndex, number>> {
+        const limitsArray = await Promise.all(
+            spotMarketIndices.map(async index => ({
+                index,
+                limit: await this.getWithdrawalLimit(index)
+            }))
+        );
+
+        const limits = limitsArray.reduce((acc, { index, limit }) => 
+            Object.assign(acc, { [index]: limit }
+        ), {} as Record<MarketIndex, number>);
+
+        return limits;
+    }
 
 
     // --- Instructions ---

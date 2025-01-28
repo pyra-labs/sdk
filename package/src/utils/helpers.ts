@@ -23,7 +23,10 @@ export const toRemainingAccount = (pubkey: PublicKey, isSigner: boolean, isWrita
 }
 
 export const getTokenProgram = async (connection: Connection, mint: PublicKey) => {
-    const mintAccount = await connection.getAccountInfo(mint);
+    const mintAccount = await retryWithBackoff(
+        () => connection.getAccountInfo(mint),
+        3
+    );
     return mintAccount?.owner || TOKEN_PROGRAM_ID;
 }
 
@@ -35,7 +38,10 @@ export async function makeCreateAtaIxIfNeeded(
     tokenProgramId: PublicKey
 ) {
     const oix_createAta: TransactionInstruction[] = [];
-    const ataInfo = await connection.getAccountInfo(ata);
+    const ataInfo = await retryWithBackoff(
+        () => connection.getAccountInfo(ata),
+        3
+    );
     if (ataInfo === null) {
         oix_createAta.push(
             createAssociatedTokenAccountInstruction(
@@ -58,4 +64,30 @@ export function baseUnitToDecimal(baseUnits: number, marketIndex: MarketIndex): 
 export function decimalToBaseUnit(decimal: number, marketIndex: MarketIndex): number {
     const token = TOKENS[marketIndex];
     return Math.trunc(decimal * (10 ** token.decimalPrecision.toNumber()));
+}
+
+export async function retryWithBackoff<T>(
+    fn: () => Promise<T>,
+    retries = 5,
+    initialDelay = 1_000,
+    retryCallback?: (error: unknown, delayMs: number) => void,
+) {
+    let lastError = new Error("Unknown error");
+    for (let i = 0; i <= retries; i++) {
+        try {
+            return await fn();
+        } catch (error) {
+            const delay = initialDelay * (2 ** i);
+            lastError = (error instanceof Error) 
+                ? error 
+                : new Error(String(error));
+
+            if (retryCallback) {
+                retryCallback(lastError, delay);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+    throw lastError;
 }
