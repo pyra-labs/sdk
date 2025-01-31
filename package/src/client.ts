@@ -10,6 +10,7 @@ import { DriftClientService } from "./services/driftClientService.js";
 import { SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
 import { DummyWallet } from "./types/classes/dummyWallet.class.js";
 import type { TransactionInstruction } from "@solana/web3.js";
+import { retryWithBackoff } from "./utils/helpers.js";
 
 export class QuartzClient {
     private connection: Connection;
@@ -139,11 +140,16 @@ export class QuartzClient {
             async (logs: Logs) => {
                 if (!logs.logs.some(log => log.includes(instructionName))) return;
 
-                const tx = await this.connection.getTransaction(logs.signature, {
-                    maxSupportedTransactionVersion: 0,
-                    commitment: 'confirmed'
-                });
-                if (!tx) throw new Error("Transaction not found"); 
+                const tx = await retryWithBackoff(
+                    async () => {
+                        const tx = await this.connection.getTransaction(logs.signature, {
+                            maxSupportedTransactionVersion: 0,
+                            commitment: 'confirmed'
+                        });
+                        if (!tx) throw new Error("Transaction not found");
+                        return tx;
+                    }
+                );
 
                 const encodedIxs = tx.transaction.message.compiledInstructions;
                 const coder = new BorshInstructionCoder(IDL);
