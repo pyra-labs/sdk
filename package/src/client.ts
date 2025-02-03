@@ -30,14 +30,17 @@ export class QuartzClient {
         this.driftClient = driftClient;
     }
 
-    public static async fetchClient(
-        connection: Connection
-    ) {
+    private static async getProgram(connection: Connection) {
         const wallet = new DummyWallet();
         const provider = new AnchorProvider(connection, wallet, { commitment: "confirmed" });
         setProvider(provider);
-        const program = new Program(IDL, QUARTZ_PROGRAM_ID, provider) as unknown as Program<Quartz>;
+        return new Program(IDL, QUARTZ_PROGRAM_ID, provider) as unknown as Program<Quartz>;
+    }
 
+    public static async fetchClient(
+        connection: Connection
+    ) {
+        const program = await QuartzClient.getProgram(connection);
         const quartzLookupTable = await connection.getAddressLookupTable(QUARTZ_ADDRESS_TABLE).then((res) => res.value);
         if (!quartzLookupTable) throw Error("Address Lookup Table account not found");
 
@@ -49,6 +52,20 @@ export class QuartzClient {
             quartzLookupTable,
             driftClient
         );
+    }
+
+    public static async doesQuartzUserExist(
+        connection: Connection,
+        owner: PublicKey
+    ) {
+        const vault = getVaultPublicKey(owner);
+        try {
+            const program = await QuartzClient.getProgram(connection);
+            await program.account.vault.fetch(vault);
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     public async getAllQuartzAccountOwnerPubkeys(): Promise<PublicKey[]> {
