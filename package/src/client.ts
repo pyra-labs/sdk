@@ -1,11 +1,11 @@
-import type { DriftClient } from "@drift-labs/sdk";
+import { BN, type DriftClient } from "@drift-labs/sdk";
 import { calculateBorrowRate, calculateDepositRate, DRIFT_PROGRAM_ID, fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
-import { QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID } from "./config/constants.js";
+import { MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID, RENT_RECLAIMER_PUBKEY } from "./config/constants.js";
 import { IDL, type Quartz } from "./types/idl/quartz.js";
 import { AnchorProvider, BorshInstructionCoder, Program, setProvider } from "@coral-xyz/anchor";
 import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledInstruction, Logs, } from "@solana/web3.js";
 import { QuartzUser } from "./user.js";
-import { getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getVaultPublicKey } from "./utils/accounts.js";
+import { getBridgeRentPayerPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getMessageTransmitter, getVaultPublicKey } from "./utils/accounts.js";
 import { DriftClientService } from "./services/driftClientService.js";
 import { SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
 import { DummyWallet } from "./types/classes/dummyWallet.class.js";
@@ -18,7 +18,7 @@ export class QuartzClient {
     private quartzLookupTable: AddressLookupTableAccount;
     private driftClient: DriftClient;
 
-    constructor(
+    private constructor(
         connection: Connection,
         program: Program<Quartz>,
         quartzAddressTable: AddressLookupTableAccount,
@@ -59,9 +59,14 @@ export class QuartzClient {
         owner: PublicKey
     ) {
         const vault = getVaultPublicKey(owner);
+        const program = await QuartzClient.getProgram(connection);
         try {
-            const program = await QuartzClient.getProgram(connection);
-            await program.account.vault.fetch(vault);
+            await retryWithBackoff(
+                async () => {
+                    await program.account.vault.fetch(vault);
+                },
+                3
+            );
             return true;
         } catch {
             return false;
@@ -184,6 +189,61 @@ export class QuartzClient {
         )
     }
 
+    public static async parseTopUpIx(
+        connection: Connection,
+        signature: string,
+        owner: PublicKey
+    ): Promise<{
+        amountBaseUnits: BN,
+        messageSentEventDataAccounts: PublicKey[]
+    }> {
+        const INSRTUCTION_NAME = "topUpCard";
+        const ACCOUNT_INDEX_OWNER = 1;
+        const ACCOUNT_INDEX_MESSAGE_SENT_EVENT_DATA = 11;
+
+        const tx = await connection.getTransaction(signature, {
+            maxSupportedTransactionVersion: 0,
+            commitment: "finalized"
+        });
+        if (!tx) throw new Error("Transaction not found");
+
+        const encodedIxs = tx.transaction.message.compiledInstructions;
+        const coder = new BorshInstructionCoder(IDL);
+
+        const messageSentEventDataAccounts: PublicKey[] = [];
+        let totalTopUpBaseUnits = new BN(0);
+        for (const ix of encodedIxs) {
+            try {
+                const quartzIx = coder.decode(Buffer.from(ix.data), "base58");
+                if (quartzIx?.name.toLowerCase() === INSRTUCTION_NAME.toLowerCase()) {
+                    const accountKeys = tx.transaction.message.staticAccountKeys;
+
+                    const ownerIndex = ix.accountKeyIndexes?.[ACCOUNT_INDEX_OWNER];
+                    if (ownerIndex === undefined || accountKeys[ownerIndex] === undefined) {
+                        throw new Error("Owner not found");
+                    }
+
+                    const actualOwner = accountKeys[ownerIndex];
+                    if (!actualOwner.equals(owner)) throw new Error("Owner does not match");
+
+                    const args = quartzIx.data as {amountUsdcBaseUnits: BN};
+                    totalTopUpBaseUnits = totalTopUpBaseUnits.add(args.amountUsdcBaseUnits);
+
+                    const messageSentEventDataIndex = ix.accountKeyIndexes?.[ACCOUNT_INDEX_MESSAGE_SENT_EVENT_DATA];
+                    if (messageSentEventDataIndex === undefined || accountKeys[messageSentEventDataIndex] === undefined) {
+                        throw new Error("Message sent event data not found");
+                    }
+                    messageSentEventDataAccounts.push(accountKeys[messageSentEventDataIndex]);
+                }
+            } catch { }
+        }
+
+        return {
+            amountBaseUnits: totalTopUpBaseUnits,
+            messageSentEventDataAccounts
+        };
+    }
+
 
     // --- Instructions ---
 
@@ -213,5 +273,25 @@ export class QuartzClient {
             .instruction(); 
 
         return [ix_initUser, ix_initVaultDriftAccount];
+    }
+
+    public admin = {
+        makeReclaimBridgeRentIxs: async (
+            messageSentEventData: PublicKey,
+            attestation: Buffer<ArrayBuffer>
+        ): Promise<TransactionInstruction[]> => {
+            const ix_reclaimBridgeRent = await this.program.methods
+                .reclaimBridgeRent(attestation)
+                .accounts({
+                    rentReclaimer: RENT_RECLAIMER_PUBKEY,
+                    bridgeRentPayer: getBridgeRentPayerPublicKey(),
+                    messageTransmitter: getMessageTransmitter(),
+                    messageSentEventData: messageSentEventData,
+                    cctpMessageTransmitter: MESSAGE_TRANSMITTER_PROGRAM_ID
+                })
+                .instruction();
+
+            return [ix_reclaimBridgeRent];
+        }
     }
 }

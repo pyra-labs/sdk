@@ -1,19 +1,20 @@
 import { DriftUser } from "./types/classes/driftUser.class.js";
 import type { DriftClient, UserAccount } from "@drift-labs/sdk";
 import type { Connection, AddressLookupTableAccount, TransactionInstruction, } from "@solana/web3.js";
-import { DRIFT_PROGRAM_ID, QUARTZ_HEALTH_BUFFER, } from "./config/constants.js";
+import { DRIFT_PROGRAM_ID, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_HEALTH_BUFFER, TOKEN_MESSAGE_MINTER_PROGRAM_ID, } from "./config/constants.js";
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
-import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getVaultSplPublicKey, getCollateralRepayLedgerPublicKey } from "./utils/accounts.js";
+import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getVaultSplPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority } from "./utils/accounts.js";
 import { baseUnitToDecimal, getTokenProgram } from "./utils/helpers.js";
-import { getAssociatedTokenAddress, } from "@solana/spl-token";
+import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, } from "@solana/spl-token";
 import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import BN from "bn.js";
 import { getJupiterSwapIx } from "./utils/jupiter.js";
 import { TOKENS, type MarketIndex } from "./config/tokens.js";
 import type { QuoteResponse } from "@jup-ag/api";
+import { Keypair } from "@solana/web3.js";
 
 export class QuartzUser {
     public readonly pubkey: PublicKey;
@@ -163,6 +164,10 @@ export class QuartzUser {
 
 
     // --- Instructions ---
+
+    public async getLookupTables(): Promise<AddressLookupTableAccount[]> {
+        return [this.quartzLookupTable];
+    }
 
     public async makeCloseAccountIxs() {
         const ix_closeDriftAccount = await this.program.methods
@@ -390,5 +395,50 @@ export class QuartzUser {
                 ...jupiterLookupTables
             ],
         };
+    }
+
+    // signerKeypair must sign the transaction that this instruction is added to
+    public async makeTopUpCardIxs(
+        amountBaseUnits: number
+    ): Promise<{
+        ixs: TransactionInstruction[],
+        lookupTables: AddressLookupTableAccount[],
+        signerKeypair: Keypair
+    }> {
+        const messageSentEventData = Keypair.generate();
+        const ownerUsdc = await getAssociatedTokenAddress(TOKENS[MARKET_INDEX_USDC].mint, this.pubkey);
+
+        const ix_topUpCard = await this.program.methods
+            .topUpCard(new BN(amountBaseUnits))
+            .accounts({
+                vault: this.vaultPubkey,
+                ownerUsdc: ownerUsdc,
+                owner: this.pubkey,
+                usdcMint: TOKENS[MARKET_INDEX_USDC].mint,
+                bridgeRentPayer: getBridgeRentPayerPublicKey(),
+                senderAuthorityPda: getSenderAuthority(),
+                messageTransmitter: getMessageTransmitter(),
+                tokenMessenger: getTokenMessenger(),
+                remoteTokenMessenger: getRemoteTokenMessenger(),
+                tokenMinter: getTokenMinter(),
+                localToken: getLocalToken(),
+                messageSentEventData: messageSentEventData.publicKey,
+                eventAuthority: getEventAuthority(),
+                messageTransmitterProgram: MESSAGE_TRANSMITTER_PROGRAM_ID,
+                tokenMessengerMinterProgram: TOKEN_MESSAGE_MINTER_PROGRAM_ID,
+                tokenProgram: TOKEN_PROGRAM_ID,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                systemProgram: SystemProgram.programId
+            })
+            .remainingAccounts(
+                this.driftUser.getRemainingAccounts(MARKET_INDEX_USDC)
+            )
+            .instruction();
+
+        return {
+            ixs: [ix_topUpCard],
+            lookupTables: [this.quartzLookupTable],
+            signerKeypair: messageSentEventData
+        }
     }
 }

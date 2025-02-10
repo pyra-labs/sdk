@@ -6,7 +6,15 @@ export const QUARTZ_DRIFT_ACCOUNT = new PublicKey("5XY5pQbBjwv8ByBxKPNE7Xyb9dVcd
 
 export const DRIFT_PROGRAM_ID = new PublicKey("dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH");
 export const PYTH_ORACLE_PROGRAM_ID = new PublicKey("pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT");
+export const TOKEN_MESSAGE_MINTER_PROGRAM_ID = new PublicKey("CCTPiPYPc6AsJuwueEnWgSgucamXDZwBd53dQ11YiKX3");
+export const MESSAGE_TRANSMITTER_PROGRAM_ID = new PublicKey("CCTPmbSD7gX1bxKPAmg77w8oFzNFpaQiQUWD43TKaecd");
+
+export const RENT_RECLAIMER_PUBKEY = new PublicKey("AhLjdeYqv4Ytw5sukK4z3x37ZGaSJ44pRqdcxqHP4ChS");
 
 export const QUARTZ_HEALTH_BUFFER = 10;
 
-export const WSOL_MINT = new PublicKey("So11111111111111111111111111111111111111112");
+export const MARKET_INDEX_USDC = 0;
+export const MARKET_INDEX_SOL = 1;
+
+export const PROVIDER_BASE_ADDRESS = "0x55a2eeB9028ee51Ef91352Fa9f84A9450C5Af099";
+export const QUARTZ_CALLER_BASE_ADDRESS = "0x28A0105A0cf8C0485a4956ba14b5274e9ED229DE";

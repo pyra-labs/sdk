@@ -1,4 +1,4 @@
-import { ComputeBudgetProgram, type Connection, type PublicKey, type TransactionInstruction, } from "@solana/web3.js";
+import { ComputeBudgetProgram, PublicKey, type Connection, type TransactionInstruction, } from "@solana/web3.js";
 import type { AccountMeta } from "../types/interfaces/accountMeta.interface.js";
 import { type MarketIndex, TOKENS } from "../config/tokens.js";
 import { createAssociatedTokenAccountInstruction, TOKEN_PROGRAM_ID } from "@solana/spl-token";
@@ -90,4 +90,17 @@ export async function retryWithBackoff<T>(
         }
     }
     throw lastError;
+}
+
+export function evmAddressToSolana(evmAddress: string) {
+    const bytes32 = `0x000000000000000000000000${evmAddress.replace("0x", "")}`;
+    
+    const bytes = new Uint8Array((bytes32.length - 2) / 2);
+    let offset = 2;
+    for (let i = 0; i < bytes.length; i++) {
+        bytes[i] = Number.parseInt(bytes32.substring(offset, offset + 2), 16);
+        offset += 2;
+    }
+    
+    return new PublicKey(bytes);
 }

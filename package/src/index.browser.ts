@@ -1,5 +1,7 @@
 import BN from "bn.js";
 export { BN };
+import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes/index.js";
+export { bs58 };
 export * from "./config/constants.js";
 export * from "./config/tokens.js";
 export * from "./types/interfaces/token.interface.js";

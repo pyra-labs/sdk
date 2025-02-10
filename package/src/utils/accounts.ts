@@ -1,8 +1,11 @@
 import { PublicKey } from "@solana/web3.js";
-import { DRIFT_PROGRAM_ID, PYTH_ORACLE_PROGRAM_ID, QUARTZ_PROGRAM_ID } from "../config/constants.js";
+import { DRIFT_PROGRAM_ID, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, PYTH_ORACLE_PROGRAM_ID, QUARTZ_PROGRAM_ID, TOKEN_MESSAGE_MINTER_PROGRAM_ID } from "../config/constants.js";
 import BN from "bn.js";
 import { TOKENS } from "../config/tokens.js";
 import type { MarketIndex } from "../config/tokens.js";
+
+
+// Quartz
 
 export const getVaultPublicKey = (user: PublicKey) => {
     const [vaultPda] = PublicKey.findProgramAddressSync(
@@ -28,6 +31,18 @@ export const getCollateralRepayLedgerPublicKey = (user: PublicKey) => {
     );
     return tokenLedgerPda;
 }
+
+export const getBridgeRentPayerPublicKey = () => {
+    const [bridgeRentPayerPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("bridge_rent_payer")],
+        QUARTZ_PROGRAM_ID
+    );
+    return bridgeRentPayerPda;
+}
+
+
+// Drift
+
 
 export const getDriftUserPublicKey = (vaultPda: PublicKey) => {
     const [userPda] = PublicKey.findProgramAddressSync(
@@ -87,6 +102,9 @@ export const getDriftSpotMarketPublicKey = (marketIndex: number) => {
     return spotMarketPda;
 }
 
+
+// Pyth
+
 export const getPythPriceFeedAccount = (shardId: number, priceFeedId: string) => {
     let priceFeedIdBuffer: Buffer;
     if (priceFeedId.startsWith("0x")) {
@@ -106,3 +124,63 @@ export const getPythOracle = (marketIndex: MarketIndex) => {
     const priceFeedId = TOKENS[marketIndex].pythPriceFeedId;
     return getPythPriceFeedAccount(0, priceFeedId);
 }
+
+
+// Circle
+
+export const getSenderAuthority = () => {
+    const [senderAuthorityPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("sender_authority")],
+        TOKEN_MESSAGE_MINTER_PROGRAM_ID
+    );
+    return senderAuthorityPda;
+};
+
+export const getMessageTransmitter = () => {
+    const [messageTransmitter] = PublicKey.findProgramAddressSync(
+        [Buffer.from("message_transmitter")],
+        MESSAGE_TRANSMITTER_PROGRAM_ID
+    );
+    return messageTransmitter;
+};
+
+export const getTokenMessenger = () => {
+    const [tokenMessenger] = PublicKey.findProgramAddressSync(
+        [Buffer.from("token_messenger")],
+        TOKEN_MESSAGE_MINTER_PROGRAM_ID
+    );
+    return tokenMessenger;
+};
+
+export const getTokenMinter = () => {
+    const [tokenMinter] = PublicKey.findProgramAddressSync(
+        [Buffer.from("token_minter")],
+        TOKEN_MESSAGE_MINTER_PROGRAM_ID
+    );
+    return tokenMinter;
+};
+
+export const getLocalToken = () => {
+    const [localToken] = PublicKey.findProgramAddressSync(
+        [Buffer.from("local_token"), TOKENS[MARKET_INDEX_USDC].mint.toBuffer()],
+        TOKEN_MESSAGE_MINTER_PROGRAM_ID,
+    );
+    return localToken;
+};
+
+export const getRemoteTokenMessenger = () => {
+    const DOMAIN_BASE = 6;
+    const [remoteTokenMessenger] = PublicKey.findProgramAddressSync(
+        [Buffer.from("remote_token_messenger"), Buffer.from(DOMAIN_BASE.toString())],
+        TOKEN_MESSAGE_MINTER_PROGRAM_ID
+    );
+    return remoteTokenMessenger;
+};
+
+export const getEventAuthority = () => {
+    const [eventAuthority] = PublicKey.findProgramAddressSync(
+        [Buffer.from("__event_authority")],
+        TOKEN_MESSAGE_MINTER_PROGRAM_ID
+    );
+    return eventAuthority;
+};

@@ -1,7 +1,43 @@
 export type Quartz = {
-  "version": "0.2.7",
+  "version": "0.3.2",
   "name": "quartz",
   "instructions": [
+    {
+      "name": "reclaimBridgeRent",
+      "accounts": [
+        {
+          "name": "rentReclaimer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "bridgeRentPayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "messageTransmitter",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "messageSentEventData",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "cctpMessageTransmitter",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "attestation",
+          "type": "bytes"
+        }
+      ]
+    },
     {
       "name": "initUser",
       "accounts": [
@@ -295,6 +331,107 @@ export type Quartz = {
       ]
     },
     {
+      "name": "topUpCard",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "ownerUsdc",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "usdcMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bridgeRentPayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "senderAuthorityPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "messageTransmitter",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMessenger",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "remoteTokenMessenger",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMinter",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "localToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "messageSentEventData",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "eventAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "messageTransmitterProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMessengerMinterProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amountUsdcBaseUnits",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "startCollateralRepay",
       "accounts": [
         {
@@ -546,249 +683,6 @@ export type Quartz = {
           "type": "u16"
         }
       ]
-    },
-    {
-      "name": "collateralRepayStart",
-      "accounts": [
-        {
-          "name": "caller",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "callerWithdrawSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "withdrawMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "vaultWithdrawSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "instructions",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "startWithdrawBalance",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "collateralRepayDeposit",
-      "accounts": [
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "vaultSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "caller",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "callerSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "splMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "driftUser",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftUserStats",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftState",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "spotMarketVault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "driftProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "instructions",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "driftMarketIndex",
-          "type": "u16"
-        }
-      ]
-    },
-    {
-      "name": "collateralRepayWithdraw",
-      "accounts": [
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "vaultSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "caller",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "callerSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "splMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "driftUser",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftUserStats",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftState",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "spotMarketVault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftSigner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "driftProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "depositPriceUpdate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "withdrawPriceUpdate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "instructions",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "driftMarketIndex",
-          "type": "u16"
-        }
-      ]
     }
   ],
   "accounts": [
@@ -925,14 +819,55 @@ export type Quartz = {
       "code": 6019,
       "name": "FreshTokenLedgerRequired",
       "msg": "Provided token ledger is not empty"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidEvmAddress",
+      "msg": "Provided EVM address does not match expected format"
     }
   ]
 };
 
 export const IDL: Quartz = {
-  "version": "0.2.7",
+  "version": "0.3.2",
   "name": "quartz",
   "instructions": [
+    {
+      "name": "reclaimBridgeRent",
+      "accounts": [
+        {
+          "name": "rentReclaimer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "bridgeRentPayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "messageTransmitter",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "messageSentEventData",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "cctpMessageTransmitter",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "attestation",
+          "type": "bytes"
+        }
+      ]
+    },
     {
       "name": "initUser",
       "accounts": [
@@ -1226,6 +1161,107 @@ export const IDL: Quartz = {
       ]
     },
     {
+      "name": "topUpCard",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "ownerUsdc",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "usdcMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bridgeRentPayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "senderAuthorityPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "messageTransmitter",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMessenger",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "remoteTokenMessenger",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMinter",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "localToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "messageSentEventData",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "eventAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "messageTransmitterProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMessengerMinterProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amountUsdcBaseUnits",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "startCollateralRepay",
       "accounts": [
         {
@@ -1477,249 +1513,6 @@ export const IDL: Quartz = {
           "type": "u16"
         }
       ]
-    },
-    {
-      "name": "collateralRepayStart",
-      "accounts": [
-        {
-          "name": "caller",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "callerWithdrawSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "withdrawMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "vaultWithdrawSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "instructions",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "startWithdrawBalance",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "collateralRepayDeposit",
-      "accounts": [
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "vaultSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "caller",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "callerSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "splMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "driftUser",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftUserStats",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftState",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "spotMarketVault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "driftProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "instructions",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "driftMarketIndex",
-          "type": "u16"
-        }
-      ]
-    },
-    {
-      "name": "collateralRepayWithdraw",
-      "accounts": [
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "vaultSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "caller",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "callerSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "splMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "driftUser",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftUserStats",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftState",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "spotMarketVault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftSigner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "driftProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "depositPriceUpdate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "withdrawPriceUpdate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "instructions",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "driftMarketIndex",
-          "type": "u16"
-        }
-      ]
     }
   ],
   "accounts": [
@@ -1856,6 +1649,11 @@ export const IDL: Quartz = {
       "code": 6019,
       "name": "FreshTokenLedgerRequired",
       "msg": "Provided token ledger is not empty"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidEvmAddress",
+      "msg": "Provided EVM address does not match expected format"
     }
   ]
 };
