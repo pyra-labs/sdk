@@ -40,6 +40,15 @@ export const getBridgeRentPayerPublicKey = () => {
     return bridgeRentPayerPda;
 }
 
+export const getInitRentPayerPublicKey = () => {
+    const [initRentPayerPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("init_rent_payer")],
+        QUARTZ_PROGRAM_ID
+    );
+    return initRentPayerPda;
+}
+
+
 
 // Drift
 

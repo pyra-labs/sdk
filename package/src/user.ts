@@ -5,15 +5,13 @@ import { DRIFT_PROGRAM_ID, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, QU
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
-import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getVaultSplPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority } from "./utils/accounts.js";
+import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getVaultSplPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority, getInitRentPayerPublicKey } from "./utils/accounts.js";
 import { baseUnitToDecimal, getTokenProgram } from "./utils/helpers.js";
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, } from "@solana/spl-token";
 import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import BN from "bn.js";
-import { getJupiterSwapIx } from "./utils/jupiter.js";
 import { TOKENS, type MarketIndex } from "./config/tokens.js";
-import type { QuoteResponse } from "@jup-ag/api";
 import { Keypair } from "@solana/web3.js";
 
 export class QuartzUser {
@@ -169,35 +167,113 @@ export class QuartzUser {
         return [this.quartzLookupTable];
     }
 
-    public async makeCloseAccountIxs() {
-        const ix_closeDriftAccount = await this.program.methods
-            .closeDriftAccount()
-            .accounts({
-                vault: this.vaultPubkey,
-                owner: this.pubkey,
-                driftUser: this.driftUser.pubkey,
-                driftUserStats: this.driftUser.statsPubkey,
-                driftState: getDriftStatePublicKey(),
-                driftProgram: DRIFT_PROGRAM_ID
-            })
-            .instruction();
-
+    /**
+     * Creates instructions to close a Quartz user account. This cannot be undone.
+     * @returns {Promise<{
+     *     ixs: TransactionInstruction[],
+     *     lookupTables: AddressLookupTableAccount[],
+     *     signers: Keypair[]
+     * }>} Object containing:
+     * - ixs: Array of instructions to close the Quartz user account.
+     * - lookupTables: Array of lookup tables for building VersionedTransaction.
+     * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
+     * @throw Error if the RPC connection fails. The transaction will fail if the account has any balance or loans, or is less than 13 days old.
+     */
+    public async makeCloseAccountIxs(): Promise<{
+        ixs: TransactionInstruction[],
+        lookupTables: AddressLookupTableAccount[],
+        signers: Keypair[]
+    }> {
         const ix_closeVault = await this.program.methods
             .closeUser()
             .accounts({
                 vault: this.vaultPubkey,
-                owner: this.pubkey
+                owner: this.pubkey,
+                initRentPayer: getInitRentPayerPublicKey(),
+                driftUser: this.driftUser.pubkey,
+                driftUserStats: this.driftUser.statsPubkey,
+                driftState: getDriftStatePublicKey(),
+                driftProgram: DRIFT_PROGRAM_ID,
+                systemProgram: SystemProgram.programId
             })
             .instruction();
 
-        return [ix_closeDriftAccount, ix_closeVault];
+        return {
+            ixs: [ix_closeVault],
+            lookupTables: [this.quartzLookupTable],
+            signers: []
+        };
     }
 
+    /**
+     * Creates instructions to upgrade a Quartz user account.
+     * @param spendLimitPerTransaction - The card spend limit per transaction.
+     * @param spendLimitPerTimeframe - The card spend limit per timeframe.
+     * @param timeframeInSlots - The timeframe in slots (eg: 216,000 for ~1 day).
+     * @returns {Promise<{
+     *     ixs: TransactionInstruction[],
+     *     lookupTables: AddressLookupTableAccount[],
+     *     signers: Keypair[]
+     * }>} Object containing:
+     * - ixs: Array of instructions to upgrade the Quartz user account.
+     * - lookupTables: Array of lookup tables for building VersionedTransaction.
+     * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
+     * @throw Error if the RPC connection fails. The transaction will fail if the account does not require an upgrade.
+     */
+    public async makeUpgradeAccountIxs(
+        spendLimitPerTransaction: BN,
+        spendLimitPerTimeframe: BN,
+        timeframeInSlots: BN
+    ): Promise<{
+        ixs: TransactionInstruction[],
+        lookupTables: AddressLookupTableAccount[],
+        signers: Keypair[]
+    }> {
+        const ix_upgradeAccount = await this.program.methods
+            .upgradeVault(
+                spendLimitPerTransaction,
+                spendLimitPerTimeframe,
+                timeframeInSlots
+            )
+            .accounts({
+                vault: this.vaultPubkey,
+                owner: this.pubkey,
+                initRentPayer: getInitRentPayerPublicKey(),
+                systemProgram: SystemProgram.programId
+            })
+            .instruction();
+
+        return {
+            ixs: [ix_upgradeAccount],
+            lookupTables: [this.quartzLookupTable],
+            signers: []
+        };
+    }
+
+    /**
+     * Creates instructions to deposit a token into the Quartz user account.
+     * @param amountBaseUnits - The amount of tokens to deposit.
+     * @param marketIndex - The market index of the token to deposit.
+     * @param reduceOnly - True means amount will be capped so a negative balance (loan) cannot become a positive balance (collateral).
+     * @returns {Promise<{
+     *     ixs: TransactionInstruction[],
+     *     lookupTables: AddressLookupTableAccount[],
+     *     signers: Keypair[]
+     * }>} Object containing:
+     * - ixs: Array of instructions to deposit the token into the Quartz user account.
+     * - lookupTables: Array of lookup tables for building VersionedTransaction.
+     * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
+     * @throw Error if the RPC connection fails. The transaction will fail if the owner does not have enough tokens.
+     */
     public async makeDepositIx(
         amountBaseUnits: number,
         marketIndex: MarketIndex,
         reduceOnly: boolean
-    ) {
+    ): Promise<{
+        ixs: TransactionInstruction[],
+        lookupTables: AddressLookupTableAccount[],
+        signers: Keypair[]
+    }> {
         const mint = TOKENS[marketIndex].mint;
         const tokenProgram = await getTokenProgram(this.connection, mint);
         const ownerSpl = await getAssociatedTokenAddress(mint, this.pubkey, false, tokenProgram);
@@ -224,14 +300,37 @@ export class QuartzUser {
             )
             .instruction();
 
-        return ix;
+        return {
+            ixs: [ix],
+            lookupTables: [this.quartzLookupTable],
+            signers: []
+        };
     }
 
+    /**
+     * Creates instructions to withdraw a token from the Quartz user account.
+     * @param amountBaseUnits - The amount of tokens to withdraw.
+     * @param marketIndex - The market index of the token to withdraw.
+     * @param reduceOnly - True means amount will be capped so a positive balance (collateral) cannot become a negative balance (loan).
+     * @returns {Promise<{
+     *     ixs: TransactionInstruction[],
+     *     lookupTables: AddressLookupTableAccount[],
+     *     signers: Keypair[]
+     * }>} Object containing:
+     * - ixs: Array of instructions to withdraw the token from the Quartz user account.
+     * - lookupTables: Array of lookup tables for building VersionedTransaction.
+     * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
+     * @throw Error if the RPC connection fails. The transaction will fail if the account does not have enough tokens or, (when taking out a loan) the account health is not high enough for a loan.
+     */
     public async makeWithdrawIx(
         amountBaseUnits: number,
         marketIndex: MarketIndex,
         reduceOnly: boolean
-    ) {
+    ): Promise<{
+        ixs: TransactionInstruction[],
+        lookupTables: AddressLookupTableAccount[],
+        signers: Keypair[]
+    }> {
         const mint = TOKENS[marketIndex].mint;
         const tokenProgram = await getTokenProgram(this.connection, mint);
         const ownerSpl = await getAssociatedTokenAddress(mint, this.pubkey, false, tokenProgram);
@@ -259,27 +358,44 @@ export class QuartzUser {
             )
             .instruction();
 
-        return ix;
+        return {
+            ixs: [ix],
+            lookupTables: [this.quartzLookupTable],
+            signers: []
+        };
     }
 
+    /**
+     * Creates instructions to repay a loan using collateral.
+     * @param caller - The public key of the caller, this can be the owner or someone else if account health is 0%.
+     * @param depositMarketIndex - The market index of the loan token to deposit.
+     * @param withdrawMarketIndex - The market index of the collateral token to withdraw.
+     * @param swapInstruction - The swap instruction to use. Deposit and withdrawn amounts are calculated by the balance change after this instruction.
+     * @returns {Promise<{
+     *     ixs: TransactionInstruction[],
+     *     lookupTables: AddressLookupTableAccount[],
+     *     signers: Keypair[]
+     * }>} Object containing:
+     * - ixs: Array of instructions to repay the loan using collateral.
+     * - lookupTables: Array of lookup tables for building VersionedTransaction.
+     * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
+     * @throw Error if the RPC connection fails. The transaction will fail if:
+     * - the caller does not have enough tokens.
+     * - the account health is above 0% and the caller is not the owner.
+     * - the account health is 0% and the caller is not the owner, but the health has not increased above 0% after the repay.
+     */
     public async makeCollateralRepayIxs(
         caller: PublicKey,
         depositMarketIndex: MarketIndex,
         withdrawMarketIndex: MarketIndex,
-        jupiterRouteQuote: QuoteResponse
+        swapInstruction: TransactionInstruction
     ): Promise<{
-        ixs: TransactionInstruction[]
+        ixs: TransactionInstruction[],
         lookupTables: AddressLookupTableAccount[],
+        signers: Keypair[]
     }> {
         const depositMint = TOKENS[depositMarketIndex].mint;
         const withdrawMint = TOKENS[withdrawMarketIndex].mint;
-
-        if (jupiterRouteQuote.inputMint !== withdrawMint.toBase58()) {
-            throw Error("Jupiter quote inputMint does not match withdrawMint");
-        }
-        if (jupiterRouteQuote.outputMint !== depositMint.toBase58()) {
-            throw Error("Jupiter quote outputMint does not match depositMint");
-        }
 
         const [
             depositTokenProgram,
@@ -317,8 +433,6 @@ export class QuartzUser {
                 ledger: collateralRepayLedger
             })
             .instruction();
-
-        const jupiterSwapPromise = getJupiterSwapIx(caller, this.connection, jupiterRouteQuote);
 
         const depositCollateralRepayPromise = this.program.methods
             .depositCollateralRepay(depositMarketIndex)
@@ -373,12 +487,10 @@ export class QuartzUser {
 
         const [
             ix_startCollateralRepay,
-            { ix_jupiterSwap, jupiterLookupTables },
             ix_depositCollateralRepay,
             ix_withdrawCollateralRepay
         ] = await Promise.all([
             startCollateralRepayPromise,
-            jupiterSwapPromise,
             depositCollateralRepayPromise,
             withdrawCollateralRepayPromise
         ]);
@@ -386,20 +498,30 @@ export class QuartzUser {
         return {
             ixs: [
                 ix_startCollateralRepay,
-                ix_jupiterSwap,
+                swapInstruction,
                 ix_depositCollateralRepay,
                 ix_withdrawCollateralRepay
             ],
-            lookupTables: [
-                this.quartzLookupTable,
-                ...jupiterLookupTables
-            ],
+            lookupTables: [this.quartzLookupTable],
+            signers: []
         };
     }
 
-    // signerKeypair must sign the transaction that this instruction is added to
+    /**
+     * Creates instructions to top up the card.
+     * @param amountUsdcBaseUnits - The amount of USDC base tokens to top up the card with.
+     * @returns {Promise<{
+     *     ixs: TransactionInstruction[],
+     *     lookupTables: AddressLookupTableAccount[],
+     *     signerKeypair: Keypair
+     * }>} Object containing:
+     * - ixs: Array of instructions to top up the card.
+     * - lookupTables: Array of lookup tables for building VersionedTransaction.
+     * - signerKeypair: Keypair that must sign the transaction the instructions are added to.
+     * @throw Error if the RPC connection fails. The transaction will fail if the owner does not have enough tokens or, (when taking out a loan) the account health is not high enough for a loan.
+     */
     public async makeTopUpCardIxs(
-        amountBaseUnits: number
+        amountUsdcBaseUnits: number
     ): Promise<{
         ixs: TransactionInstruction[],
         lookupTables: AddressLookupTableAccount[],
@@ -409,7 +531,7 @@ export class QuartzUser {
         const ownerUsdc = await getAssociatedTokenAddress(TOKENS[MARKET_INDEX_USDC].mint, this.pubkey);
 
         const ix_topUpCard = await this.program.methods
-            .topUpCard(new BN(amountBaseUnits))
+            .topUpCard(new BN(amountUsdcBaseUnits))
             .accounts({
                 vault: this.vaultPubkey,
                 ownerUsdc: ownerUsdc,

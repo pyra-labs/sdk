@@ -1,16 +1,18 @@
 import { BN, type DriftClient } from "@drift-labs/sdk";
 import { calculateBorrowRate, calculateDepositRate, DRIFT_PROGRAM_ID, fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
-import { MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID, RENT_RECLAIMER_PUBKEY } from "./config/constants.js";
+import { MARGINFI_GROUP_1, MARGINFI_PROGRAM_ID, MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID, RENT_RECLAIMER_PUBKEY } from "./config/constants.js";
 import { IDL, type Quartz } from "./types/idl/quartz.js";
 import { AnchorProvider, BorshInstructionCoder, Program, setProvider } from "@coral-xyz/anchor";
 import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledInstruction, Logs, } from "@solana/web3.js";
 import { QuartzUser } from "./user.js";
-import { getBridgeRentPayerPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getMessageTransmitter, getVaultPublicKey } from "./utils/accounts.js";
+import { getBridgeRentPayerPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getInitRentPayerPublicKey, getMessageTransmitter, getVaultPublicKey } from "./utils/accounts.js";
 import { DriftClientService } from "./services/driftClientService.js";
 import { SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
 import { DummyWallet } from "./types/classes/dummyWallet.class.js";
 import type { TransactionInstruction } from "@solana/web3.js";
 import { retryWithBackoff } from "./utils/helpers.js";
+import { getConfig as getMarginfiConfig, MarginfiClient } from "@mrgnlabs/marginfi-client-v2";
+import { Keypair } from "@solana/web3.js";
 
 export class QuartzClient {
     private connection: Connection;
@@ -247,32 +249,68 @@ export class QuartzClient {
 
     // --- Instructions ---
 
-    public async makeInitQuartzUserIxs(owner: PublicKey): Promise<TransactionInstruction[]> {
-        const vault = getVaultPublicKey(owner);
-        const ix_initUser = await this.program.methods
-            .initUser()
-            .accounts({
-                vault: vault,
-                owner: owner,
-                systemProgram: SystemProgram.programId,
-            })
-            .instruction();
+    /**
+     * Creates instructions to initialize a new Quartz user account.
+     * @param owner - The public key of Quartz account owner.
+     * @param spendLimitPerTransaction - The card spend limit per transaction.
+     * @param spendLimitPerTimeframe - The card spend limit per timeframe.
+     * @param timeframeInSlots - The timeframe in slots (eg: 216,000 for ~1 day).
+     * @returns {Promise<{
+     *     ixs: TransactionInstruction[],
+     *     lookupTables: AddressLookupTableAccount[],
+     *     signers: Keypair[]
+     * }>} Object containing:
+     * - ixs: Array of instructions to initialize the Quartz user account.
+     * - lookupTables: Array of lookup tables for building VersionedTransaction.
+     * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
+     * @throws Error if the RPC connection fails. The transaction will fail if the vault already exists, or the user does not have enough SOL.
+     */
+    public async makeInitQuartzUserIxs(
+        owner: PublicKey,
+        spendLimitPerTransaction: BN,
+        spendLimitPerTimeframe: BN,
+        timeframeInSlots: BN
+    ): Promise<{
+        ixs: TransactionInstruction[],
+        lookupTables: AddressLookupTableAccount[],
+        signers: Keypair[]
+    }> {
+        const wallet = new DummyWallet(owner);
+        const marginfiClient = await MarginfiClient.fetch(getMarginfiConfig(), wallet, this.connection);
+        const marginfiAccounts = await marginfiClient.getMarginfiAccountsForAuthority(owner);
+        const requiresMarginfiAccount = (marginfiAccounts.length === 0);
 
-        const ix_initVaultDriftAccount = await this.program.methods
-            .initDriftAccount()
+        const vault = getVaultPublicKey(owner);
+        const marginfiAccount = Keypair.generate();
+
+        const ix_initUser = await this.program.methods
+            .initUser(
+                requiresMarginfiAccount,
+                spendLimitPerTransaction,
+                spendLimitPerTimeframe,
+                timeframeInSlots
+            )
             .accounts({
                 vault: vault,
                 owner: owner,
+                initRentPayer: getInitRentPayerPublicKey(),
                 driftUser: getDriftUserPublicKey(vault),
                 driftUserStats: getDriftUserStatsPublicKey(vault),
                 driftState: getDriftStatePublicKey(),
                 driftProgram: DRIFT_PROGRAM_ID,
+                marginfiGroup: MARGINFI_GROUP_1,
+                marginfiAccount: marginfiAccount.publicKey,
+                marginfiProgram: MARGINFI_PROGRAM_ID,
                 rent: SYSVAR_RENT_PUBKEY,
                 systemProgram: SystemProgram.programId,
             })
-            .instruction(); 
+            .instruction();
 
-        return [ix_initUser, ix_initVaultDriftAccount];
+        return {
+            ixs: [ix_initUser],
+            lookupTables: [this.quartzLookupTable],
+            signers: [marginfiAccount]
+        };
     }
 
     public admin = {

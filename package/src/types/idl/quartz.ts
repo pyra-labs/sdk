@@ -1,5 +1,5 @@
 export type Quartz = {
-  "version": "0.3.2",
+  "version": "0.4.0",
   "name": "quartz",
   "instructions": [
     {
@@ -52,41 +52,9 @@ export type Quartz = {
           "isSigner": true
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "closeUser",
-      "accounts": [
-        {
-          "name": "vault",
+          "name": "initRentPayer",
           "isMut": true,
           "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "initDriftAccount",
-      "accounts": [
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
         },
         {
           "name": "driftUser",
@@ -105,6 +73,21 @@ export type Quartz = {
         },
         {
           "name": "driftProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marginfiGroup",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marginfiAccount",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "marginfiProgram",
           "isMut": false,
           "isSigner": false
         },
@@ -119,10 +102,27 @@ export type Quartz = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "requiresMarginfiAccount",
+          "type": "bool"
+        },
+        {
+          "name": "spendLimitPerTransaction",
+          "type": "u64"
+        },
+        {
+          "name": "spendLimitPerTimeframe",
+          "type": "u64"
+        },
+        {
+          "name": "extendSpendLimitPerTimeframeResetSlotAmount",
+          "type": "u64"
+        }
+      ]
     },
     {
-      "name": "closeDriftAccount",
+      "name": "closeUser",
       "accounts": [
         {
           "name": "vault",
@@ -131,8 +131,13 @@ export type Quartz = {
         },
         {
           "name": "owner",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
+        },
+        {
+          "name": "initRentPayer",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "driftUser",
@@ -153,9 +158,53 @@ export type Quartz = {
           "name": "driftProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": []
+    },
+    {
+      "name": "upgradeVault",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "initRentPayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "spendLimitPerTransaction",
+          "type": "u64"
+        },
+        {
+          "name": "spendLimitPerTimeframe",
+          "type": "u64"
+        },
+        {
+          "name": "extendSpendLimitPerTimeframeResetSlotAmount",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "deposit",
@@ -698,6 +747,26 @@ export type Quartz = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "spendLimitPerTransaction",
+            "type": "u64"
+          },
+          {
+            "name": "spendLimitPerTimeframe",
+            "type": "u64"
+          },
+          {
+            "name": "remainingSpendLimitPerTimeframe",
+            "type": "u64"
+          },
+          {
+            "name": "nextSpendLimitPerTimeframeResetSlot",
+            "type": "u64"
+          },
+          {
+            "name": "extendSpendLimitPerTimeframeResetSlotAmount",
+            "type": "u64"
           }
         ]
       }
@@ -722,114 +791,159 @@ export type Quartz = {
   "errors": [
     {
       "code": 6000,
+      "name": "VaultAlreadyInitialized",
+      "msg": "Vault already initialized"
+    },
+    {
+      "code": 6001,
       "name": "IllegalCollateralRepayInstructions",
       "msg": "Illegal collateral repay instructions"
     },
     {
-      "code": 6001,
+      "code": 6002,
       "name": "InvalidMint",
       "msg": "Invalid mint provided"
     },
     {
-      "code": 6002,
+      "code": 6003,
       "name": "MaxSlippageExceeded",
       "msg": "Price slippage is above maximum"
     },
     {
-      "code": 6003,
+      "code": 6004,
       "name": "InvalidPlatformFee",
       "msg": "Swap platform fee must be zero"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "InvalidUserAccounts",
       "msg": "User accounts for deposit and withdraw do not match"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "InvalidSourceTokenAccount",
       "msg": "Swap source token account does not match withdraw"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "InvalidDestinationTokenAccount",
       "msg": "Swap destination token account does not match deposit"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "InvalidStartBalance",
       "msg": "Declared start balance is not accurate"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "NegativeOraclePrice",
       "msg": "Price received from oracle should be a positive number"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "InvalidMarketIndex",
       "msg": "Invalid market index"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "MathOverflow",
       "msg": "Math overflow"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "InvalidPriceExponent",
       "msg": "Price exponents received from oracle should be the same"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "UnableToLoadAccountLoader",
       "msg": "Unable to load account loader"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "DeserializationError",
       "msg": "Could not deserialize introspection instruction data"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "NotReachedCollateralRepayThreshold",
       "msg": "Account health is not low enough for collateral_repay"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "CollateralRepayHealthTooHigh",
       "msg": "Too much collateral sold in collateral_repay"
     },
     {
-      "code": 6016,
+      "code": 6017,
       "name": "CollateralRepayHealthTooLow",
       "msg": "User health is still zero after collateral_repay"
     },
     {
-      "code": 6017,
+      "code": 6018,
       "name": "IdenticalCollateralRepayMarkets",
       "msg": "Collateral repay deposit and withdraw markets must be different"
     },
     {
-      "code": 6018,
+      "code": 6019,
       "name": "InvalidStartingVaultBalance",
       "msg": "Invalid starting vault balance"
     },
     {
-      "code": 6019,
+      "code": 6020,
       "name": "FreshTokenLedgerRequired",
       "msg": "Provided token ledger is not empty"
     },
     {
-      "code": 6020,
+      "code": 6021,
       "name": "InvalidEvmAddress",
       "msg": "Provided EVM address does not match expected format"
+    },
+    {
+      "code": 6022,
+      "name": "InvalidVaultOwner",
+      "msg": "Invalid vault owner"
+    },
+    {
+      "code": 6023,
+      "name": "InvalidVaultAddress",
+      "msg": "Invalid vault address"
+    },
+    {
+      "code": 6024,
+      "name": "LookupTableAlreadyInitialized",
+      "msg": "Lookup table already initialized"
+    },
+    {
+      "code": 6025,
+      "name": "MissingTokenMint",
+      "msg": "Missing token mint"
+    },
+    {
+      "code": 6026,
+      "name": "InvalidTokenProgramId",
+      "msg": "Invalid token program id"
+    },
+    {
+      "code": 6027,
+      "name": "InvalidLookupTable",
+      "msg": "Invalid lookup table"
+    },
+    {
+      "code": 6028,
+      "name": "InvalidLookupTableContent",
+      "msg": "Invalid lookup table content"
+    },
+    {
+      "code": 6029,
+      "name": "InvalidLookupTableAuthority",
+      "msg": "Invalid lookup table authority"
     }
   ]
 };
 
 export const IDL: Quartz = {
-  "version": "0.3.2",
+  "version": "0.4.0",
   "name": "quartz",
   "instructions": [
     {
@@ -882,41 +996,9 @@ export const IDL: Quartz = {
           "isSigner": true
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "closeUser",
-      "accounts": [
-        {
-          "name": "vault",
+          "name": "initRentPayer",
           "isMut": true,
           "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "initDriftAccount",
-      "accounts": [
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
         },
         {
           "name": "driftUser",
@@ -935,6 +1017,21 @@ export const IDL: Quartz = {
         },
         {
           "name": "driftProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marginfiGroup",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "marginfiAccount",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "marginfiProgram",
           "isMut": false,
           "isSigner": false
         },
@@ -949,10 +1046,27 @@ export const IDL: Quartz = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "requiresMarginfiAccount",
+          "type": "bool"
+        },
+        {
+          "name": "spendLimitPerTransaction",
+          "type": "u64"
+        },
+        {
+          "name": "spendLimitPerTimeframe",
+          "type": "u64"
+        },
+        {
+          "name": "extendSpendLimitPerTimeframeResetSlotAmount",
+          "type": "u64"
+        }
+      ]
     },
     {
-      "name": "closeDriftAccount",
+      "name": "closeUser",
       "accounts": [
         {
           "name": "vault",
@@ -961,8 +1075,13 @@ export const IDL: Quartz = {
         },
         {
           "name": "owner",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
+        },
+        {
+          "name": "initRentPayer",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "driftUser",
@@ -983,9 +1102,53 @@ export const IDL: Quartz = {
           "name": "driftProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": []
+    },
+    {
+      "name": "upgradeVault",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "initRentPayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "spendLimitPerTransaction",
+          "type": "u64"
+        },
+        {
+          "name": "spendLimitPerTimeframe",
+          "type": "u64"
+        },
+        {
+          "name": "extendSpendLimitPerTimeframeResetSlotAmount",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "deposit",
@@ -1528,6 +1691,26 @@ export const IDL: Quartz = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "spendLimitPerTransaction",
+            "type": "u64"
+          },
+          {
+            "name": "spendLimitPerTimeframe",
+            "type": "u64"
+          },
+          {
+            "name": "remainingSpendLimitPerTimeframe",
+            "type": "u64"
+          },
+          {
+            "name": "nextSpendLimitPerTimeframeResetSlot",
+            "type": "u64"
+          },
+          {
+            "name": "extendSpendLimitPerTimeframeResetSlotAmount",
+            "type": "u64"
           }
         ]
       }
@@ -1552,108 +1735,153 @@ export const IDL: Quartz = {
   "errors": [
     {
       "code": 6000,
+      "name": "VaultAlreadyInitialized",
+      "msg": "Vault already initialized"
+    },
+    {
+      "code": 6001,
       "name": "IllegalCollateralRepayInstructions",
       "msg": "Illegal collateral repay instructions"
     },
     {
-      "code": 6001,
+      "code": 6002,
       "name": "InvalidMint",
       "msg": "Invalid mint provided"
     },
     {
-      "code": 6002,
+      "code": 6003,
       "name": "MaxSlippageExceeded",
       "msg": "Price slippage is above maximum"
     },
     {
-      "code": 6003,
+      "code": 6004,
       "name": "InvalidPlatformFee",
       "msg": "Swap platform fee must be zero"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "InvalidUserAccounts",
       "msg": "User accounts for deposit and withdraw do not match"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "InvalidSourceTokenAccount",
       "msg": "Swap source token account does not match withdraw"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "InvalidDestinationTokenAccount",
       "msg": "Swap destination token account does not match deposit"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "InvalidStartBalance",
       "msg": "Declared start balance is not accurate"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "NegativeOraclePrice",
       "msg": "Price received from oracle should be a positive number"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "InvalidMarketIndex",
       "msg": "Invalid market index"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "MathOverflow",
       "msg": "Math overflow"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "InvalidPriceExponent",
       "msg": "Price exponents received from oracle should be the same"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "UnableToLoadAccountLoader",
       "msg": "Unable to load account loader"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "DeserializationError",
       "msg": "Could not deserialize introspection instruction data"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "NotReachedCollateralRepayThreshold",
       "msg": "Account health is not low enough for collateral_repay"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "CollateralRepayHealthTooHigh",
       "msg": "Too much collateral sold in collateral_repay"
     },
     {
-      "code": 6016,
+      "code": 6017,
       "name": "CollateralRepayHealthTooLow",
       "msg": "User health is still zero after collateral_repay"
     },
     {
-      "code": 6017,
+      "code": 6018,
       "name": "IdenticalCollateralRepayMarkets",
       "msg": "Collateral repay deposit and withdraw markets must be different"
     },
     {
-      "code": 6018,
+      "code": 6019,
       "name": "InvalidStartingVaultBalance",
       "msg": "Invalid starting vault balance"
     },
     {
-      "code": 6019,
+      "code": 6020,
       "name": "FreshTokenLedgerRequired",
       "msg": "Provided token ledger is not empty"
     },
     {
-      "code": 6020,
+      "code": 6021,
       "name": "InvalidEvmAddress",
       "msg": "Provided EVM address does not match expected format"
+    },
+    {
+      "code": 6022,
+      "name": "InvalidVaultOwner",
+      "msg": "Invalid vault owner"
+    },
+    {
+      "code": 6023,
+      "name": "InvalidVaultAddress",
+      "msg": "Invalid vault address"
+    },
+    {
+      "code": 6024,
+      "name": "LookupTableAlreadyInitialized",
+      "msg": "Lookup table already initialized"
+    },
+    {
+      "code": 6025,
+      "name": "MissingTokenMint",
+      "msg": "Missing token mint"
+    },
+    {
+      "code": 6026,
+      "name": "InvalidTokenProgramId",
+      "msg": "Invalid token program id"
+    },
+    {
+      "code": 6027,
+      "name": "InvalidLookupTable",
+      "msg": "Invalid lookup table"
+    },
+    {
+      "code": 6028,
+      "name": "InvalidLookupTableContent",
+      "msg": "Invalid lookup table content"
+    },
+    {
+      "code": 6029,
+      "name": "InvalidLookupTableAuthority",
+      "msg": "Invalid lookup table authority"
     }
   ]
 };
