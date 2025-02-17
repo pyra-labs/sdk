@@ -17,7 +17,5 @@ export const QUARTZ_CALLER_BASE_ADDRESS = "0x28A0105A0cf8C0485a4956ba14b5274e9ED
 
 export const MARGINFI_GROUP_1 = new PublicKey("4qp6Fx6tnZkY5Wropq9wUYgtFxXKwE6viZxFHg3rdAG8");
 
-export const QUARTZ_HEALTH_BUFFER = 10;
-
 export const MARKET_INDEX_USDC = 0;
 export const MARKET_INDEX_SOL = 1;

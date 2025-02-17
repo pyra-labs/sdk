@@ -1,7 +1,7 @@
 import { DriftUser } from "./types/classes/driftUser.class.js";
 import type { DriftClient, UserAccount } from "@drift-labs/sdk";
 import type { Connection, AddressLookupTableAccount, TransactionInstruction, } from "@solana/web3.js";
-import { DRIFT_PROGRAM_ID, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_HEALTH_BUFFER, TOKEN_MESSAGE_MINTER_PROGRAM_ID, } from "./config/constants.js";
+import { DRIFT_PROGRAM_ID, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, TOKEN_MESSAGE_MINTER_PROGRAM_ID, } from "./config/constants.js";
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
@@ -48,57 +48,46 @@ export class QuartzUser {
         );
     }
 
-    private convertToQuartzHealth(protocolHealth: number): number {
-        if (protocolHealth <= 0) return 0;
-        if (protocolHealth >= 100) return 100;
-
-        return Math.floor(
-            Math.min(
-                100,
-                Math.max(
-                    0,
-                    ((protocolHealth - QUARTZ_HEALTH_BUFFER) / (100 - QUARTZ_HEALTH_BUFFER)) * 100
-                )
-            )
-        );
-    }
-
     public getHealth(): number {
-        const driftHealth = this.driftUser.getHealth();
-        return this.convertToQuartzHealth(driftHealth);
+        return this.driftUser.getHealth();
     }
 
     public getRepayValueForTargetHealth(
         targetHealth: number,
-        repayCollateralWeight: number
+        repayAssetWeight: number,
+        repayLiabilityWeight: number
     ): number {
         // New Quartz health after repayment is given as:
         // 
-        //                                           loanValue - repayValue                     
-        //                  1 - ---------------------------------------------------------------- - quartzHealthBuffer
-        //                      currentWeightedCollateral - (repayValue * repayCollateralWeight)
-        //   targetHealth = -----------------------------------------------------------------------------------------
-        //                                                   1 - quartzHealthBuffer                                  
+        //                         marginRequirement - (repayValue * repayLiabilityWeight)
+        //   targetHealth =  1 - -----------------------------------------------------------
+        //                       currentWeightedCollateral - (repayValue * repayAssetWeight)
         //
-        // Where quartzHealthBuffer, and repayCollateralWeight are both between 0 and 1.
+        // Where repayAssetWeight and repayLiabilityWeight are between 0 and 1.
         // The following is an algebraicly simplified expression of the above formula, in terms of repayValue.
-        // TODO: Note this does not take liability weight into account, so the formula is imprecise for some token pairs.
 
-        if (targetHealth <= 0 || targetHealth >= 100) throw Error("Target health must be between 0 and 100");
-        if (repayCollateralWeight <= 0 || repayCollateralWeight >= 100) throw Error("Repay collateral weight must be between 0 and 100");
+        if (targetHealth < 0 || targetHealth > 100) throw Error("Target health must be between 0 and 100 inclusive");
+        if (!Number.isInteger(targetHealth)) throw new Error("Target health must be a whole number");
+
+        if (repayAssetWeight < 0 || repayAssetWeight > 100) throw Error("Repay collateral weight must be between 0 and 100 inclusive");
+        if (!Number.isInteger(repayAssetWeight)) throw new Error("Repay collateral weight must be a whole number");
+
+        if (repayLiabilityWeight < 100) throw Error("Repay liability weight must be greater or equal to 100");
+        if (!Number.isInteger(repayLiabilityWeight)) throw new Error("Repay liability weight must be a whole number");
+
         if (targetHealth <= this.getHealth()) throw Error("Target health must be greater than current health");
 
         const currentWeightedCollateral = this.getTotalWeightedCollateralValue();
-        const loanValue = this.getMaintenanceMarginRequirement();
+        const marginRequirement = this.getMarginRequirement();
         const targetHealthDecimal = targetHealth / 100;
-        const healthBufferDecimal = QUARTZ_HEALTH_BUFFER / 100;
-        const repayCollateralWeightDecimal = repayCollateralWeight / 100;
+        const repayAssetWeightDecimal = repayAssetWeight / 100;
+        const repayLiabilityWeightDecimal = repayLiabilityWeight / 100;
 
         const repayValueUsdcBaseUnits = Math.round(
             (
-                loanValue - currentWeightedCollateral * (healthBufferDecimal - 1) * (targetHealthDecimal - 1) // Any issues try swapping this to 1 - targetHealthDecimal
+                currentWeightedCollateral * (targetHealthDecimal - 1) + marginRequirement
             ) / (
-                1 - repayCollateralWeightDecimal * (healthBufferDecimal - 1) * (targetHealthDecimal - 1)
+                repayAssetWeightDecimal * (targetHealthDecimal - 1) + repayLiabilityWeightDecimal
             )
         );
 
@@ -110,15 +99,19 @@ export class QuartzUser {
     }
 
     public getTotalCollateralValue(): number {
-        return this.driftUser.getTotalCollateralValue(undefined).toNumber();
+        return this.driftUser.getTotalCollateralValue().toNumber(); // No params = not weighted
     }
 
     public getTotalWeightedCollateralValue(): number {
-        return this.driftUser.getTotalCollateralValue('Maintenance').toNumber();
+        return this.driftUser.getTotalCollateralValue("Initial").toNumber();
     }
 
-    public getMaintenanceMarginRequirement(): number {
-        return this.driftUser.getMaintenanceMarginRequirement().toNumber();
+    public getMarginRequirement(): number {
+        return this.driftUser.getInitialMarginRequirement().toNumber();
+    }
+
+    public getSpendableBalanceUsdcBaseUnits(): number {
+        return this.driftUser.getFreeCollateral("Initial").toNumber();
     }
 
     public async getTokenBalance(spotMarketIndex: number): Promise<BN> {
@@ -141,8 +134,7 @@ export class QuartzUser {
     }
 
     public async getWithdrawalLimit(spotMarketIndex: number): Promise<number> {
-        const adjustForAutoRepayLimit = (this.getHealth() !== 100); // TODO: Calculations for adjusting could be made more precise
-        return this.driftUser.getWithdrawalLimit(spotMarketIndex, false, adjustForAutoRepayLimit).toNumber();
+        return this.driftUser.getWithdrawalLimit(spotMarketIndex, false).toNumber();
     }
     
     public async getMultipleWithdrawalLimits(spotMarketIndices: MarketIndex[]): Promise<Record<MarketIndex, number>> {

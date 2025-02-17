@@ -1,7 +1,6 @@
 import { AMM_RESERVE_PRECISION, AMM_RESERVE_PRECISION_EXP, BN, calculateAssetWeight, calculateLiabilityWeight, calculateLiveOracleTwap, calculateMarketMarginRatio, calculateMarketOpenBidAsk, calculatePerpLiabilityValue, calculatePositionPNL, calculateUnrealizedAssetWeight, calculateUnsettledFundingPnl, calculateWithdrawLimit, calculateWorstCasePerpLiabilityValue, type DriftClient, FIVE_MINUTE, getSignedTokenAmount, getStrictTokenValue, getTokenAmount, getWorstCaseTokenAmounts, isSpotPositionAvailable, isVariant, MARGIN_PRECISION, type MarginCategory, ONE, OPEN_ORDER_MARGIN_REQUIREMENT, type PerpPosition, PRICE_PRECISION, QUOTE_PRECISION, QUOTE_SPOT_MARKET_INDEX, SPOT_MARKET_WEIGHT_PRECISION, SpotBalanceType, StrictOraclePrice, type UserAccount, UserStatus, ZERO, TEN, divCeil, type SpotMarketAccount } from "@drift-labs/sdk";
 import type { PublicKey } from "@solana/web3.js";
 import { getDriftUserPublicKey, getDriftUserStatsPublicKey } from "../../utils/accounts.js";
-import { QUARTZ_HEALTH_BUFFER } from "../../config/constants.js";
 import type { AccountMeta } from "../interfaces/accountMeta.interface.js";
 import type { MarketIndex } from "../../config/tokens.js";
 
@@ -49,8 +48,9 @@ export class DriftUser {
     public getHealth(): number{
         if (this.isBeingLiquidated()) return 0;
 
-        const totalCollateral = this.getTotalCollateralValue('Maintenance');
-		const maintenanceMarginReq = this.getMaintenanceMarginRequirement();
+		// Drift health uses Maintenance margin, Quartz health uses Initial margin
+        const totalCollateral = this.getTotalCollateralValue('Initial'); 
+		const maintenanceMarginReq = this.getInitialMarginRequirement();
 
 		if (maintenanceMarginReq.eq(ZERO) && totalCollateral.gte(ZERO)) {
 			return 100;
@@ -94,7 +94,7 @@ export class DriftUser {
 		);
 	}
 
-	public getWithdrawalLimit(marketIndex: number, reduceOnly?: boolean, adjustForAutoRepayLimit = false): BN {
+	public getWithdrawalLimit(marketIndex: number, reduceOnly?: boolean): BN {
 		const nowTs = new BN(Math.floor(Date.now() / 1000));
 		const spotMarket = this.driftClient.getSpotMarketAccount(marketIndex);
 		if (!spotMarket) throw new Error("Spot market not found");
@@ -105,8 +105,8 @@ export class DriftUser {
 			nowTs
 		);
 
-		const freeCollateral = this.getFreeCollateral("Initial", adjustForAutoRepayLimit);
-		const initialMarginRequirement = this.getMarginRequirement('Initial', undefined, false, true);
+		const freeCollateral = this.getFreeCollateral("Initial");
+		const initialMarginRequirement = this.getMarginRequirement('Initial', undefined, true);
 		const oracleData = this.driftClient.getOracleDataForSpotMarket(marketIndex);
 		const precisionIncrease = TEN.pow(new BN(spotMarket.decimals - 6));
 
@@ -169,19 +169,14 @@ export class DriftUser {
 		return BN.max(maxBorrowValue, ZERO);
 	}
 
-	private getFreeCollateral(marginCategory: MarginCategory = 'Initial', adjustForAutoRepayLimit = false): BN {
-		const borrowLimitScale = adjustForAutoRepayLimit
-			? new BN(100 - QUARTZ_HEALTH_BUFFER)
-			: new BN(100);
-		
-		const totalCollateral = this.getTotalCollateralValue(marginCategory, true)
-			.mul(borrowLimitScale)
-			.div(new BN(100));
+	public getFreeCollateral(marginCategory: MarginCategory = 'Initial'): BN {
+		const totalCollateral = this.getTotalCollateralValue(marginCategory, true);
 
 		const marginRequirement =
 			marginCategory === 'Initial'
 				? this.getMarginRequirement('Initial', undefined, false, true)
-				: this.getMaintenanceMarginRequirement();
+				: this.getInitialMarginRequirement();
+		
 		const freeCollateral = totalCollateral.sub(marginRequirement);
 		return freeCollateral.gte(ZERO) ? freeCollateral : ZERO;
 	}
@@ -894,7 +889,7 @@ export class DriftUser {
 		return clonedPosition;
 	}
 
-    public getMaintenanceMarginRequirement(): BN {
+    public getInitialMarginRequirement(): BN {
 		if (!this.userAccount) throw new Error("DriftUser not initialized");
 		
 		// if user being liq'd, can continue to be liq'd until total collateral above the margin requirement plus buffer
@@ -905,7 +900,7 @@ export class DriftUser {
 			);
 		}
 
-		return this.getMarginRequirement('Maintenance', liquidationBuffer);
+		return this.getMarginRequirement('Initial', liquidationBuffer);
 	}
 
     private getMarginRequirement(

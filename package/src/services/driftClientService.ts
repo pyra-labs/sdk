@@ -9,7 +9,7 @@ export class DriftClientService {
     private driftClient: DriftClient;
     private driftClientInitPromise: Promise<boolean>;
 
-    constructor(
+    private constructor(
         connection: Connection
     ) {
         const wallet = new DummyWallet(QUARTZ_DRIFT_ACCOUNT);
