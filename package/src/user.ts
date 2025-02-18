@@ -133,15 +133,21 @@ export class QuartzUser {
         return balances;
     }
 
-    public async getWithdrawalLimit(spotMarketIndex: number): Promise<number> {
-        return this.driftUser.getWithdrawalLimit(spotMarketIndex, false).toNumber();
+    public async getWithdrawalLimit(
+        spotMarketIndex: number, 
+        reduceOnly = false
+    ): Promise<number> {
+        return this.driftUser.getWithdrawalLimit(spotMarketIndex, reduceOnly).toNumber();
     }
     
-    public async getMultipleWithdrawalLimits(spotMarketIndices: MarketIndex[]): Promise<Record<MarketIndex, number>> {
+    public async getMultipleWithdrawalLimits(
+        spotMarketIndices: MarketIndex[], 
+        reduceOnly = false
+    ): Promise<Record<MarketIndex, number>> {
         const limitsArray = await Promise.all(
             spotMarketIndices.map(async index => ({
                 index,
-                limit: await this.getWithdrawalLimit(index)
+                limit: await this.getWithdrawalLimit(index, reduceOnly)
             }))
         );
 

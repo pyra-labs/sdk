@@ -49,7 +49,7 @@ export class DriftUser {
         if (this.isBeingLiquidated()) return 0;
 
 		// Drift health uses Maintenance margin, Quartz health uses Initial margin
-        const totalCollateral = this.getTotalCollateralValue('Initial'); 
+        const totalCollateral = this.getTotalCollateralValue('Initial', true); 
 		const maintenanceMarginReq = this.getInitialMarginRequirement();
 
 		if (maintenanceMarginReq.eq(ZERO) && totalCollateral.gte(ZERO)) {
@@ -147,7 +147,8 @@ export class DriftUser {
 		const weightedAssetValue = this.getSpotMarketAssetValue(
 			'Initial',
 			marketIndex,
-			false
+			false,
+			true
 		);
 
 		const freeCollatAfterWithdraw = userDepositAmount.gt(ZERO)
@@ -169,12 +170,12 @@ export class DriftUser {
 		return BN.max(maxBorrowValue, ZERO);
 	}
 
-	public getFreeCollateral(marginCategory: MarginCategory = 'Initial'): BN {
+	public getFreeCollateral(marginCategory: MarginCategory = 'Initial', strict = true): BN {
 		const totalCollateral = this.getTotalCollateralValue(marginCategory, true);
 
 		const marginRequirement =
 			marginCategory === 'Initial'
-				? this.getMarginRequirement('Initial', undefined, false, true)
+				? this.getMarginRequirement('Initial', undefined, strict, true)
 				: this.getInitialMarginRequirement();
 		
 		const freeCollateral = totalCollateral.sub(marginRequirement);
@@ -906,7 +907,7 @@ export class DriftUser {
     private getMarginRequirement(
 		marginCategory: MarginCategory,
 		liquidationBuffer?: BN,
-		strict = false,
+		strict = true,
 		includeOpenOrders = true
 	): BN {
 		return this.getTotalPerpPositionLiability(
