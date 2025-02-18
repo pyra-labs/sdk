@@ -6,7 +6,7 @@ import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
 import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getVaultSplPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority, getInitRentPayerPublicKey } from "./utils/accounts.js";
-import { baseUnitToDecimal, getTokenProgram } from "./utils/helpers.js";
+import { getTokenProgram } from "./utils/helpers.js";
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, } from "@solana/spl-token";
 import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
@@ -52,7 +52,7 @@ export class QuartzUser {
         return this.driftUser.getHealth();
     }
 
-    public getRepayValueForTargetHealth(
+    public getRepayUsdcValueForTargetHealth(
         targetHealth: number,
         repayAssetWeight: number,
         repayLiabilityWeight: number
@@ -91,11 +91,7 @@ export class QuartzUser {
             )
         );
 
-        const USDC_INDEX = 0;
-        if (TOKENS[USDC_INDEX].name !== "USDC") throw Error("USDC not found");
-        const repayValue = baseUnitToDecimal(repayValueUsdcBaseUnits, USDC_INDEX);
-
-        return repayValue;
+        return repayValueUsdcBaseUnits;
     }
 
     public getTotalCollateralValue(): number {

@@ -19,3 +19,6 @@ export const MARGINFI_GROUP_1 = new PublicKey("4qp6Fx6tnZkY5Wropq9wUYgtFxXKwE6vi
 
 export const MARKET_INDEX_USDC = 0;
 export const MARKET_INDEX_SOL = 1;
+
+export const DEFAULT_COMPUTE_UNIT_LIMIT = 400_000;
+export const DEFAULT_COMPUTE_UNIT_PRICE = 1_250_000;
