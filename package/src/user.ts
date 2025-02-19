@@ -18,6 +18,12 @@ export class QuartzUser {
     public readonly pubkey: PublicKey;
     public readonly vaultPubkey: PublicKey;
 
+    public readonly spendLimitPerTransaction: BN;
+    public readonly spendLimitPerTimeframe: BN;
+    public readonly remainingSpendLimitPerTimeframe: BN;
+    public readonly nextTimeframeResetSlot: BN;
+    public readonly timeframeInSlots: BN;
+
     private connection: Connection;
     private program: Program<Quartz>;
     private quartzLookupTable: AddressLookupTableAccount;
@@ -31,7 +37,12 @@ export class QuartzUser {
         program: Program<Quartz>,
         quartzLookupTable: AddressLookupTableAccount,
         driftClient: DriftClient,
-        driftUserAccount: UserAccount
+        driftUserAccount: UserAccount,
+        spendLimitPerTransaction: BN,
+        spendLimitPerTimeframe: BN,
+        remainingSpendLimitPerTimeframe: BN,
+        nextTimeframeResetSlot: BN,
+        timeframeInSlots: BN
     ) {
         this.pubkey = pubkey;
         this.connection = connection;
@@ -40,6 +51,12 @@ export class QuartzUser {
         
         this.vaultPubkey = getVaultPublicKey(pubkey);
         this.driftSigner = getDriftSignerPublicKey();
+
+        this.spendLimitPerTransaction = spendLimitPerTransaction;
+        this.spendLimitPerTimeframe = spendLimitPerTimeframe;
+        this.remainingSpendLimitPerTimeframe = remainingSpendLimitPerTimeframe;
+        this.nextTimeframeResetSlot = nextTimeframeResetSlot;
+        this.timeframeInSlots = timeframeInSlots;
 
         this.driftUser = new DriftUser(
             this.vaultPubkey,

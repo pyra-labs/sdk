@@ -83,13 +83,13 @@ export class QuartzClient {
     }
 
     public async getQuartzAccount(owner: PublicKey): Promise<QuartzUser> {
-        const vault = getVaultPublicKey(owner);
-        await this.program.account.vault.fetch(vault); // Check account exists
+        const vaultAddress = getVaultPublicKey(owner);
+        const vaultAccount = await this.program.account.vault.fetch(vaultAddress); // Check account exists
 
         const [ driftUserAccount ] = await fetchDriftAccountsUsingKeys(
             this.connection,
             this.driftClient.program,
-            [getDriftUserPublicKey(vault)]
+            [getDriftUserPublicKey(vaultAddress)]
         );
         if (!driftUserAccount) throw Error("Drift user not found");
 
@@ -99,23 +99,28 @@ export class QuartzClient {
             this.program, 
             this.quartzLookupTable, 
             this.driftClient,
-            driftUserAccount
+            driftUserAccount,
+            vaultAccount.spendLimitPerTransaction,
+            vaultAccount.spendLimitPerTimeframe,
+            vaultAccount.remainingSpendLimitPerTimeframe,
+            vaultAccount.nextTimeframeResetSlot,
+            vaultAccount.timeframeInSlots
         );
     }
 
     public async getMultipleQuartzAccounts(owners: PublicKey[]): Promise<(QuartzUser | null)[]> {
         if (owners.length === 0) return [];
-        const vaults = owners.map((owner) => getVaultPublicKey(owner));
-        const accounts = await this.program.account.vault.fetchMultiple(vaults);
+        const vaultAddresses = owners.map((owner) => getVaultPublicKey(owner));
+        const vaultAccounts = await this.program.account.vault.fetchMultiple(vaultAddresses);
 
-        accounts.forEach((account, index) => {
-            if (account === null) throw Error(`Account not found for pubkey: ${vaults[index]?.toBase58()}`)
+        vaultAccounts.forEach((account, index) => {
+            if (account === null) throw Error(`Account not found for pubkey: ${vaultAddresses[index]?.toBase58()}`)
         });
 
         const driftUsers = await fetchDriftAccountsUsingKeys(
             this.connection,
             this.driftClient.program,
-            vaults.map((vault) => getDriftUserPublicKey(vault))
+            vaultAddresses.map((vault) => getDriftUserPublicKey(vault))
         )
 
         // TODO: Uncomment once Drift accounts are guaranteed
@@ -127,13 +132,22 @@ export class QuartzClient {
         return driftUsers.map((driftUser, index) => {
             if (driftUser === undefined) return null;
             if (owners[index] === undefined) throw Error("Missing pubkey in owners array");
+
+            const vaultAccount = vaultAccounts[index];
+            if (!vaultAccount) throw Error(`Vault account not found for pubkey: ${vaultAddresses[index]?.toBase58()}`);
+
             return new QuartzUser(
                 owners[index], 
                 this.connection, 
                 this.program, 
                 this.quartzLookupTable,
                 this.driftClient,
-                driftUser
+                driftUser,
+                vaultAccount.spendLimitPerTransaction,
+                vaultAccount.spendLimitPerTimeframe,
+                vaultAccount.remainingSpendLimitPerTimeframe,
+                vaultAccount.nextTimeframeResetSlot,
+                vaultAccount.timeframeInSlots
             )
         });
     }

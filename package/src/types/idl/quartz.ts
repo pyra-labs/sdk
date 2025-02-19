@@ -1,5 +1,5 @@
 export type Quartz = {
-  "version": "0.4.1",
+  "version": "0.5.0",
   "name": "quartz",
   "instructions": [
     {
@@ -481,6 +481,227 @@ export type Quartz = {
       ]
     },
     {
+      "name": "startSpend",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "spendCaller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "mule",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "usdcMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftUser",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftUserStats",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "spotMarketVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instructions",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amountUsdcBaseUnits",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "completeSpend",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "spendCaller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "mule",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "usdcMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bridgeRentPayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "senderAuthorityPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "messageTransmitter",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMessenger",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "remoteTokenMessenger",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMinter",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "localToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "messageSentEventData",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "eventAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "messageTransmitterProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMessengerMinterProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instructions",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "adjustSpendLimits",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "spendLimitPerTransaction",
+          "type": "u64"
+        },
+        {
+          "name": "spendLimitPerTimeframe",
+          "type": "u64"
+        },
+        {
+          "name": "timeframeInSlots",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "startCollateralRepay",
       "accounts": [
         {
@@ -761,7 +982,7 @@ export type Quartz = {
             "type": "u64"
           },
           {
-            "name": "nextSpendLimitPerTimeframeResetSlot",
+            "name": "nextTimeframeResetSlot",
             "type": "u64"
           },
           {
@@ -817,7 +1038,7 @@ export type Quartz = {
     {
       "code": 6005,
       "name": "InvalidUserAccounts",
-      "msg": "User accounts for deposit and withdraw do not match"
+      "msg": "User accounts accross instructions must match"
     },
     {
       "code": 6006,
@@ -938,12 +1159,27 @@ export type Quartz = {
       "code": 6029,
       "name": "InvalidLookupTableAuthority",
       "msg": "Invalid lookup table authority"
+    },
+    {
+      "code": 6030,
+      "name": "InsufficientTimeframeSpendLimit",
+      "msg": "Insufficient spend limit remaining for the timeframe"
+    },
+    {
+      "code": 6031,
+      "name": "InsufficientTransactionSpendLimit",
+      "msg": "Transaction is larger than the transaction spend limit"
+    },
+    {
+      "code": 6032,
+      "name": "IllegalSpendInstructions",
+      "msg": "start_spend instruction must be followed by complete_spend instruction"
     }
   ]
 };
 
 export const IDL: Quartz = {
-  "version": "0.4.1",
+  "version": "0.5.0",
   "name": "quartz",
   "instructions": [
     {
@@ -1425,6 +1661,227 @@ export const IDL: Quartz = {
       ]
     },
     {
+      "name": "startSpend",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "spendCaller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "mule",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "usdcMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftUser",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftUserStats",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "spotMarketVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instructions",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amountUsdcBaseUnits",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "completeSpend",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "spendCaller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "mule",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "usdcMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bridgeRentPayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "senderAuthorityPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "messageTransmitter",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMessenger",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "remoteTokenMessenger",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMinter",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "localToken",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "messageSentEventData",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "eventAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "messageTransmitterProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMessengerMinterProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instructions",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "adjustSpendLimits",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "spendLimitPerTransaction",
+          "type": "u64"
+        },
+        {
+          "name": "spendLimitPerTimeframe",
+          "type": "u64"
+        },
+        {
+          "name": "timeframeInSlots",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "startCollateralRepay",
       "accounts": [
         {
@@ -1705,7 +2162,7 @@ export const IDL: Quartz = {
             "type": "u64"
           },
           {
-            "name": "nextSpendLimitPerTimeframeResetSlot",
+            "name": "nextTimeframeResetSlot",
             "type": "u64"
           },
           {
@@ -1761,7 +2218,7 @@ export const IDL: Quartz = {
     {
       "code": 6005,
       "name": "InvalidUserAccounts",
-      "msg": "User accounts for deposit and withdraw do not match"
+      "msg": "User accounts accross instructions must match"
     },
     {
       "code": 6006,
@@ -1882,6 +2339,21 @@ export const IDL: Quartz = {
       "code": 6029,
       "name": "InvalidLookupTableAuthority",
       "msg": "Invalid lookup table authority"
+    },
+    {
+      "code": 6030,
+      "name": "InsufficientTimeframeSpendLimit",
+      "msg": "Insufficient spend limit remaining for the timeframe"
+    },
+    {
+      "code": 6031,
+      "name": "InsufficientTransactionSpendLimit",
+      "msg": "Transaction is larger than the transaction spend limit"
+    },
+    {
+      "code": 6032,
+      "name": "IllegalSpendInstructions",
+      "msg": "start_spend instruction must be followed by complete_spend instruction"
     }
   ]
 };
