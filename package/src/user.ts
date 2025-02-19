@@ -1,12 +1,12 @@
 import { DriftUser } from "./types/classes/driftUser.class.js";
 import type { DriftClient, UserAccount } from "@drift-labs/sdk";
 import type { Connection, AddressLookupTableAccount, TransactionInstruction, } from "@solana/web3.js";
-import { DRIFT_PROGRAM_ID, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, TOKEN_MESSAGE_MINTER_PROGRAM_ID, } from "./config/constants.js";
+import { DRIFT_PROGRAM_ID, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, SPEND_CALLER, TOKEN_MESSAGE_MINTER_PROGRAM_ID, } from "./config/constants.js";
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
-import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getVaultSplPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority, getInitRentPayerPublicKey } from "./utils/accounts.js";
-import { getTokenProgram } from "./utils/helpers.js";
+import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getVaultSplPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority, getInitRentPayerPublicKey, getSpendMulePda } from "./utils/accounts.js";
+import { getTokenProgram, } from "./utils/helpers.js";
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, } from "@solana/spl-token";
 import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
@@ -360,6 +360,120 @@ export class QuartzUser {
     }
 
     /**
+     * Creates instructions to adjust the spend limits of a Quartz user account.
+     * @param spendLimitPerTransaction - The new spend limit per transaction.
+     * @param spendLimitPerTimeframe - The new spend limit per timeframe.
+     * @param timeframeInSlots - The new timeframe in slots.
+     * @returns {Promise<{
+     *     ixs: TransactionInstruction[],
+     *     lookupTables: AddressLookupTableAccount[],
+     *     signers: Keypair[]
+     * }>} Object containing:
+     * - ixs: Array of instructions to adjust the spend limits.
+     * - lookupTables: Array of lookup tables for building VersionedTransaction.
+     * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
+     * @throw Error if the RPC connection fails.
+     */
+    public async makeAdjustSpendLimitsIxs(
+        spendLimitPerTransaction: BN,
+        spendLimitPerTimeframe: BN,
+        timeframeInSlots: BN
+    ): Promise<{
+        ixs: TransactionInstruction[],
+        lookupTables: AddressLookupTableAccount[],
+        signers: Keypair[]
+    }> {
+        const ix_adjustSpendLimits = await this.program.methods
+            .adjustSpendLimits(
+                spendLimitPerTransaction,
+                spendLimitPerTimeframe,
+                timeframeInSlots
+            )
+            .accounts({
+                vault: this.vaultPubkey,
+                owner: this.pubkey
+            })
+            .instruction();
+
+        return {
+            ixs: [ix_adjustSpendLimits],
+            lookupTables: [this.quartzLookupTable],
+            signers: []
+        };
+    }
+
+    public async makeSpendIxs(
+        amountBaseUnits: number,
+        spendCaller: Keypair
+    ): Promise<{
+        ixs: TransactionInstruction[],
+        lookupTables: AddressLookupTableAccount[],
+        signers: Keypair[]
+    }> {
+        if (spendCaller.publicKey !== SPEND_CALLER) {
+            throw new Error("Unauthorized spend caller");
+        }
+
+        const messageSentEventData = Keypair.generate();
+
+        const ix_startSpend = await this.program.methods
+            .startSpend(new BN(amountBaseUnits))
+            .accounts({
+                vault: this.vaultPubkey,
+                owner: this.pubkey,
+                spendCaller: SPEND_CALLER,
+                mule: getSpendMulePda(this.pubkey),
+                usdcMint: TOKENS[MARKET_INDEX_USDC].mint,
+                driftUser: this.driftUser.pubkey,
+                driftUserStats: this.driftUser.statsPubkey,
+                driftState: getDriftStatePublicKey(),
+                spotMarketVault: getDriftSpotMarketVaultPublicKey(MARKET_INDEX_USDC),
+                driftSigner: this.driftSigner,
+                tokenProgram: TOKEN_PROGRAM_ID,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                driftProgram: DRIFT_PROGRAM_ID,
+                instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+                systemProgram: SystemProgram.programId,
+            })
+            .remainingAccounts(
+                this.driftUser.getRemainingAccounts(MARKET_INDEX_USDC)
+            )
+            .instruction();
+    
+        const ix_completeSpend = await this.program.methods
+            .completeSpend()
+            .accounts({
+                vault: this.vaultPubkey,
+                owner: this.pubkey,
+                spendCaller: SPEND_CALLER,
+                mule: getSpendMulePda(this.pubkey),
+                usdcMint: TOKENS[MARKET_INDEX_USDC].mint,
+                bridgeRentPayer: getBridgeRentPayerPublicKey(),
+                senderAuthorityPda: getSenderAuthority(),
+                messageTransmitter: getMessageTransmitter(),
+                tokenMessenger: getTokenMessenger(),
+                remoteTokenMessenger: getRemoteTokenMessenger(),
+                tokenMinter: getTokenMinter(),
+                localToken: getLocalToken(),
+                messageSentEventData: messageSentEventData.publicKey,
+                eventAuthority: getEventAuthority(),
+                messageTransmitterProgram: MESSAGE_TRANSMITTER_PROGRAM_ID,
+                tokenMessengerMinterProgram: TOKEN_MESSAGE_MINTER_PROGRAM_ID,
+                tokenProgram: TOKEN_PROGRAM_ID,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+                systemProgram: SystemProgram.programId,
+            })
+            .instruction();
+
+        return {
+            ixs: [ix_startSpend, ix_completeSpend],
+            lookupTables: [this.quartzLookupTable],
+            signers: [spendCaller, messageSentEventData]
+        }
+    }
+
+    /**
      * Creates instructions to repay a loan using collateral.
      * @param caller - The public key of the caller, this can be the owner or someone else if account health is 0%.
      * @param depositMarketIndex - The market index of the loan token to deposit.
@@ -511,7 +625,7 @@ export class QuartzUser {
      * }>} Object containing:
      * - ixs: Array of instructions to top up the card.
      * - lookupTables: Array of lookup tables for building VersionedTransaction.
-     * - signerKeypair: Keypair that must sign the transaction the instructions are added to.
+     * - signers: Keypairs that must sign the transaction the instructions are added to.
      * @throw Error if the RPC connection fails. The transaction will fail if the owner does not have enough tokens or, (when taking out a loan) the account health is not high enough for a loan.
      */
     public async makeTopUpCardIxs(
@@ -519,7 +633,7 @@ export class QuartzUser {
     ): Promise<{
         ixs: TransactionInstruction[],
         lookupTables: AddressLookupTableAccount[],
-        signerKeypair: Keypair
+        signers: Keypair[]
     }> {
         const messageSentEventData = Keypair.generate();
         const ownerUsdc = await getAssociatedTokenAddress(TOKENS[MARKET_INDEX_USDC].mint, this.pubkey);
@@ -554,7 +668,7 @@ export class QuartzUser {
         return {
             ixs: [ix_topUpCard],
             lookupTables: [this.quartzLookupTable],
-            signerKeypair: messageSentEventData
+            signers: []
         }
     }
 }

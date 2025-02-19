@@ -6,13 +6,13 @@ import { AnchorProvider, BorshInstructionCoder, Program, setProvider } from "@co
 import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledInstruction, Logs, } from "@solana/web3.js";
 import { QuartzUser } from "./user.js";
 import { getBridgeRentPayerPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getInitRentPayerPublicKey, getMessageTransmitter, getVaultPublicKey } from "./utils/accounts.js";
-import { DriftClientService } from "./services/driftClientService.js";
 import { SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
 import { DummyWallet } from "./types/classes/dummyWallet.class.js";
 import type { TransactionInstruction } from "@solana/web3.js";
 import { retryWithBackoff } from "./utils/helpers.js";
 import { getConfig as getMarginfiConfig, MarginfiClient } from "@mrgnlabs/marginfi-client-v2";
 import { Keypair } from "@solana/web3.js";
+import { DriftClientService } from "./services/driftClientService.js";
 
 export class QuartzClient {
     private connection: Connection;
@@ -41,7 +41,8 @@ export class QuartzClient {
 
     public static async fetchClient(
         connection: Connection
-    ) {
+    ): Promise<QuartzClient> {
+        console.log("Fetching Quartz client");
         const program = await QuartzClient.getProgram(connection);
         const quartzLookupTable = await connection.getAddressLookupTable(QUARTZ_ADDRESS_TABLE).then((res) => res.value);
         if (!quartzLookupTable) throw Error("Address Lookup Table account not found");

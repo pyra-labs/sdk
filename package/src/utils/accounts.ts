@@ -193,3 +193,11 @@ export const getEventAuthority = () => {
     );
     return eventAuthority;
 };
+
+export const getSpendMulePda = (user: PublicKey) => {
+    const [mulePda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("spend_mule"), user.toBuffer()],
+        QUARTZ_PROGRAM_ID
+    );
+    return mulePda;
+};
