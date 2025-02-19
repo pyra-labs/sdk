@@ -1,5 +1,5 @@
 export type Quartz = {
-  "version": "0.4.0",
+  "version": "0.4.1",
   "name": "quartz",
   "instructions": [
     {
@@ -116,7 +116,7 @@ export type Quartz = {
           "type": "u64"
         },
         {
-          "name": "extendSpendLimitPerTimeframeResetSlotAmount",
+          "name": "timeframeInSlots",
           "type": "u64"
         }
       ]
@@ -201,7 +201,7 @@ export type Quartz = {
           "type": "u64"
         },
         {
-          "name": "extendSpendLimitPerTimeframeResetSlotAmount",
+          "name": "timeframeInSlots",
           "type": "u64"
         }
       ]
@@ -765,7 +765,7 @@ export type Quartz = {
             "type": "u64"
           },
           {
-            "name": "extendSpendLimitPerTimeframeResetSlotAmount",
+            "name": "timeframeInSlots",
             "type": "u64"
           }
         ]
@@ -866,18 +866,18 @@ export type Quartz = {
     },
     {
       "code": 6015,
-      "name": "NotReachedCollateralRepayThreshold",
-      "msg": "Account health is not low enough for collateral_repay"
+      "name": "AutoRepayThresholdNotReached",
+      "msg": "Total collateral cannot be less than margin requirement for auto repay"
     },
     {
       "code": 6016,
-      "name": "CollateralRepayHealthTooHigh",
-      "msg": "Too much collateral sold in collateral_repay"
+      "name": "AutoRepayTooMuchSold",
+      "msg": "Too much collateral sold in auto repay"
     },
     {
       "code": 6017,
-      "name": "CollateralRepayHealthTooLow",
-      "msg": "User health is still zero after collateral_repay"
+      "name": "AutoRepayNotEnoughSold",
+      "msg": "Not enough collateral sold in auto repay"
     },
     {
       "code": 6018,
@@ -943,7 +943,7 @@ export type Quartz = {
 };
 
 export const IDL: Quartz = {
-  "version": "0.4.0",
+  "version": "0.4.1",
   "name": "quartz",
   "instructions": [
     {
@@ -1060,7 +1060,7 @@ export const IDL: Quartz = {
           "type": "u64"
         },
         {
-          "name": "extendSpendLimitPerTimeframeResetSlotAmount",
+          "name": "timeframeInSlots",
           "type": "u64"
         }
       ]
@@ -1145,7 +1145,7 @@ export const IDL: Quartz = {
           "type": "u64"
         },
         {
-          "name": "extendSpendLimitPerTimeframeResetSlotAmount",
+          "name": "timeframeInSlots",
           "type": "u64"
         }
       ]
@@ -1709,7 +1709,7 @@ export const IDL: Quartz = {
             "type": "u64"
           },
           {
-            "name": "extendSpendLimitPerTimeframeResetSlotAmount",
+            "name": "timeframeInSlots",
             "type": "u64"
           }
         ]
@@ -1810,18 +1810,18 @@ export const IDL: Quartz = {
     },
     {
       "code": 6015,
-      "name": "NotReachedCollateralRepayThreshold",
-      "msg": "Account health is not low enough for collateral_repay"
+      "name": "AutoRepayThresholdNotReached",
+      "msg": "Total collateral cannot be less than margin requirement for auto repay"
     },
     {
       "code": 6016,
-      "name": "CollateralRepayHealthTooHigh",
-      "msg": "Too much collateral sold in collateral_repay"
+      "name": "AutoRepayTooMuchSold",
+      "msg": "Too much collateral sold in auto repay"
     },
     {
       "code": 6017,
-      "name": "CollateralRepayHealthTooLow",
-      "msg": "User health is still zero after collateral_repay"
+      "name": "AutoRepayNotEnoughSold",
+      "msg": "Not enough collateral sold in auto repay"
     },
     {
       "code": 6018,
