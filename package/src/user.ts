@@ -427,7 +427,7 @@ export class QuartzUser {
         lookupTables: AddressLookupTableAccount[],
         signers: Keypair[]
     }> {
-        if (spendCaller.publicKey !== SPEND_CALLER) {
+        if (!spendCaller.publicKey.equals(SPEND_CALLER)) {
             throw new Error("Unauthorized spend caller");
         }
 

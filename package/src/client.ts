@@ -42,7 +42,6 @@ export class QuartzClient {
     public static async fetchClient(
         connection: Connection
     ): Promise<QuartzClient> {
-        console.log("Fetching Quartz client");
         const program = await QuartzClient.getProgram(connection);
         const quartzLookupTable = await connection.getAddressLookupTable(QUARTZ_ADDRESS_TABLE).then((res) => res.value);
         if (!quartzLookupTable) throw Error("Address Lookup Table account not found");
