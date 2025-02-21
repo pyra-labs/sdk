@@ -1,5 +1,5 @@
 export type Quartz = {
-  "version": "0.6.0",
+  "version": "0.7.0",
   "name": "quartz",
   "instructions": [
     {
@@ -384,107 +384,6 @@ export type Quartz = {
         {
           "name": "reduceOnly",
           "type": "bool"
-        }
-      ]
-    },
-    {
-      "name": "topUpCard",
-      "accounts": [
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "ownerUsdc",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "usdcMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bridgeRentPayer",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "senderAuthorityPda",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "messageTransmitter",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMessenger",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "remoteTokenMessenger",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMinter",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "localToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "messageSentEventData",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "eventAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "messageTransmitterProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMessengerMinterProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "amountUsdcBaseUnits",
-          "type": "u64"
         }
       ]
     },
@@ -1196,7 +1095,7 @@ export type Quartz = {
 };
 
 export const IDL: Quartz = {
-  "version": "0.6.0",
+  "version": "0.7.0",
   "name": "quartz",
   "instructions": [
     {
@@ -1581,107 +1480,6 @@ export const IDL: Quartz = {
         {
           "name": "reduceOnly",
           "type": "bool"
-        }
-      ]
-    },
-    {
-      "name": "topUpCard",
-      "accounts": [
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "ownerUsdc",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "usdcMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bridgeRentPayer",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "senderAuthorityPda",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "messageTransmitter",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMessenger",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "remoteTokenMessenger",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMinter",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "localToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "messageSentEventData",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "eventAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "messageTransmitterProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMessengerMinterProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "amountUsdcBaseUnits",
-          "type": "u64"
         }
       ]
     },
