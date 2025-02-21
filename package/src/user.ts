@@ -1,7 +1,7 @@
 import { DriftUser } from "./types/classes/driftUser.class.js";
 import type { DriftClient, UserAccount } from "@drift-labs/sdk";
 import type { Connection, AddressLookupTableAccount, TransactionInstruction, } from "@solana/web3.js";
-import { DRIFT_PROGRAM_ID, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, SPEND_CALLER, TOKEN_MESSAGE_MINTER_PROGRAM_ID, } from "./config/constants.js";
+import { DRIFT_PROGRAM_ID, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, TOKEN_MESSAGE_MINTER_PROGRAM_ID, } from "./config/constants.js";
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
@@ -431,10 +431,6 @@ export class QuartzUser {
         lookupTables: AddressLookupTableAccount[],
         signers: Keypair[]
     }> {
-        if (!spendCaller.publicKey.equals(SPEND_CALLER)) {
-            throw new Error("Unauthorized spend caller");
-        }
-
         const messageSentEventData = Keypair.generate();
 
         const ix_startSpend = await this.program.methods
@@ -442,7 +438,7 @@ export class QuartzUser {
             .accounts({
                 vault: this.vaultPubkey,
                 owner: this.pubkey,
-                spendCaller: SPEND_CALLER,
+                spendCaller: spendCaller.publicKey,
                 mule: getSpendMulePda(this.pubkey),
                 usdcMint: TOKENS[MARKET_INDEX_USDC].mint,
                 driftUser: this.driftUser.pubkey,
@@ -466,7 +462,7 @@ export class QuartzUser {
             .accounts({
                 vault: this.vaultPubkey,
                 owner: this.pubkey,
-                spendCaller: SPEND_CALLER,
+                spendCaller: spendCaller.publicKey,
                 mule: getSpendMulePda(this.pubkey),
                 usdcMint: TOKENS[MARKET_INDEX_USDC].mint,
                 bridgeRentPayer: getBridgeRentPayerPublicKey(),
