@@ -102,8 +102,8 @@ export class QuartzClient {
             vaultAccount.spendLimitPerTransaction,
             vaultAccount.spendLimitPerTimeframe,
             vaultAccount.remainingSpendLimitPerTimeframe,
-            vaultAccount.nextTimeframeResetSlot,
-            vaultAccount.timeframeInSlots
+            vaultAccount.nextTimeframeResetTimestamp,
+            vaultAccount.timeframeInSeconds
         );
     }
 
@@ -145,8 +145,8 @@ export class QuartzClient {
                 vaultAccount.spendLimitPerTransaction,
                 vaultAccount.spendLimitPerTimeframe,
                 vaultAccount.remainingSpendLimitPerTimeframe,
-                vaultAccount.nextTimeframeResetSlot,
-                vaultAccount.timeframeInSlots
+                vaultAccount.nextTimeframeResetTimestamp,
+                vaultAccount.timeframeInSeconds
             )
         });
     }
@@ -283,7 +283,8 @@ export class QuartzClient {
         owner: PublicKey,
         spendLimitPerTransaction: BN,
         spendLimitPerTimeframe: BN,
-        timeframeInSlots: BN
+        timeframeInSeconds: BN,
+        nextTimeframeResetTimestamp: BN
     ): Promise<{
         ixs: TransactionInstruction[],
         lookupTables: AddressLookupTableAccount[],
@@ -302,7 +303,8 @@ export class QuartzClient {
                 requiresMarginfiAccount,
                 spendLimitPerTransaction,
                 spendLimitPerTimeframe,
-                timeframeInSlots
+                timeframeInSeconds,
+                nextTimeframeResetTimestamp
             )
             .accounts({
                 vault: vault,

@@ -1,5 +1,5 @@
 export type Quartz = {
-  "version": "0.5.1",
+  "version": "0.6.0",
   "name": "quartz",
   "instructions": [
     {
@@ -116,7 +116,11 @@ export type Quartz = {
           "type": "u64"
         },
         {
-          "name": "timeframeInSlots",
+          "name": "timeframeInSeconds",
+          "type": "u64"
+        },
+        {
+          "name": "nextTimeframeResetTimestamp",
           "type": "u64"
         }
       ]
@@ -201,7 +205,11 @@ export type Quartz = {
           "type": "u64"
         },
         {
-          "name": "timeframeInSlots",
+          "name": "timeframeInSeconds",
+          "type": "u64"
+        },
+        {
+          "name": "nextTimeframeResetTimestamp",
           "type": "u64"
         }
       ]
@@ -696,7 +704,11 @@ export type Quartz = {
           "type": "u64"
         },
         {
-          "name": "timeframeInSlots",
+          "name": "timeframeInSeconds",
+          "type": "u64"
+        },
+        {
+          "name": "nextTimeframeResetTimestamp",
           "type": "u64"
         }
       ]
@@ -982,11 +994,11 @@ export type Quartz = {
             "type": "u64"
           },
           {
-            "name": "nextTimeframeResetSlot",
+            "name": "nextTimeframeResetTimestamp",
             "type": "u64"
           },
           {
-            "name": "timeframeInSlots",
+            "name": "timeframeInSeconds",
             "type": "u64"
           }
         ]
@@ -1174,12 +1186,17 @@ export type Quartz = {
       "code": 6032,
       "name": "IllegalSpendInstructions",
       "msg": "start_spend instruction must be followed by complete_spend instruction"
+    },
+    {
+      "code": 6033,
+      "name": "InvalidTimestamp",
+      "msg": "Current timestamp cannot be negative"
     }
   ]
 };
 
 export const IDL: Quartz = {
-  "version": "0.5.1",
+  "version": "0.6.0",
   "name": "quartz",
   "instructions": [
     {
@@ -1296,7 +1313,11 @@ export const IDL: Quartz = {
           "type": "u64"
         },
         {
-          "name": "timeframeInSlots",
+          "name": "timeframeInSeconds",
+          "type": "u64"
+        },
+        {
+          "name": "nextTimeframeResetTimestamp",
           "type": "u64"
         }
       ]
@@ -1381,7 +1402,11 @@ export const IDL: Quartz = {
           "type": "u64"
         },
         {
-          "name": "timeframeInSlots",
+          "name": "timeframeInSeconds",
+          "type": "u64"
+        },
+        {
+          "name": "nextTimeframeResetTimestamp",
           "type": "u64"
         }
       ]
@@ -1876,7 +1901,11 @@ export const IDL: Quartz = {
           "type": "u64"
         },
         {
-          "name": "timeframeInSlots",
+          "name": "timeframeInSeconds",
+          "type": "u64"
+        },
+        {
+          "name": "nextTimeframeResetTimestamp",
           "type": "u64"
         }
       ]
@@ -2162,11 +2191,11 @@ export const IDL: Quartz = {
             "type": "u64"
           },
           {
-            "name": "nextTimeframeResetSlot",
+            "name": "nextTimeframeResetTimestamp",
             "type": "u64"
           },
           {
-            "name": "timeframeInSlots",
+            "name": "timeframeInSeconds",
             "type": "u64"
           }
         ]
@@ -2354,6 +2383,11 @@ export const IDL: Quartz = {
       "code": 6032,
       "name": "IllegalSpendInstructions",
       "msg": "start_spend instruction must be followed by complete_spend instruction"
+    },
+    {
+      "code": 6033,
+      "name": "InvalidTimestamp",
+      "msg": "Current timestamp cannot be negative"
     }
   ]
 };

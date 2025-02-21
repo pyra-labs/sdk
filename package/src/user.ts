@@ -21,8 +21,8 @@ export class QuartzUser {
     public readonly spendLimitPerTransaction: BN;
     public readonly spendLimitPerTimeframe: BN;
     public readonly remainingSpendLimitPerTimeframe: BN;
-    public readonly nextTimeframeResetSlot: BN;
-    public readonly timeframeInSlots: BN;
+    public readonly nextTimeframeResetTimestamp: BN;
+    public readonly timeframeInSeconds: BN;
 
     private connection: Connection;
     private program: Program<Quartz>;
@@ -41,8 +41,8 @@ export class QuartzUser {
         spendLimitPerTransaction: BN,
         spendLimitPerTimeframe: BN,
         remainingSpendLimitPerTimeframe: BN,
-        nextTimeframeResetSlot: BN,
-        timeframeInSlots: BN
+        nextTimeframeResetTimeframe: BN,
+        timeframeInSeconds: BN
     ) {
         this.pubkey = pubkey;
         this.connection = connection;
@@ -55,8 +55,8 @@ export class QuartzUser {
         this.spendLimitPerTransaction = spendLimitPerTransaction;
         this.spendLimitPerTimeframe = spendLimitPerTimeframe;
         this.remainingSpendLimitPerTimeframe = remainingSpendLimitPerTimeframe;
-        this.nextTimeframeResetSlot = nextTimeframeResetSlot;
-        this.timeframeInSlots = timeframeInSlots;
+        this.nextTimeframeResetTimestamp = nextTimeframeResetTimeframe;
+        this.timeframeInSeconds = timeframeInSeconds;
 
         this.driftUser = new DriftUser(
             this.vaultPubkey,
@@ -234,7 +234,8 @@ export class QuartzUser {
     public async makeUpgradeAccountIxs(
         spendLimitPerTransaction: BN,
         spendLimitPerTimeframe: BN,
-        timeframeInSlots: BN
+        timeframeInSeconds: BN,
+        nextTimeframeResetTimestamp: BN
     ): Promise<{
         ixs: TransactionInstruction[],
         lookupTables: AddressLookupTableAccount[],
@@ -244,7 +245,8 @@ export class QuartzUser {
             .upgradeVault(
                 spendLimitPerTransaction,
                 spendLimitPerTimeframe,
-                timeframeInSlots
+                timeframeInSeconds,
+                nextTimeframeResetTimestamp
             )
             .accounts({
                 vault: this.vaultPubkey,
@@ -394,7 +396,8 @@ export class QuartzUser {
     public async makeAdjustSpendLimitsIxs(
         spendLimitPerTransaction: BN,
         spendLimitPerTimeframe: BN,
-        timeframeInSlots: BN
+        timeframeInSeconds: BN,
+        nextTimeframeResetTimestamp: BN
     ): Promise<{
         ixs: TransactionInstruction[],
         lookupTables: AddressLookupTableAccount[],
@@ -404,7 +407,8 @@ export class QuartzUser {
             .adjustSpendLimits(
                 spendLimitPerTransaction,
                 spendLimitPerTimeframe,
-                timeframeInSlots
+                timeframeInSeconds,
+                nextTimeframeResetTimestamp
             )
             .accounts({
                 vault: this.vaultPubkey,
