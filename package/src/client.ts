@@ -1,6 +1,6 @@
 import { BN, type DriftClient } from "@drift-labs/sdk";
 import { calculateBorrowRate, calculateDepositRate, DRIFT_PROGRAM_ID, fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
-import { MARGINFI_GROUP_1, MARGINFI_PROGRAM_ID, MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID, RENT_RECLAIMER_PUBKEY } from "./config/constants.js";
+import { MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID, RENT_RECLAIMER_PUBKEY } from "./config/constants.js";
 import { IDL, type Quartz } from "./types/idl/quartz.js";
 import { AnchorProvider, BorshInstructionCoder, Program, setProvider } from "@coral-xyz/anchor";
 import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledInstruction, Logs, } from "@solana/web3.js";
@@ -10,7 +10,6 @@ import { SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
 import { DummyWallet } from "./types/classes/dummyWallet.class.js";
 import type { TransactionInstruction } from "@solana/web3.js";
 import { retryWithBackoff } from "./utils/helpers.js";
-import { getConfig as getMarginfiConfig, MarginfiClient } from "@mrgnlabs/marginfi-client-v2";
 import { Keypair } from "@solana/web3.js";
 import { DriftClientService } from "./services/driftClientService.js";
 
@@ -290,17 +289,11 @@ export class QuartzClient {
         lookupTables: AddressLookupTableAccount[],
         signers: Keypair[]
     }> {
-        const wallet = new DummyWallet(owner);
-        const marginfiClient = await MarginfiClient.fetch(getMarginfiConfig(), wallet, this.connection);
-        const marginfiAccounts = await marginfiClient.getMarginfiAccountsForAuthority(owner);
-        const requiresMarginfiAccount = (marginfiAccounts.length === 0);
-
         const vault = getVaultPublicKey(owner);
         const marginfiAccount = Keypair.generate();
 
         const ix_initUser = await this.program.methods
             .initUser(
-                requiresMarginfiAccount,
                 spendLimitPerTransaction,
                 spendLimitPerTimeframe,
                 timeframeInSeconds,
@@ -314,9 +307,6 @@ export class QuartzClient {
                 driftUserStats: getDriftUserStatsPublicKey(vault),
                 driftState: getDriftStatePublicKey(),
                 driftProgram: DRIFT_PROGRAM_ID,
-                marginfiGroup: MARGINFI_GROUP_1,
-                marginfiAccount: marginfiAccount.publicKey,
-                marginfiProgram: MARGINFI_PROGRAM_ID,
                 rent: SYSVAR_RENT_PUBKEY,
                 systemProgram: SystemProgram.programId,
             })

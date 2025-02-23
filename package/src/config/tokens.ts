@@ -3,7 +3,7 @@ import type { Token } from "../types/interfaces/token.interface.js";
 import BN from "bn.js";
 
 export const MarketIndex = [
-    1, 0, 5, 22, 28, 3, 6, 19
+    1, 0, 5, 22, 28, 3, 6, 19, 29
 ] as const;
 export type MarketIndex = (typeof MarketIndex)[number];
 
@@ -78,5 +78,13 @@ export const TOKENS: Record<MarketIndex, Token> = {
         decimalPrecision: new BN(6),
         driftInitialCollateralWeight: new BN(80),
         coingeckoPriceId: "jupiter-perpetuals-liquidity-provider-token",
+    },
+    29: {
+        name: "META",
+        mint: new PublicKey("METADDFL6wWMWEoKTFJwcThTbUmtarRJZjRpzUvkxhr"),
+        pythPriceFeedId: "0xe379d8d3a1a44952474f057bdfe6e902a97f093b2872c152dcf04f612e3e3be9",
+        decimalPrecision: new BN(9),
+        driftInitialCollateralWeight: new BN(25),
+        coingeckoPriceId: "meta-2",
     }
 };

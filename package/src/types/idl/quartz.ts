@@ -77,21 +77,6 @@ export type Quartz = {
           "isSigner": false
         },
         {
-          "name": "marginfiGroup",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "marginfiAccount",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "marginfiProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "rent",
           "isMut": false,
           "isSigner": false
@@ -103,10 +88,6 @@ export type Quartz = {
         }
       ],
       "args": [
-        {
-          "name": "requiresMarginfiAccount",
-          "type": "bool"
-        },
         {
           "name": "spendLimitPerTransaction",
           "type": "u64"
@@ -1173,21 +1154,6 @@ export const IDL: Quartz = {
           "isSigner": false
         },
         {
-          "name": "marginfiGroup",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "marginfiAccount",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "marginfiProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "rent",
           "isMut": false,
           "isSigner": false
@@ -1199,10 +1165,6 @@ export const IDL: Quartz = {
         }
       ],
       "args": [
-        {
-          "name": "requiresMarginfiAccount",
-          "type": "bool"
-        },
         {
           "name": "spendLimitPerTransaction",
           "type": "u64"
