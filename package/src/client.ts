@@ -10,7 +10,7 @@ import { SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
 import { DummyWallet } from "./types/classes/dummyWallet.class.js";
 import type { TransactionInstruction } from "@solana/web3.js";
 import { retryWithBackoff } from "./utils/helpers.js";
-import { Keypair } from "@solana/web3.js";
+import type { Keypair } from "@solana/web3.js";
 import { DriftClientService } from "./services/driftClientService.js";
 
 export class QuartzClient {
@@ -290,7 +290,6 @@ export class QuartzClient {
         signers: Keypair[]
     }> {
         const vault = getVaultPublicKey(owner);
-        const marginfiAccount = Keypair.generate();
 
         const ix_initUser = await this.program.methods
             .initUser(
@@ -315,7 +314,7 @@ export class QuartzClient {
         return {
             ixs: [ix_initUser],
             lookupTables: [this.quartzLookupTable],
-            signers: [marginfiAccount]
+            signers: []
         };
     }
 

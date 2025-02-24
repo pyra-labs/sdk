@@ -496,6 +496,7 @@ export class QuartzUser {
      * @param depositMarketIndex - The market index of the loan token to deposit.
      * @param withdrawMarketIndex - The market index of the collateral token to withdraw.
      * @param swapInstruction - The swap instruction to use. Deposit and withdrawn amounts are calculated by the balance change after this instruction.
+     * @param requireOwnerSignature - True means the owner must sign the transaction. This is for manually marking the account info when two signers are required.
      * @returns {Promise<{
      *     ixs: TransactionInstruction[],
      *     lookupTables: AddressLookupTableAccount[],
@@ -513,7 +514,8 @@ export class QuartzUser {
         caller: PublicKey,
         depositMarketIndex: MarketIndex,
         withdrawMarketIndex: MarketIndex,
-        swapInstruction: TransactionInstruction
+        swapInstruction: TransactionInstruction,
+        requireOwnerSignature = false
     ): Promise<{
         ixs: TransactionInstruction[],
         lookupTables: AddressLookupTableAccount[],
@@ -619,6 +621,16 @@ export class QuartzUser {
             depositCollateralRepayPromise,
             withdrawCollateralRepayPromise
         ]);
+
+        // Mark the owner as a signer if the caller is not the owner
+        if (requireOwnerSignature) {
+            for (const ix of [ix_startCollateralRepay, ix_depositCollateralRepay, ix_withdrawCollateralRepay]) {
+                const ownerAccountMeta = ix.keys.find(key => key.pubkey.equals(this.pubkey));
+                if (ownerAccountMeta) {
+                    ownerAccountMeta.isSigner = true;
+                }
+            }
+        }
 
         return {
             ixs: [
