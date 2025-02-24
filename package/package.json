@@ -64,7 +64,7 @@
     "bn.js": "^5.2.1"
   },
   "peerDependencies": {
-    "@solana/web3.js": "^1.98.0",
-    "rpc-websockets": "^9.0.4"
+    "@solana/web3.js": "1.98.0",
+    "rpc-websockets": "9.0.4"
   }
 }

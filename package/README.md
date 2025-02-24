@@ -18,8 +18,8 @@ There is currently an issue with dependancy resolutions, so add the following to
 
 ```json
 "resolutions": {
-  "rpc-websockets": "^9.0.4",
-  "@solana/web3.js": "^1.95.8"
+  "rpc-websockets": "9.0.4",
+  "@solana/web3.js": "1.98.0"
 }
 ```
 
