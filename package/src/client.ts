@@ -170,7 +170,8 @@ export class QuartzClient {
 
     public async listenForInstruction(
         instructionName: string,
-        onInstruction: (instruction: MessageCompiledInstruction, accountKeys: PublicKey[]) => void
+        onInstruction: (instruction: MessageCompiledInstruction, accountKeys: PublicKey[]) => void,
+        ignoreErrors = true
     ) {
         this.connection.onLogs(
             QUARTZ_PROGRAM_ID,
@@ -187,6 +188,8 @@ export class QuartzClient {
                         return tx;
                     }
                 );
+
+                if (tx.meta?.err && ignoreErrors) return;
 
                 const encodedIxs = tx.transaction.message.compiledInstructions;
                 const coder = new BorshInstructionCoder(IDL);

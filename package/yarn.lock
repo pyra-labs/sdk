@@ -968,6 +968,18 @@
     bs58 "^5.0.0"
     jito-ts "^3.0.1"
 
+"@quartz-labs/sdk@2.111.0-beta.6":
+  version "0.9.4"
+  resolved "https://registry.yarnpkg.com/@quartz-labs/sdk/-/sdk-0.9.4.tgz#3554ebe8af477df7d22edfbae06a97270f91d09a"
+  integrity sha512-YV9b3P64dNvUruEGPzc4cY6/g/iZTyAaj0drCpqpJ4Eec6v71h93AZg29swcJ8JdlmkoXOyOw6FIQ9ex09VOuA==
+  dependencies:
+    "@coral-xyz/anchor" "^0.29.0"
+    "@drift-labs/sdk" "^2.110.0-beta.22"
+    "@jup-ag/api" "6.0.30"
+    "@pythnetwork/pyth-solana-receiver" "^0.9.1"
+    "@solana/spl-token" "^0.4.9"
+    bn.js "^5.2.1"
+
 "@shikijs/engine-oniguruma@^1.24.2":
   version "1.24.2"
   resolved "https://registry.yarnpkg.com/@shikijs/engine-oniguruma/-/engine-oniguruma-1.24.2.tgz#90924001a17a2551a2a9073aed4af3767ce68b1b"
