@@ -403,10 +403,10 @@
     bn.js "^5.1.2"
     buffer-layout "^1.2.0"
 
-"@drift-labs/sdk@^2.110.0-beta.22":
-  version "2.110.0-beta.22"
-  resolved "https://registry.yarnpkg.com/@drift-labs/sdk/-/sdk-2.110.0-beta.22.tgz#a01597f866500b65937e496bb09ee16a995118fb"
-  integrity sha512-G6G7KQb8IPnhcwvCOXrSBpwcVG+/vdihMZ7jHU5m4ATlM9ZpMyN6SfmzbStZ0i8XlD/+t0FDrFzUnpu4JBYeLw==
+"@drift-labs/sdk@2.111.0-beta.6":
+  version "2.111.0-beta.6"
+  resolved "https://registry.yarnpkg.com/@drift-labs/sdk/-/sdk-2.111.0-beta.6.tgz#fe4ca2c3548abfef2378bd58343d38318a667490"
+  integrity sha512-23OyUB+1jZUwift1NmyJ8xqyrShDqgbEaC+7TbqlFnNYaulm47Mxf45IjkffOdECjcL/nAjsnFm6fN4+DZr1NA==
   dependencies:
     "@coral-xyz/anchor" "0.29.0"
     "@coral-xyz/anchor-30" "npm:@coral-xyz/anchor@0.30.1"
@@ -967,18 +967,6 @@
     "@solana/web3.js" "^1.90.0"
     bs58 "^5.0.0"
     jito-ts "^3.0.1"
-
-"@quartz-labs/sdk@2.111.0-beta.6":
-  version "0.9.4"
-  resolved "https://registry.yarnpkg.com/@quartz-labs/sdk/-/sdk-0.9.4.tgz#3554ebe8af477df7d22edfbae06a97270f91d09a"
-  integrity sha512-YV9b3P64dNvUruEGPzc4cY6/g/iZTyAaj0drCpqpJ4Eec6v71h93AZg29swcJ8JdlmkoXOyOw6FIQ9ex09VOuA==
-  dependencies:
-    "@coral-xyz/anchor" "^0.29.0"
-    "@drift-labs/sdk" "^2.110.0-beta.22"
-    "@jup-ag/api" "6.0.30"
-    "@pythnetwork/pyth-solana-receiver" "^0.9.1"
-    "@solana/spl-token" "^0.4.9"
-    bn.js "^5.2.1"
 
 "@shikijs/engine-oniguruma@^1.24.2":
   version "1.24.2"
