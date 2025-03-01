@@ -10,8 +10,6 @@ export const TOKEN_MESSAGE_MINTER_PROGRAM_ID = new PublicKey("CCTPiPYPc6AsJuwueE
 export const MESSAGE_TRANSMITTER_PROGRAM_ID = new PublicKey("CCTPmbSD7gX1bxKPAmg77w8oFzNFpaQiQUWD43TKaecd");
 export const MARGINFI_PROGRAM_ID = new PublicKey("MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA");
 
-export const RENT_RECLAIMER_PUBKEY = new PublicKey("AhLjdeYqv4Ytw5sukK4z3x37ZGaSJ44pRqdcxqHP4ChS");
-
 export const PROVIDER_BASE_ADDRESS = "0x55a2eeB9028ee51Ef91352Fa9f84A9450C5Af099";
 export const QUARTZ_CALLER_BASE_ADDRESS = "0x28A0105A0cf8C0485a4956ba14b5274e9ED229DE";
 

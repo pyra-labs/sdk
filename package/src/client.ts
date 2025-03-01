@@ -1,9 +1,9 @@
-import { BN, type DriftClient } from "@drift-labs/sdk";
+import type { BN, DriftClient } from "@drift-labs/sdk";
 import { calculateBorrowRate, calculateDepositRate, DRIFT_PROGRAM_ID, fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
-import { MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID, RENT_RECLAIMER_PUBKEY } from "./config/constants.js";
+import { MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID } from "./config/constants.js";
 import { IDL, type Quartz } from "./types/idl/quartz.js";
 import { AnchorProvider, BorshInstructionCoder, Program, setProvider } from "@coral-xyz/anchor";
-import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledInstruction, Logs, } from "@solana/web3.js";
+import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledInstruction, Logs, Signer, } from "@solana/web3.js";
 import { QuartzUser } from "./user.js";
 import { getBridgeRentPayerPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getInitRentPayerPublicKey, getMessageTransmitter, getVaultPublicKey } from "./utils/accounts.js";
 import { SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
@@ -207,17 +207,14 @@ export class QuartzClient {
         )
     }
 
-    public static async parseTopUpIx(
+    public static async parseSpendIx(
         connection: Connection,
         signature: string,
         owner: PublicKey
-    ): Promise<{
-        amountBaseUnits: BN,
-        messageSentEventDataAccounts: PublicKey[]
-    }> {
-        const INSRTUCTION_NAME = "topUpCard";
+    ): Promise<PublicKey> {
+        const INSRTUCTION_NAME = "complete_spend";
         const ACCOUNT_INDEX_OWNER = 1;
-        const ACCOUNT_INDEX_MESSAGE_SENT_EVENT_DATA = 11;
+        const ACCOUNT_INDEX_MESSAGE_SENT_EVENT_DATA = 12;
 
         const tx = await connection.getTransaction(signature, {
             maxSupportedTransactionVersion: 0,
@@ -228,8 +225,6 @@ export class QuartzClient {
         const encodedIxs = tx.transaction.message.compiledInstructions;
         const coder = new BorshInstructionCoder(IDL);
 
-        const messageSentEventDataAccounts: PublicKey[] = [];
-        let totalTopUpBaseUnits = new BN(0);
         for (const ix of encodedIxs) {
             try {
                 const quartzIx = coder.decode(Buffer.from(ix.data), "base58");
@@ -244,22 +239,17 @@ export class QuartzClient {
                     const actualOwner = accountKeys[ownerIndex];
                     if (!actualOwner.equals(owner)) throw new Error("Owner does not match");
 
-                    const args = quartzIx.data as {amountUsdcBaseUnits: BN};
-                    totalTopUpBaseUnits = totalTopUpBaseUnits.add(args.amountUsdcBaseUnits);
 
                     const messageSentEventDataIndex = ix.accountKeyIndexes?.[ACCOUNT_INDEX_MESSAGE_SENT_EVENT_DATA];
                     if (messageSentEventDataIndex === undefined || accountKeys[messageSentEventDataIndex] === undefined) {
                         throw new Error("Message sent event data not found");
                     }
-                    messageSentEventDataAccounts.push(accountKeys[messageSentEventDataIndex]);
+                    return accountKeys[messageSentEventDataIndex];
                 }
             } catch { }
         }
 
-        return {
-            amountBaseUnits: totalTopUpBaseUnits,
-            messageSentEventDataAccounts
-        };
+        throw new Error("Spend instruction not found");
     }
 
 
@@ -324,12 +314,17 @@ export class QuartzClient {
     public admin = {
         makeReclaimBridgeRentIxs: async (
             messageSentEventData: PublicKey,
-            attestation: Buffer<ArrayBuffer>
-        ): Promise<TransactionInstruction[]> => {
+            attestation: Buffer<ArrayBuffer>,
+            rentReclaimer: Signer
+        ): Promise<{
+            ixs: TransactionInstruction[],
+            lookupTables: AddressLookupTableAccount[],
+            signers: Signer[]
+        }> => {
             const ix_reclaimBridgeRent = await this.program.methods
                 .reclaimBridgeRent(attestation)
                 .accounts({
-                    rentReclaimer: RENT_RECLAIMER_PUBKEY,
+                    rentReclaimer: rentReclaimer.publicKey,
                     bridgeRentPayer: getBridgeRentPayerPublicKey(),
                     messageTransmitter: getMessageTransmitter(),
                     messageSentEventData: messageSentEventData,
@@ -337,7 +332,11 @@ export class QuartzClient {
                 })
                 .instruction();
 
-            return [ix_reclaimBridgeRent];
+            return {
+                ixs: [ix_reclaimBridgeRent],
+                lookupTables: [this.quartzLookupTable],
+                signers: [rentReclaimer]
+            };
         }
     }
 }
