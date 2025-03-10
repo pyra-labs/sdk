@@ -1,4 +1,4 @@
-import { DriftClient } from "@drift-labs/sdk";
+import { BulkAccountLoader, DriftClient } from "@drift-labs/sdk";
 import type { Connection } from "@solana/web3.js";
 import { MarketIndex } from "../config/tokens.js";
 import { DummyWallet } from "../types/classes/dummyWallet.class.js";
@@ -10,7 +10,8 @@ export class DriftClientService {
     private driftClientInitPromise: Promise<boolean>;
 
     private constructor(
-        connection: Connection
+        connection: Connection,
+        pollingFrequency = 1000
     ) {
         const wallet = new DummyWallet(QUARTZ_DRIFT_ACCOUNT);
 
@@ -22,16 +23,16 @@ export class DriftClientService {
             perpMarketIndexes: [],
             spotMarketIndexes: [...MarketIndex],
             accountSubscription: {
-                type: 'websocket',
-                commitment: "confirmed"
+                type: 'polling',
+                accountLoader: new BulkAccountLoader(connection, "confirmed", pollingFrequency)
             }
         });
         this.driftClientInitPromise = this.driftClient.subscribe();
     }
 
-    public static async getDriftClient(connection: Connection): Promise<DriftClient> {
+    public static async getDriftClient(connection: Connection, pollingFrequency = 1000): Promise<DriftClient> {
         if (!DriftClientService.instance) {
-            DriftClientService.instance = new DriftClientService(connection);
+            DriftClientService.instance = new DriftClientService(connection, pollingFrequency);
         }
         await DriftClientService.instance.driftClientInitPromise;
         return DriftClientService.instance.driftClient;

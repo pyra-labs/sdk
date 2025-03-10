@@ -39,13 +39,14 @@ export class QuartzClient {
     }
 
     public static async fetchClient(
-        connection: Connection
+        connection: Connection,
+        pollingFrequency = 1000
     ): Promise<QuartzClient> {
         const program = await QuartzClient.getProgram(connection);
         const quartzLookupTable = await connection.getAddressLookupTable(QUARTZ_ADDRESS_TABLE).then((res) => res.value);
         if (!quartzLookupTable) throw Error("Address Lookup Table account not found");
 
-        const driftClient = await DriftClientService.getDriftClient(connection);
+        const driftClient = await DriftClientService.getDriftClient(connection, pollingFrequency);
 
         return new QuartzClient(
             connection, 
@@ -212,7 +213,7 @@ export class QuartzClient {
         signature: string,
         owner: PublicKey
     ): Promise<PublicKey> {
-        const INSRTUCTION_NAME = "complete_spend";
+        const INSRTUCTION_NAME = "CompleteSpend";
         const ACCOUNT_INDEX_OWNER = 1;
         const ACCOUNT_INDEX_MESSAGE_SENT_EVENT_DATA = 12;
 
