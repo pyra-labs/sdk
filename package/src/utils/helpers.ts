@@ -160,18 +160,16 @@ export async function retryWithBackoff<T>(
     initialDelay = 1_000,
     retryCallback?: (error: unknown, delayMs: number) => void,
 ) {
-    let lastError = new Error("Unknown error");
+    let lastError: unknown = new Error("Unknown error");
     for (let i = 0; i <= retries; i++) {
         try {
             return await fn();
         } catch (error) {
             const delay = initialDelay * (2 ** i);
-            lastError = (error instanceof Error) 
-                ? error 
-                : new Error(String(error));
+            lastError = error;
 
             if (retryCallback) {
-                retryCallback(lastError, delay);
+                retryCallback(error, delay);
             }
 
             await new Promise(resolve => setTimeout(resolve, delay));
