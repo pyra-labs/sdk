@@ -1,7 +1,7 @@
 import { DriftUser } from "./types/classes/driftUser.class.js";
 import type { DriftClient, UserAccount } from "@drift-labs/sdk";
 import type { Connection, AddressLookupTableAccount, TransactionInstruction, } from "@solana/web3.js";
-import { DRIFT_PROGRAM_ID, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, TOKEN_MESSAGE_MINTER_PROGRAM_ID, } from "./config/constants.js";
+import { DRIFT_PROGRAM_ID, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, SPEND_FEE_DESTINATION, TOKEN_MESSAGE_MINTER_PROGRAM_ID, } from "./config/constants.js";
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
@@ -425,7 +425,8 @@ export class QuartzUser {
 
     public async makeSpendIxs(
         amountBaseUnits: number,
-        spendCaller: Keypair
+        spendCaller: Keypair,
+        spendFee: boolean
     ): Promise<{
         ixs: TransactionInstruction[],
         lookupTables: AddressLookupTableAccount[],
@@ -434,11 +435,15 @@ export class QuartzUser {
         const messageSentEventData = Keypair.generate();
 
         const ix_startSpend = await this.program.methods
-            .startSpend(new BN(amountBaseUnits))
+            .startSpend(
+                new BN(amountBaseUnits),
+                spendFee
+            )
             .accounts({
                 vault: this.vaultPubkey,
                 owner: this.pubkey,
                 spendCaller: spendCaller.publicKey,
+                spendFeeDestination: SPEND_FEE_DESTINATION,
                 mule: getSpendMulePda(this.pubkey),
                 usdcMint: TOKENS[MARKET_INDEX_USDC].mint,
                 driftUser: this.driftUser.pubkey,

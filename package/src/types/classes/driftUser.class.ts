@@ -170,8 +170,8 @@ export class DriftUser {
 		return BN.max(maxBorrowValue, ZERO);
 	}
 
-	public getFreeCollateral(marginCategory: MarginCategory = 'Initial', strict = true): BN {
-		const totalCollateral = this.getTotalCollateralValue(marginCategory, true);
+	public getFreeCollateral(marginCategory: MarginCategory = 'Initial', strict = false): BN {
+		const totalCollateral = this.getTotalCollateralValue(marginCategory, strict);
 
 		const marginRequirement =
 			marginCategory === 'Initial'
@@ -907,7 +907,7 @@ export class DriftUser {
     private getMarginRequirement(
 		marginCategory: MarginCategory,
 		liquidationBuffer?: BN,
-		strict = true,
+		strict = false,
 		includeOpenOrders = true
 	): BN {
 		return this.getTotalPerpPositionLiability(
