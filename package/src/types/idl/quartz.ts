@@ -1,5 +1,5 @@
 export type Quartz = {
-  "version": "0.7.1",
+  "version": "0.8.1",
   "name": "quartz",
   "instructions": [
     {
@@ -83,16 +83,6 @@ export type Quartz = {
         },
         {
           "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "eventAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "program",
           "isMut": false,
           "isSigner": false
         }
@@ -938,67 +928,6 @@ export type Quartz = {
           }
         ]
       }
-    }
-  ],
-  "types": [
-    {
-      "name": "CommonFields",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "slot",
-            "type": "u64"
-          },
-          {
-            "name": "unixTimestamp",
-            "type": "i64"
-          },
-          {
-            "name": "user",
-            "type": "publicKey"
-          }
-        ]
-      }
-    }
-  ],
-  "events": [
-    {
-      "name": "SpendLimitUpdatedEvent",
-      "fields": [
-        {
-          "name": "commonFields",
-          "type": {
-            "defined": "CommonFields"
-          },
-          "index": false
-        },
-        {
-          "name": "spendLimitPerTransaction",
-          "type": "u64",
-          "index": false
-        },
-        {
-          "name": "spendLimitPerTimeframe",
-          "type": "u64",
-          "index": false
-        },
-        {
-          "name": "remainingSpendLimitPerTimeframe",
-          "type": "u64",
-          "index": false
-        },
-        {
-          "name": "nextTimeframeResetTimestamp",
-          "type": "u64",
-          "index": false
-        },
-        {
-          "name": "timeframeInSeconds",
-          "type": "u64",
-          "index": false
-        }
-      ]
     }
   ],
   "errors": [
@@ -1176,7 +1105,7 @@ export type Quartz = {
 };
 
 export const IDL: Quartz = {
-  "version": "0.7.1",
+  "version": "0.8.1",
   "name": "quartz",
   "instructions": [
     {
@@ -1260,16 +1189,6 @@ export const IDL: Quartz = {
         },
         {
           "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "eventAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "program",
           "isMut": false,
           "isSigner": false
         }
@@ -2115,67 +2034,6 @@ export const IDL: Quartz = {
           }
         ]
       }
-    }
-  ],
-  "types": [
-    {
-      "name": "CommonFields",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "slot",
-            "type": "u64"
-          },
-          {
-            "name": "unixTimestamp",
-            "type": "i64"
-          },
-          {
-            "name": "user",
-            "type": "publicKey"
-          }
-        ]
-      }
-    }
-  ],
-  "events": [
-    {
-      "name": "SpendLimitUpdatedEvent",
-      "fields": [
-        {
-          "name": "commonFields",
-          "type": {
-            "defined": "CommonFields"
-          },
-          "index": false
-        },
-        {
-          "name": "spendLimitPerTransaction",
-          "type": "u64",
-          "index": false
-        },
-        {
-          "name": "spendLimitPerTimeframe",
-          "type": "u64",
-          "index": false
-        },
-        {
-          "name": "remainingSpendLimitPerTimeframe",
-          "type": "u64",
-          "index": false
-        },
-        {
-          "name": "nextTimeframeResetTimestamp",
-          "type": "u64",
-          "index": false
-        },
-        {
-          "name": "timeframeInSeconds",
-          "type": "u64",
-          "index": false
-        }
-      ]
     }
   ],
   "errors": [
