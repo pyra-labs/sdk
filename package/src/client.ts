@@ -12,6 +12,7 @@ import type { TransactionInstruction } from "@solana/web3.js";
 import { retryWithBackoff } from "./utils/helpers.js";
 import type { Keypair } from "@solana/web3.js";
 import { DriftClientService } from "./services/driftClientService.js";
+import type { VersionedTransactionResponse } from "@solana/web3.js";
 
 export class QuartzClient {
     private connection: Connection;
@@ -171,7 +172,7 @@ export class QuartzClient {
 
     public async listenForInstruction(
         instructionName: string,
-        onInstruction: (instruction: MessageCompiledInstruction, accountKeys: PublicKey[]) => void,
+        onInstruction: (tx: VersionedTransactionResponse, ix: MessageCompiledInstruction, accountKeys: PublicKey[]) => void,
         ignoreErrors = true
     ) {
         this.connection.onLogs(
@@ -199,7 +200,7 @@ export class QuartzClient {
                         const quartzIx = coder.decode(Buffer.from(ix.data), "base58");
                         if (quartzIx?.name.toLowerCase() === instructionName.toLowerCase()) {
                             const accountKeys = tx.transaction.message.staticAccountKeys;
-                            onInstruction(ix, accountKeys);
+                            onInstruction(tx, ix, accountKeys);
                         }
                     } catch { }
                 }
