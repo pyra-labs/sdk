@@ -48,6 +48,14 @@ export const getInitRentPayerPublicKey = () => {
     return initRentPayerPda;
 }
 
+export const getTimeLockRentPayerPublicKey = () => {
+    const [timeLockRentPayerPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("time_lock_rent_payer")],
+        QUARTZ_PROGRAM_ID
+    );
+    return timeLockRentPayerPda;
+}
+
 
 
 // Drift

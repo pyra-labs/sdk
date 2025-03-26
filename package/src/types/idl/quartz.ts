@@ -1,5 +1,5 @@
 export type Quartz = {
-  "version": "0.8.1",
+  "version": "0.8.2",
   "name": "quartz",
   "instructions": [
     {
@@ -369,6 +369,136 @@ export type Quartz = {
       ]
     },
     {
+      "name": "initiateWithdraw",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "withdrawOrder",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "timeLockRentPayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amountBaseUnits",
+          "type": "u64"
+        },
+        {
+          "name": "driftMarketIndex",
+          "type": "u16"
+        },
+        {
+          "name": "reduceOnly",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "fulfilWithdraw",
+      "accounts": [
+        {
+          "name": "withdrawOrder",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "timeLockRentPayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "ownerSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "splMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftUser",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftUserStats",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "spotMarketVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "startSpend",
       "accounts": [
         {
@@ -621,6 +751,95 @@ export type Quartz = {
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "initiateSpendLimits",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "spendLimitsOrder",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "timeLockRentPayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "spendLimitPerTransaction",
+          "type": "u64"
+        },
+        {
+          "name": "spendLimitPerTimeframe",
+          "type": "u64"
+        },
+        {
+          "name": "timeframeInSeconds",
+          "type": "u64"
+        },
+        {
+          "name": "nextTimeframeResetTimestamp",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "fulfilSpendLimits",
+      "accounts": [
+        {
+          "name": "spendLimitsOrder",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "timeLockRentPayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "eventAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "program",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     },
     {
       "name": "startCollateralRepay",
@@ -928,6 +1147,84 @@ export type Quartz = {
           }
         ]
       }
+    },
+    {
+      "name": "withdrawOrder",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timeLock",
+            "type": {
+              "defined": "TimeLock"
+            }
+          },
+          {
+            "name": "amountBaseUnits",
+            "type": "u64"
+          },
+          {
+            "name": "driftMarketIndex",
+            "type": "u16"
+          },
+          {
+            "name": "reduceOnly",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "spendLimitsOrder",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timeLock",
+            "type": {
+              "defined": "TimeLock"
+            }
+          },
+          {
+            "name": "spendLimitPerTransaction",
+            "type": "u64"
+          },
+          {
+            "name": "spendLimitPerTimeframe",
+            "type": "u64"
+          },
+          {
+            "name": "timeframeInSeconds",
+            "type": "u64"
+          },
+          {
+            "name": "nextTimeframeResetTimestamp",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "TimeLock",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "isOwnerPayer",
+            "type": "bool"
+          },
+          {
+            "name": "releaseSlot",
+            "type": "u64"
+          }
+        ]
+      }
     }
   ],
   "errors": [
@@ -1100,12 +1397,27 @@ export type Quartz = {
       "code": 6033,
       "name": "InvalidTimestamp",
       "msg": "Current timestamp cannot be negative"
+    },
+    {
+      "code": 6034,
+      "name": "InvalidTimeLockRentPayer",
+      "msg": "Time lock rent payer must either be the owner or the time_lock_rent_payer PDA"
+    },
+    {
+      "code": 6035,
+      "name": "TimeLockNotReleased",
+      "msg": "Release slot has not passed for time lock"
+    },
+    {
+      "code": 6036,
+      "name": "InvalidTimeLockOwner",
+      "msg": "Time lock owner does not match"
     }
   ]
 };
 
 export const IDL: Quartz = {
-  "version": "0.8.1",
+  "version": "0.8.2",
   "name": "quartz",
   "instructions": [
     {
@@ -1475,6 +1787,136 @@ export const IDL: Quartz = {
       ]
     },
     {
+      "name": "initiateWithdraw",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "withdrawOrder",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "timeLockRentPayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amountBaseUnits",
+          "type": "u64"
+        },
+        {
+          "name": "driftMarketIndex",
+          "type": "u16"
+        },
+        {
+          "name": "reduceOnly",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "fulfilWithdraw",
+      "accounts": [
+        {
+          "name": "withdrawOrder",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "timeLockRentPayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "ownerSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "splMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftUser",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftUserStats",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "spotMarketVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "startSpend",
       "accounts": [
         {
@@ -1727,6 +2169,95 @@ export const IDL: Quartz = {
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "initiateSpendLimits",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "spendLimitsOrder",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "timeLockRentPayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "spendLimitPerTransaction",
+          "type": "u64"
+        },
+        {
+          "name": "spendLimitPerTimeframe",
+          "type": "u64"
+        },
+        {
+          "name": "timeframeInSeconds",
+          "type": "u64"
+        },
+        {
+          "name": "nextTimeframeResetTimestamp",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "fulfilSpendLimits",
+      "accounts": [
+        {
+          "name": "spendLimitsOrder",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "timeLockRentPayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "eventAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "program",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     },
     {
       "name": "startCollateralRepay",
@@ -2034,6 +2565,84 @@ export const IDL: Quartz = {
           }
         ]
       }
+    },
+    {
+      "name": "withdrawOrder",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timeLock",
+            "type": {
+              "defined": "TimeLock"
+            }
+          },
+          {
+            "name": "amountBaseUnits",
+            "type": "u64"
+          },
+          {
+            "name": "driftMarketIndex",
+            "type": "u16"
+          },
+          {
+            "name": "reduceOnly",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "spendLimitsOrder",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timeLock",
+            "type": {
+              "defined": "TimeLock"
+            }
+          },
+          {
+            "name": "spendLimitPerTransaction",
+            "type": "u64"
+          },
+          {
+            "name": "spendLimitPerTimeframe",
+            "type": "u64"
+          },
+          {
+            "name": "timeframeInSeconds",
+            "type": "u64"
+          },
+          {
+            "name": "nextTimeframeResetTimestamp",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "TimeLock",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "isOwnerPayer",
+            "type": "bool"
+          },
+          {
+            "name": "releaseSlot",
+            "type": "u64"
+          }
+        ]
+      }
     }
   ],
   "errors": [
@@ -2206,6 +2815,21 @@ export const IDL: Quartz = {
       "code": 6033,
       "name": "InvalidTimestamp",
       "msg": "Current timestamp cannot be negative"
+    },
+    {
+      "code": 6034,
+      "name": "InvalidTimeLockRentPayer",
+      "msg": "Time lock rent payer must either be the owner or the time_lock_rent_payer PDA"
+    },
+    {
+      "code": 6035,
+      "name": "TimeLockNotReleased",
+      "msg": "Release slot has not passed for time lock"
+    },
+    {
+      "code": 6036,
+      "name": "InvalidTimeLockOwner",
+      "msg": "Time lock owner does not match"
     }
   ]
 };

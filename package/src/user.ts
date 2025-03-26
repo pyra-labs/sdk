@@ -5,7 +5,7 @@ import { DRIFT_PROGRAM_ID, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, SP
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
-import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getVaultSplPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority, getInitRentPayerPublicKey, getSpendMulePda } from "./utils/accounts.js";
+import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getVaultSplPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority, getInitRentPayerPublicKey, getSpendMulePda, getTimeLockRentPayerPublicKey } from "./utils/accounts.js";
 import { getTokenProgram, } from "./utils/helpers.js";
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, } from "@solana/spl-token";
 import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
@@ -379,10 +379,126 @@ export class QuartzUser {
     }
 
     /**
+     * Creates instructions to iniaite a withdraw order from the Quartz user account, which will be fulfilled after the time lock.
+     * @param amountBaseUnits - The amount of tokens to withdraw.
+     * @param marketIndex - The market index of the token to withdraw.
+     * @param reduceOnly - True means amount will be capped so a positive balance (collateral) cannot become a negative balance (loan).
+     * @returns {Promise<{
+    *     ixs: TransactionInstruction[],
+    *     lookupTables: AddressLookupTableAccount[],
+    *     signers: Keypair[]
+    * }>} Object containing:
+    * - ixs: Array of instructions to initiate a withdraw order.
+    * - lookupTables: Array of lookup tables for building VersionedTransaction.
+    * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
+    * @throw Error if the RPC connection fails.
+    */
+    public async makeInitiateWithdrawIx(
+        amountBaseUnits: number,
+        marketIndex: MarketIndex,
+        reduceOnly: boolean,
+        paidByUser = false
+    ): Promise<{
+        ixs: TransactionInstruction[],
+        lookupTables: AddressLookupTableAccount[],
+        signers: Keypair[]
+    }> {
+        const orderAccount = Keypair.generate();
+        const timeLockRentPayer = paidByUser 
+            ? this.pubkey 
+            : getTimeLockRentPayerPublicKey();
+        
+        const ix = await this.program.methods
+            .initiateWithdraw(
+                new BN(amountBaseUnits), 
+                marketIndex, 
+                reduceOnly
+            )
+            .accounts({
+                vault: this.vaultPubkey,
+                owner: this.pubkey,
+                withdrawOrder: orderAccount.publicKey,
+                timeLockRentPayer: timeLockRentPayer,
+                systemProgram: SystemProgram.programId
+            })
+            .instruction();
+
+        return {
+            ixs: [ix],
+            lookupTables: [this.quartzLookupTable],
+            signers: [orderAccount]
+        };
+    }
+
+    /**
+     * Creates instructions to withdraw a token from the Quartz user account.
+     * @param orderAccount - The public key of the withdraw order, which must be created with the initiateWithdraw instruction.
+     * @returns {Promise<{
+     *     ixs: TransactionInstruction[],
+     *     lookupTables: AddressLookupTableAccount[],
+     *     signers: Keypair[]
+     * }>} Object containing:
+     * - ixs: Array of instructions to withdraw the token from the Quartz user account.
+     * - lookupTables: Array of lookup tables for building VersionedTransaction.
+     * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
+     * @throw Error if the RPC connection fails. The transaction will fail if the account does not have enough tokens or, (when taking out a loan) the account health is not high enough for a loan.
+     */
+    public async makeFulfilWithdrawIx(
+        orderAccount: PublicKey,
+    ): Promise<{
+        ixs: TransactionInstruction[],
+        lookupTables: AddressLookupTableAccount[],
+        signers: Keypair[]
+    }> {
+        const order = await this.program.account.withdrawOrder.fetch(orderAccount);
+        
+        const marketIndex = order.driftMarketIndex as MarketIndex;
+        const timeLockRentPayer = order.timeLock.isOwnerPayer 
+            ? this.pubkey 
+            : getTimeLockRentPayerPublicKey();
+
+        const mint = TOKENS[marketIndex].mint;
+        const tokenProgram = await getTokenProgram(this.connection, mint);
+        const ownerSpl = await getAssociatedTokenAddress(mint, this.pubkey, false, tokenProgram);
+      
+        const ix = await this.program.methods
+            .fulfilWithdraw()
+            .accounts({
+                withdrawOrder: orderAccount,
+                timeLockRentPayer: timeLockRentPayer,
+                vault: this.vaultPubkey,
+                vaultSpl: getVaultSplPublicKey(this.pubkey, mint),
+                owner: this.pubkey,
+                ownerSpl: ownerSpl,
+                splMint: mint,
+                driftUser: this.driftUser.pubkey,
+                driftUserStats: this.driftUser.statsPubkey,
+                driftState: getDriftStatePublicKey(),
+                spotMarketVault: getDriftSpotMarketVaultPublicKey(marketIndex),
+                driftSigner: this.driftSigner,
+                tokenProgram: tokenProgram,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                driftProgram: DRIFT_PROGRAM_ID,
+                systemProgram: SystemProgram.programId
+            })
+            .remainingAccounts(
+                this.driftUser.getRemainingAccounts(marketIndex)
+            )
+            .instruction();
+
+        return {
+            ixs: [ix],
+            lookupTables: [this.quartzLookupTable],
+            signers: []
+        };
+    }
+
+    /**
      * Creates instructions to adjust the spend limits of a Quartz user account.
      * @param spendLimitPerTransaction - The new spend limit per transaction.
      * @param spendLimitPerTimeframe - The new spend limit per timeframe.
-     * @param timeframeInSlots - The new timeframe in slots.
+     * @param timeframeInSeconds - The new timeframe in seconds.
+     * @param nextTimeframeResetTimestamp - The new next timeframe reset timestamp.
      * @returns {Promise<{
      *     ixs: TransactionInstruction[],
      *     lookupTables: AddressLookupTableAccount[],
@@ -423,6 +539,121 @@ export class QuartzUser {
         };
     }
 
+    /**
+     * Creates instructions to iniate and order to adjust the spend limits of a Quartz user account.
+     * @param spendLimitPerTransaction - The new spend limit per transaction.
+     * @param spendLimitPerTimeframe - The new spend limit per timeframe.
+     * @param timeframeInSeconds - The new timeframe in seconds.
+     * @param nextTimeframeResetTimestamp - The new next timeframe reset timestamp.
+     * @returns {Promise<{
+    *     ixs: TransactionInstruction[],
+    *     lookupTables: AddressLookupTableAccount[],
+    *     signers: Keypair[]
+    * }>} Object containing:
+    * - ixs: Array of instructions to adjust the spend limits.
+    * - lookupTables: Array of lookup tables for building VersionedTransaction.
+    * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
+    * @throw Error if the RPC connection fails.
+    */
+    public async makeInitiateSpendLimitsIxs(
+        spendLimitPerTransaction: BN,
+        spendLimitPerTimeframe: BN,
+        timeframeInSeconds: BN,
+        nextTimeframeResetTimestamp: BN,
+        paidByUser = false
+    ): Promise<{
+        ixs: TransactionInstruction[],
+        lookupTables: AddressLookupTableAccount[],
+        signers: Keypair[]
+    }> {
+        const orderAccount = Keypair.generate();
+        const timeLockRentPayer = paidByUser 
+            ? this.pubkey 
+            : getTimeLockRentPayerPublicKey();
+
+        const ix = await this.program.methods
+            .initiateSpendLimits(
+                spendLimitPerTransaction,
+                spendLimitPerTimeframe,
+                timeframeInSeconds,
+                nextTimeframeResetTimestamp
+            )
+            .accounts({
+                vault: this.vaultPubkey,
+                owner: this.pubkey,
+                spendLimitsOrder: orderAccount.publicKey,
+                timeLockRentPayer: timeLockRentPayer,
+                systemProgram: SystemProgram.programId
+            })
+            .instruction();
+
+        return {
+            ixs: [ix],
+            lookupTables: [this.quartzLookupTable],
+            signers: [orderAccount]
+        };
+    }
+
+    /**
+     * Creates instructions to update the card spend limits of a Quartz user account.
+     * @param orderAccount - The public key of the spend limits order, which must be created with the initiateSpendLimits instruction.
+     * @returns {Promise<{
+    *     ixs: TransactionInstruction[],
+    *     lookupTables: AddressLookupTableAccount[],
+    *     signers: Keypair[]
+    * }>} Object containing:
+    * - ixs: Array of instructions to fulfil the spend limits order.
+    * - lookupTables: Array of lookup tables for building VersionedTransaction.
+    * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
+    * @throw Error if the RPC connection fails.
+    */
+    public async makeFulfilSpendLimitsIx(
+        orderAccount: PublicKey,
+    ): Promise<{
+        ixs: TransactionInstruction[],
+        lookupTables: AddressLookupTableAccount[],
+        signers: Keypair[]
+    }> {
+        const order = await this.program.account.spendLimitsOrder.fetch(orderAccount);
+        const timeLockRentPayer = order.timeLock.isOwnerPayer 
+            ? this.pubkey 
+            : getTimeLockRentPayerPublicKey();
+
+        const ix_fulfilSpendLimits = await this.program.methods
+            .fulfilSpendLimits()
+            .accounts({
+                spendLimitsOrder: orderAccount,
+                timeLockRentPayer: timeLockRentPayer,
+                vault: this.vaultPubkey,
+                owner: this.pubkey,
+                systemProgram: SystemProgram.programId
+            })
+            .instruction();
+
+        return {
+            ixs: [ix_fulfilSpendLimits],
+            lookupTables: [this.quartzLookupTable],
+            signers: []
+        };
+    }
+
+    /**
+     * Creates instructions to spend using the Quartz card.
+     * @param amountBaseUnits - The amount of tokens to spend.
+     * @param spendCaller - The public key of the Quartz spend caller.
+     * @param spendFee - True means a percentage of the spend will be sent to the spend fee address.
+     * @returns {Promise<{
+    *     ixs: TransactionInstruction[],
+    *     lookupTables: AddressLookupTableAccount[],
+    *     signers: Keypair[]
+    * }>} Object containing:
+    * - ixs: Array of instructions to repay the loan using collateral.
+    * - lookupTables: Array of lookup tables for building VersionedTransaction.
+    * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
+    * @throw Error if the RPC connection fails. The transaction will fail if:
+    * - the user does not have enough available tokens.
+    * - the user's spend limit is exceeded.
+    */
     public async makeSpendIxs(
         amountBaseUnits: number,
         spendCaller: Keypair,
