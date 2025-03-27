@@ -351,6 +351,51 @@ export class QuartzUser {
         };
     }
 
+    public async makeFulfilDepositIx(
+        amountBaseUnits: number,
+        marketIndex: MarketIndex,
+        reduceOnly: boolean,
+        caller: PublicKey
+    ): Promise<{
+        ixs: TransactionInstruction[],
+        lookupTables: AddressLookupTableAccount[],
+        signers: Keypair[]
+    }> {
+        const mint = TOKENS[marketIndex].mint;
+        const tokenProgram = await getTokenProgram(this.connection, mint);
+        const callerSpl = await getAssociatedTokenAddress(mint, caller, false, tokenProgram);
+
+        const ix = await this.program.methods
+            .fulfilDeposit(new BN(amountBaseUnits), marketIndex, reduceOnly)
+            .accounts({
+                vault: this.vaultPubkey,
+                vaultSpl: getVaultSplPublicKey(this.pubkey, mint),
+                owner: this.pubkey,
+                caller: caller,
+                callerSpl: callerSpl,
+                splMint: mint,
+                driftUser: this.driftUser.pubkey,
+                driftUserStats: this.driftUser.statsPubkey,
+                driftState: getDriftStatePublicKey(),
+                spotMarketVault: getDriftSpotMarketVaultPublicKey(marketIndex),
+                tokenProgram: tokenProgram,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+                driftProgram: DRIFT_PROGRAM_ID,
+                systemProgram: SystemProgram.programId
+            })
+            .remainingAccounts(
+                this.driftUser.getRemainingAccounts(marketIndex)
+            )
+            .instruction();
+
+        return {
+            ixs: [ix],
+            lookupTables: [this.quartzLookupTable],
+            signers: []
+        };
+    }
+
+
     /**
      * Creates instructions to withdraw a token from the Quartz user account.
      * @param amountBaseUnits - The amount of tokens to withdraw.

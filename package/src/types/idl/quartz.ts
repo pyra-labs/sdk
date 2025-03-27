@@ -1,5 +1,5 @@
 export type Quartz = {
-  "version": "0.8.2",
+  "version": "0.9.0",
   "name": "quartz",
   "instructions": [
     {
@@ -215,6 +215,95 @@ export type Quartz = {
         },
         {
           "name": "ownerSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "splMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftUser",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftUserStats",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "spotMarketVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amountBaseUnits",
+          "type": "u64"
+        },
+        {
+          "name": "driftMarketIndex",
+          "type": "u16"
+        },
+        {
+          "name": "reduceOnly",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "fulfilDeposit",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "caller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "callerSpl",
           "isMut": true,
           "isSigner": false
         },
@@ -1417,7 +1506,7 @@ export type Quartz = {
 };
 
 export const IDL: Quartz = {
-  "version": "0.8.2",
+  "version": "0.9.0",
   "name": "quartz",
   "instructions": [
     {
@@ -1633,6 +1722,95 @@ export const IDL: Quartz = {
         },
         {
           "name": "ownerSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "splMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftUser",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftUserStats",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "spotMarketVault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amountBaseUnits",
+          "type": "u64"
+        },
+        {
+          "name": "driftMarketIndex",
+          "type": "u16"
+        },
+        {
+          "name": "reduceOnly",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "fulfilDeposit",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "caller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "callerSpl",
           "isMut": true,
           "isSigner": false
         },

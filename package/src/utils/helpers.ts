@@ -84,19 +84,22 @@ export async function getComputeUnitPriceIx(connection: Connection, instructions
 
 export async function buildTransaction(
     connection: Connection,
+    blockhash: string,
     instructions: TransactionInstruction[],
     address: PublicKey,
     lookupTables: AddressLookupTableAccount[] = []
 ): Promise<VersionedTransaction> {
-    const blockhash = (await connection.getLatestBlockhash()).blockhash;
     const ix_computeLimit = await getComputerUnitLimitIx(connection, instructions, address, blockhash, lookupTables);
     const ix_computePrice = await getComputeUnitPriceIx(connection, instructions);
-    instructions.unshift(ix_computeLimit, ix_computePrice);
 
     const messageV0 = new TransactionMessage({
         payerKey: address,
         recentBlockhash: blockhash,
-        instructions: instructions
+        instructions: [
+            ix_computeLimit, 
+            ix_computePrice, 
+            ...instructions
+        ]
     }).compileToV0Message(lookupTables);
     const transaction = new VersionedTransaction(messageV0);
     return transaction;
