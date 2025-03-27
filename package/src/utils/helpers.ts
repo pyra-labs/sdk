@@ -1,5 +1,5 @@
 import { ComputeBudgetProgram, PublicKey, type Connection, type TransactionInstruction, } from "@solana/web3.js";
-import type { AccountMeta } from "../types/interfaces/accountMeta.interface.js";
+import type { AccountMeta } from "../types/interfaces/AccountMeta.interface.js";
 import { type MarketIndex, TOKENS } from "../config/tokens.js";
 import { createAssociatedTokenAccountInstruction, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import type { AddressLookupTableAccount } from "@solana/web3.js";
@@ -17,7 +17,7 @@ export async function getComputeUnitLimit(
     const messageV0 = new TransactionMessage({
         payerKey: address,
         recentBlockhash: blockhash,
-        instructions: instructions
+        instructions: [...instructions]
     }).compileToV0Message(lookupTables);
     const simulation = await connection.simulateTransaction(
         new VersionedTransaction(messageV0)

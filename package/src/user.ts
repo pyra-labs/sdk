@@ -1,4 +1,4 @@
-import { DriftUser } from "./types/classes/driftUser.class.js";
+import { DriftUser } from "./types/classes/DriftUser.class.js";
 import type { DriftClient, UserAccount } from "@drift-labs/sdk";
 import type { Connection, AddressLookupTableAccount, TransactionInstruction, } from "@solana/web3.js";
 import { DRIFT_PROGRAM_ID, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, SPEND_FEE_DESTINATION, TOKEN_MESSAGE_MINTER_PROGRAM_ID, } from "./config/constants.js";
@@ -13,6 +13,8 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import BN from "bn.js";
 import { TOKENS, type MarketIndex } from "./config/tokens.js";
 import { Keypair } from "@solana/web3.js";
+import type { WithdrawOrder } from "./types/accounts/WithdrawOrder.account.js";
+import type { SpendLimitsOrder } from "./types/accounts/SpendLimitsOrder.account.js";
 
 export class QuartzUser {
     public readonly pubkey: PublicKey;
@@ -169,6 +171,35 @@ export class QuartzUser {
         ), {} as Record<MarketIndex, number>);
 
         return limits;
+    }
+
+    public async getOpenWithdrawOrders(): Promise<WithdrawOrder[]> {
+        const orders = await this.program.account.withdrawOrder.all([
+            {
+                memcmp: {
+                    offset: 8,
+                    bytes: this.pubkey.toBase58()
+                 }
+            }
+        ]);
+
+        return orders.map(order => ({
+            ...order.account,
+            driftMarketIndex: new BN(order.account.driftMarketIndex)
+        }));
+    }
+
+    public async getOpenSpendLimitsOrders(): Promise<SpendLimitsOrder[]> {
+        const orders = await this.program.account.spendLimitsOrder.all([
+            {
+                memcmp: {
+                    offset: 8,
+                    bytes: this.pubkey.toBase58()
+                 }
+            }
+        ]);
+
+        return orders.map(order => order.account);
     }
 
 

@@ -7,7 +7,7 @@ import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledI
 import { QuartzUser } from "./user.js";
 import { getBridgeRentPayerPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getInitRentPayerPublicKey, getMessageTransmitter, getVaultPublicKey } from "./utils/accounts.js";
 import { SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
-import { DummyWallet } from "./types/classes/dummyWallet.class.js";
+import { DummyWallet } from "./types/classes/DummyWallet.class.js";
 import type { TransactionInstruction } from "@solana/web3.js";
 import { retryWithBackoff } from "./utils/helpers.js";
 import type { Keypair } from "@solana/web3.js";
@@ -218,11 +218,16 @@ export class QuartzClient {
         const ACCOUNT_INDEX_OWNER = 1;
         const ACCOUNT_INDEX_MESSAGE_SENT_EVENT_DATA = 12;
 
-        const tx = await connection.getTransaction(signature, {
-            maxSupportedTransactionVersion: 0,
-            commitment: "finalized"
-        });
-        if (!tx) throw new Error("Transaction not found");
+        const tx = await retryWithBackoff(
+            async () => {
+                const tx = await connection.getTransaction(signature, {
+                    maxSupportedTransactionVersion: 0,
+                    commitment: "finalized"
+                });
+                if (!tx) throw new Error("Transaction not found");
+                return tx;
+            }
+        );
 
         const encodedIxs = tx.transaction.message.compiledInstructions;
         const coder = new BorshInstructionCoder(IDL);

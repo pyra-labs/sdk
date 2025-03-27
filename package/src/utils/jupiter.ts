@@ -2,7 +2,7 @@ import type { Connection, AccountInfo } from "@solana/web3.js";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import type { QuoteResponse } from "@jup-ag/api";
 import { AddressLookupTableAccount } from "@solana/web3.js";
-import type { AccountMeta } from "../types/interfaces/accountMeta.interface.js";
+import type { AccountMeta } from "../types/interfaces/AccountMeta.interface.js";
 
 export async function getJupiterSwapIx(
   walletPubkey: PublicKey, 

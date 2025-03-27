@@ -1,4 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
+import { BN } from "bn.js";
 
 export const QUARTZ_PROGRAM_ID = new PublicKey("6JjHXLheGSNvvexgzMthEcgjkcirDrGduc3HAKB2P1v2");
 export const QUARTZ_ADDRESS_TABLE = new PublicKey("5GQiSzo2t6ftg2LR56kHpdP8RYyzo5dryRz87ydaBycS");
@@ -21,3 +22,5 @@ export const MARKET_INDEX_SOL = 1;
 
 export const DEFAULT_COMPUTE_UNIT_LIMIT = 400_000;
 export const DEFAULT_COMPUTE_UNIT_PRICE = 1_250_000;
+
+export const ZERO = new BN(0);
