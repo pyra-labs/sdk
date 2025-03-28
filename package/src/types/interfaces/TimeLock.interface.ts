@@ -6,3 +6,7 @@ export interface TimeLock {
     isOwnerPayer: boolean;
     releaseSlot: BN;
 }
+
+export interface TimeLocked {
+    timeLock: TimeLock;
+}

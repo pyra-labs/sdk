@@ -1,4 +1,4 @@
-import type { BN, DriftClient } from "@drift-labs/sdk";
+import { BN, type DriftClient } from "@drift-labs/sdk";
 import { calculateBorrowRate, calculateDepositRate, DRIFT_PROGRAM_ID, fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
 import { MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID } from "./config/constants.js";
 import { IDL, type Quartz } from "./types/idl/quartz.js";
@@ -13,6 +13,8 @@ import { retryWithBackoff } from "./utils/helpers.js";
 import type { Keypair } from "@solana/web3.js";
 import { DriftClientService } from "./services/driftClientService.js";
 import type { VersionedTransactionResponse } from "@solana/web3.js";
+import type { WithdrawOrder } from "./types/accounts/WithdrawOrder.account.js";
+import type { SpendLimitsOrder } from "./types/accounts/SpendLimitsOrder.account.js";
 
 export class QuartzClient {
     private connection: Connection;
@@ -168,6 +170,37 @@ export class QuartzClient {
         const spotMarket = await this.driftClient.getSpotMarketAccount(spotMarketIndex);
         if (!spotMarket) throw Error("Spot market not found");
         return spotMarket;
+    }
+
+    public async getOpenWithdrawOrders(user?: PublicKey): Promise<WithdrawOrder[]> {
+        const query = user
+            ? [{
+                memcmp: {
+                    offset: 8,
+                    bytes: user.toBase58()
+                }
+            }]
+            : undefined;
+        
+        const orders = await this.program.account.withdrawOrder.all(query);
+        return orders.map(order => ({
+            ...order.account,
+            driftMarketIndex: new BN(order.account.driftMarketIndex)
+        }));
+    }
+
+    public async getOpenSpendLimitsOrders(user?: PublicKey): Promise<SpendLimitsOrder[]> {
+        const query = user
+            ? [{
+                memcmp: {
+                    offset: 8,
+                    bytes: user.toBase58()
+                }
+            }]
+            : undefined;
+        
+        const orders = await this.program.account.spendLimitsOrder.all(query);
+        return orders.map(order => order.account);
     }
 
     public async listenForInstruction(

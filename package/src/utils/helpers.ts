@@ -1,6 +1,6 @@
 import { ComputeBudgetProgram, PublicKey, type Connection, type TransactionInstruction, } from "@solana/web3.js";
 import type { AccountMeta } from "../types/interfaces/AccountMeta.interface.js";
-import { type MarketIndex, TOKENS } from "../config/tokens.js";
+import { MarketIndex, TOKENS } from "../config/tokens.js";
 import { createAssociatedTokenAccountInstruction, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import type { AddressLookupTableAccount } from "@solana/web3.js";
 import { VersionedTransaction } from "@solana/web3.js";
@@ -84,11 +84,11 @@ export async function getComputeUnitPriceIx(connection: Connection, instructions
 
 export async function buildTransaction(
     connection: Connection,
-    blockhash: string,
     instructions: TransactionInstruction[],
     address: PublicKey,
     lookupTables: AddressLookupTableAccount[] = []
 ): Promise<VersionedTransaction> {
+    const blockhash = (await connection.getLatestBlockhash()).blockhash;
     const ix_computeLimit = await getComputerUnitLimitIx(connection, instructions, address, blockhash, lookupTables);
     const ix_computePrice = await getComputeUnitPriceIx(connection, instructions);
 
@@ -155,6 +155,11 @@ export function baseUnitToDecimal(baseUnits: number, marketIndex: MarketIndex): 
 export function decimalToBaseUnit(decimal: number, marketIndex: MarketIndex): number {
     const token = TOKENS[marketIndex];
     return Math.trunc(decimal * (10 ** token.decimalPrecision.toNumber()));
+}
+
+export function isMarketIndex(index: number): boolean {
+    const marketIndex = index as MarketIndex;
+    return Object.values(MarketIndex).includes(marketIndex);
 }
 
 export async function retryWithBackoff<T>(
