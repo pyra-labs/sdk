@@ -396,7 +396,7 @@
     bn.js "^5.1.2"
     buffer-layout "^1.2.0"
 
-"@drift-labs/sdk@^2.117.0-beta.8":
+"@drift-labs/sdk@2.117.0-beta.8":
   version "2.117.0-beta.8"
   resolved "https://registry.yarnpkg.com/@drift-labs/sdk/-/sdk-2.117.0-beta.8.tgz#24e0b979186c4b6724d1b01985dc6f8937e75c98"
   integrity sha512-IO1I3DkTj0ZZGP1W2Y+vPDRBtzXP/R7gKzQ09AOJeEPROJIL/8x40MLibBePRXf8ap8kGMnUOJ2mdxQUegiImA==

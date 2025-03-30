@@ -23,6 +23,8 @@ export class DriftUser {
 		this.pubkey = getDriftUserPublicKey(this.authority);
 		this.statsPubkey = getDriftUserStatsPublicKey(this.authority);
 		this.userAccount = userAccount;
+
+		driftClient.addUser(0, this.authority, userAccount);
     }
 
 	public getDriftUserAccount(): UserAccount {
