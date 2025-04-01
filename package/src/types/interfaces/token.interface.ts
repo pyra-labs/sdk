@@ -6,6 +6,5 @@ export interface Token {
     mint: PublicKey;
     pythPriceFeedId: string;
     decimalPrecision: BN;
-    driftInitialCollateralWeight: BN;
     coingeckoPriceId: string;
 }

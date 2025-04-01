@@ -15,6 +15,7 @@ import { DriftClientService } from "./services/driftClientService.js";
 import type { VersionedTransactionResponse } from "@solana/web3.js";
 import type { WithdrawOrder } from "./types/accounts/WithdrawOrder.account.js";
 import type { SpendLimitsOrder } from "./types/accounts/SpendLimitsOrder.account.js";
+import type { MarketIndex } from "./index.browser.js";
 
 export class QuartzClient {
     private connection: Connection;
@@ -154,20 +155,25 @@ export class QuartzClient {
         });
     }
 
-    public async getDepositRate(spotMarketIndex: number) {
-        const spotMarket = await this.getSpotMarketAccount(spotMarketIndex);
+    public async getDepositRate(marketIndex: MarketIndex) {
+        const spotMarket = await this.getSpotMarketAccount(marketIndex);
         const depositRate = calculateDepositRate(spotMarket);
         return depositRate;
     }
 
-    public async getBorrowRate(spotMarketIndex: number) {
-        const spotMarket = await this.getSpotMarketAccount(spotMarketIndex);
+    public async getBorrowRate(marketIndex: MarketIndex) {
+        const spotMarket = await this.getSpotMarketAccount(marketIndex);
         const borrowRate = calculateBorrowRate(spotMarket);
         return borrowRate;
     }
 
-    private async getSpotMarketAccount(spotMarketIndex: number) {
-        const spotMarket = await this.driftClient.getSpotMarketAccount(spotMarketIndex);
+    public async getCollateralWeight(marketIndex: MarketIndex) {
+        const spotMarket = await this.getSpotMarketAccount(marketIndex);
+        return spotMarket.initialAssetWeight;
+    }
+
+    private async getSpotMarketAccount(marketIndex: MarketIndex) {
+        const spotMarket = await this.driftClient.getSpotMarketAccount(marketIndex);
         if (!spotMarket) throw Error("Spot market not found");
         return spotMarket;
     }
