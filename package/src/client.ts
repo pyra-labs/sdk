@@ -99,6 +99,7 @@ export class QuartzClient {
         return new QuartzUser(
             owner, 
             this.connection, 
+            this,
             this.program, 
             this.quartzLookupTable, 
             this.driftClient,
@@ -142,6 +143,7 @@ export class QuartzClient {
             return new QuartzUser(
                 owners[index], 
                 this.connection, 
+                this,
                 this.program, 
                 this.quartzLookupTable,
                 this.driftClient,

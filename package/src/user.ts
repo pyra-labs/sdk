@@ -6,13 +6,15 @@ import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
 import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getVaultSplPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority, getInitRentPayerPublicKey, getSpendMulePda, getTimeLockRentPayerPublicKey } from "./utils/accounts.js";
-import { getTokenProgram, } from "./utils/helpers.js";
+import { calculateWithdrawOrderBalances, getTokenProgram, } from "./utils/helpers.js";
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, } from "@solana/spl-token";
 import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import BN from "bn.js";
 import { TOKENS, type MarketIndex } from "./config/tokens.js";
 import { Keypair } from "@solana/web3.js";
+import type { QuartzClient } from "./client.js";
+import type { WithdrawOrder } from "./index.browser.js";
 
 export class QuartzUser {
     public readonly pubkey: PublicKey;
@@ -27,6 +29,7 @@ export class QuartzUser {
     private connection: Connection;
     private program: Program<Quartz>;
     private quartzLookupTable: AddressLookupTableAccount;
+    private client: QuartzClient;
 
     private driftUser: DriftUser;
     private driftSigner: PublicKey;
@@ -34,6 +37,7 @@ export class QuartzUser {
     constructor(
         pubkey: PublicKey,
         connection: Connection,
+        client: QuartzClient,
         program: Program<Quartz>,
         quartzLookupTable: AddressLookupTableAccount,
         driftClient: DriftClient,
@@ -46,6 +50,7 @@ export class QuartzUser {
     ) {
         this.pubkey = pubkey;
         this.connection = connection;
+        this.client = client;
         this.program = program;
         this.quartzLookupTable = quartzLookupTable;
         
@@ -69,11 +74,11 @@ export class QuartzUser {
         return this.driftUser.getHealth();
     }
 
-    public getRepayUsdcValueForTargetHealth(
+    public async getRepayUsdcValueForTargetHealth(
         targetHealth: number,
         repayAssetWeight: number,
         repayLiabilityWeight: number
-    ): number {
+    ): Promise<number> {
         // New Quartz health after repayment is given as:
         // 
         //                         marginRequirement - (repayValue * repayLiabilityWeight)
@@ -94,8 +99,9 @@ export class QuartzUser {
 
         if (targetHealth <= this.getHealth()) throw Error("Target health must be greater than current health");
 
-        const currentWeightedCollateral = this.getTotalWeightedCollateralValue();
-        const marginRequirement = this.getMarginRequirement();
+        const openOrders: WithdrawOrder[] = []; // Ignore orders for liquidation
+        const currentWeightedCollateral = await this.getTotalWeightedCollateralValue(openOrders);
+        const marginRequirement = await this.getMarginRequirement(openOrders);
         const targetHealthDecimal = targetHealth / 100;
         const repayAssetWeightDecimal = repayAssetWeight / 100;
         const repayLiabilityWeightDecimal = repayLiabilityWeight / 100;
@@ -111,31 +117,84 @@ export class QuartzUser {
         return repayValueUsdcBaseUnits;
     }
 
-    public getTotalCollateralValue(): number {
-        return this.driftUser.getTotalCollateralValue().toNumber(); // No params = not weighted
+    public async getTotalCollateralValue(
+        openWithdrawOrders?: WithdrawOrder[]
+    ): Promise<number> {
+        openWithdrawOrders = await this.validateOpenWithdrawOrders(openWithdrawOrders);
+        const openOrderBalances = calculateWithdrawOrderBalances(openWithdrawOrders);
+
+        return this.driftUser.getTotalCollateralValue(
+            undefined,
+            false,
+            true,
+            openOrderBalances
+        ).toNumber();
     }
 
-    public getTotalWeightedCollateralValue(): number {
-        return this.driftUser.getTotalCollateralValue("Initial").toNumber();
+    public async getTotalWeightedCollateralValue(
+        openWithdrawOrders?: WithdrawOrder[]
+    ): Promise<number> {
+        openWithdrawOrders = await this.validateOpenWithdrawOrders(openWithdrawOrders);
+        const openOrderBalances = calculateWithdrawOrderBalances(openWithdrawOrders);
+
+        return this.driftUser.getTotalCollateralValue(
+            "Initial",
+            false,
+            true,
+            openOrderBalances
+        ).toNumber();
     }
 
-    public getMarginRequirement(): number {
-        return this.driftUser.getInitialMarginRequirement().toNumber();
+    public async getMarginRequirement(
+        openWithdrawOrders?: WithdrawOrder[]
+    ): Promise<number> {
+        openWithdrawOrders = await this.validateOpenWithdrawOrders(openWithdrawOrders);
+        const openOrderBalances = calculateWithdrawOrderBalances(openWithdrawOrders);
+
+        return this.driftUser.getInitialMarginRequirement(openOrderBalances).toNumber();
     }
 
-    public getSpendableBalanceUsdcBaseUnits(): number {
-        return this.driftUser.getFreeCollateral("Initial").toNumber();
+    public async getAvailableCreditUsdcBaseUnits(
+        openWithdrawOrders?: WithdrawOrder[]
+    ): Promise<number> {
+        return await this.getWithdrawalLimit(
+            MARKET_INDEX_USDC, 
+            false,
+            openWithdrawOrders
+        );
     }
 
-    public async getTokenBalance(spotMarketIndex: number): Promise<BN> {
-        return this.driftUser.getTokenAmount(spotMarketIndex);
+    private async validateOpenWithdrawOrders(
+        openWithdrawOrders?: WithdrawOrder[]
+    ): Promise<WithdrawOrder[]> {
+        if (openWithdrawOrders === undefined) {
+            return await this.client.getOpenWithdrawOrders(this.pubkey);
+        } 
+
+        return openWithdrawOrders
+            .filter(order => order.timeLock.owner.equals(this.pubkey));
     }
 
-    public async getMultipleTokenBalances(marketIndices: MarketIndex[]): Promise<Record<MarketIndex, BN>> {
+    public async getTokenBalance(
+        spotMarketIndex: number,
+        openWithdrawOrders?: WithdrawOrder[]
+    ): Promise<BN> {
+        openWithdrawOrders = await this.validateOpenWithdrawOrders(openWithdrawOrders);
+        const openOrderBalances = calculateWithdrawOrderBalances(openWithdrawOrders);
+
+        return this.driftUser.getTokenAmount(spotMarketIndex, openOrderBalances);
+    }
+
+    public async getMultipleTokenBalances(
+        marketIndices: MarketIndex[],
+        openWithdrawOrders?: WithdrawOrder[]
+    ): Promise<Record<MarketIndex, BN>> {
+        openWithdrawOrders = await this.validateOpenWithdrawOrders(openWithdrawOrders);
+
         const balancesArray = await Promise.all(
             marketIndices.map(async index => ({
                 index,
-                balance: await this.getTokenBalance(index)
+                balance: await this.getTokenBalance(index, openWithdrawOrders)
             }))
         );
     
@@ -147,20 +206,35 @@ export class QuartzUser {
     }
 
     public async getWithdrawalLimit(
-        spotMarketIndex: number, 
-        reduceOnly = false
+        spotMarketIndex: MarketIndex, 
+        reduceOnly = false,
+        openWithdrawOrders?: WithdrawOrder[]
     ): Promise<number> {
-        return this.driftUser.getWithdrawalLimit(spotMarketIndex, reduceOnly).toNumber();
+        openWithdrawOrders = await this.validateOpenWithdrawOrders(openWithdrawOrders);
+        const openOrderBalances = calculateWithdrawOrderBalances(openWithdrawOrders);
+
+        return this.driftUser.getWithdrawalLimit(
+            spotMarketIndex, 
+            reduceOnly,
+            openOrderBalances
+        ).toNumber();
     }
     
     public async getMultipleWithdrawalLimits(
         spotMarketIndices: MarketIndex[], 
-        reduceOnly = false
+        reduceOnly = false,
+        openWithdrawOrders?: WithdrawOrder[]
     ): Promise<Record<MarketIndex, number>> {
+        openWithdrawOrders = await this.validateOpenWithdrawOrders(openWithdrawOrders);
+
         const limitsArray = await Promise.all(
             spotMarketIndices.map(async index => ({
                 index,
-                limit: await this.getWithdrawalLimit(index, reduceOnly)
+                limit: await this.getWithdrawalLimit(
+                    index, 
+                    reduceOnly, 
+                    openWithdrawOrders
+                )
             }))
         );
 
@@ -598,7 +672,7 @@ export class QuartzUser {
     * - ixs: Array of instructions to adjust the spend limits.
     * - lookupTables: Array of lookup tables for building VersionedTransaction.
     * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
-    * @throw Error if the RPC connection fails.
+    * @throw Error if the RPC connection fails. Or if the spend limits are invalid.
     */
     public async makeInitiateSpendLimitsIxs(
         spendLimitPerTransaction: BN,

@@ -1,11 +1,11 @@
 import { ComputeBudgetProgram, PublicKey, type Connection, type TransactionInstruction, } from "@solana/web3.js";
 import type { AccountMeta } from "../types/interfaces/AccountMeta.interface.js";
-import { MarketIndex, TOKENS } from "../config/tokens.js";
+import { getMarketIndicesRecord, MarketIndex, TOKENS } from "../config/tokens.js";
 import { createAssociatedTokenAccountInstruction, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import type { AddressLookupTableAccount } from "@solana/web3.js";
 import { VersionedTransaction } from "@solana/web3.js";
 import { TransactionMessage } from "@solana/web3.js";
-import { DEFAULT_COMPUTE_UNIT_LIMIT, DEFAULT_COMPUTE_UNIT_PRICE } from "../index.browser.js";
+import { type BN, DEFAULT_COMPUTE_UNIT_LIMIT, DEFAULT_COMPUTE_UNIT_PRICE, ZERO, type WithdrawOrder } from "../index.browser.js";
 
 export async function getComputeUnitLimit(
     connection: Connection,
@@ -197,4 +197,23 @@ export function evmAddressToSolana(evmAddress: string) {
     }
     
     return new PublicKey(bytes);
+}
+
+export function calculateWithdrawOrderBalances(
+    withdrawOrders: WithdrawOrder[]
+): Record<MarketIndex, BN> {
+    const openOrdersBalance = getMarketIndicesRecord(ZERO);
+
+    for (const order of withdrawOrders) {
+        const marketIndexNum = order.driftMarketIndex.toNumber();
+        if (!isMarketIndex(marketIndexNum)) {
+            throw new Error(`Invalid market index: ${marketIndexNum}`);
+        }
+        const marketIndex = marketIndexNum as MarketIndex;
+
+        openOrdersBalance[marketIndex] = openOrdersBalance[marketIndex]
+            .add(order.amountBaseUnits);
+    }
+
+    return openOrdersBalance;
 }
