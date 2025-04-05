@@ -180,7 +180,9 @@ export class QuartzClient {
         return spotMarket;
     }
 
-    public async getOpenWithdrawOrders(user?: PublicKey): Promise<WithdrawOrder[]> {
+    public async getOpenWithdrawOrders(
+        user?: PublicKey
+    ): Promise<Record<string, WithdrawOrder>> {
         const query = user
             ? [{
                 memcmp: {
@@ -191,13 +193,22 @@ export class QuartzClient {
             : undefined;
         
         const orders = await this.program.account.withdrawOrder.all(query);
-        return orders.map(order => ({
-            ...order.account,
-            driftMarketIndex: new BN(order.account.driftMarketIndex)
-        }));
+        const sortedOrders = orders.sort((a, b) =>
+            a.account.timeLock.releaseSlot.cmp(b.account.timeLock.releaseSlot)
+        )
+        
+        return sortedOrders.reduce((acc, order) => {
+            acc[order.publicKey.toBase58()] = {
+                ...order.account,
+                driftMarketIndex: new BN(order.account.driftMarketIndex)
+            };
+            return acc;
+        }, {} as Record<string, WithdrawOrder>);
     }
 
-    public async getOpenSpendLimitsOrders(user?: PublicKey): Promise<SpendLimitsOrder[]> {
+    public async getOpenSpendLimitsOrders(
+        user?: PublicKey
+    ): Promise<Record<string, SpendLimitsOrder>> {
         const query = user
             ? [{
                 memcmp: {
@@ -208,7 +219,31 @@ export class QuartzClient {
             : undefined;
         
         const orders = await this.program.account.spendLimitsOrder.all(query);
-        return orders.map(order => order.account);
+        const sortedOrders = orders.sort((a, b) =>
+            a.account.timeLock.releaseSlot.cmp(b.account.timeLock.releaseSlot)
+        )
+
+        return sortedOrders.reduce((acc, order) => {
+            acc[order.publicKey.toBase58()] = order.account;
+            return acc;
+        }, {} as Record<string, SpendLimitsOrder>);
+    }
+
+    public async parseOpenWithdrawOrder(
+        order: PublicKey
+    ): Promise<WithdrawOrder> {
+        const orderAccount = await this.program.account.withdrawOrder.fetch(order);
+        return {
+            ...orderAccount,
+            driftMarketIndex: new BN(orderAccount.driftMarketIndex)
+        };
+    }
+
+    public async parseOpenSpendLimitsOrder(
+        order: PublicKey
+    ): Promise<SpendLimitsOrder> {
+        const orderAccount = await this.program.account.spendLimitsOrder.fetch(order);
+        return orderAccount;
     }
 
     public async listenForInstruction(

@@ -7,16 +7,16 @@ import type { MarketIndex } from "../config/tokens.js";
 
 // Quartz
 
-export const getVaultPublicKey = (user: PublicKey) => {
+export const getVaultPublicKey = (owner: PublicKey) => {
     const [vaultPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("vault"), user.toBuffer()],
+        [Buffer.from("vault"), owner.toBuffer()],
         QUARTZ_PROGRAM_ID
     )
     return vaultPda;
 }
 
-export const getVaultSplPublicKey = (user: PublicKey, mint: PublicKey) => {
-    const vaultPda = getVaultPublicKey(user);
+export const getVaultSplPublicKey = (owner: PublicKey, mint: PublicKey) => {
+    const vaultPda = getVaultPublicKey(owner);
     const [vaultSplPda] = PublicKey.findProgramAddressSync(
         [vaultPda.toBuffer(), mint.toBuffer()],
         QUARTZ_PROGRAM_ID
@@ -24,9 +24,25 @@ export const getVaultSplPublicKey = (user: PublicKey, mint: PublicKey) => {
     return vaultSplPda;
 }
 
-export const getCollateralRepayLedgerPublicKey = (user: PublicKey) => {
+export const getSpendMulePublicKey = (owner: PublicKey) => {
+    const [mulePda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("spend_mule"), owner.toBuffer()],
+        QUARTZ_PROGRAM_ID
+    );
+    return mulePda;
+};
+
+export const getWithdrawMulePublicKey = (owner: PublicKey) => {
+    const [mulePda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("withdraw_mule"), owner.toBuffer()],
+        QUARTZ_PROGRAM_ID
+    )
+    return mulePda;
+}
+
+export const getCollateralRepayLedgerPublicKey = (owner: PublicKey) => {
     const [tokenLedgerPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("collateral_repay_ledger"), user.toBuffer()],
+        [Buffer.from("collateral_repay_ledger"), owner.toBuffer()],
         QUARTZ_PROGRAM_ID
     );
     return tokenLedgerPda;
@@ -54,6 +70,14 @@ export const getTimeLockRentPayerPublicKey = () => {
         QUARTZ_PROGRAM_ID
     );
     return timeLockRentPayerPda;
+}
+
+export const getRentFloatPublicKey = () => {
+    const [rentFloatPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("rent_float")],
+        QUARTZ_PROGRAM_ID
+    );
+    return rentFloatPda;
 }
 
 
@@ -200,12 +224,4 @@ export const getEventAuthority = () => {
         TOKEN_MESSAGE_MINTER_PROGRAM_ID
     );
     return eventAuthority;
-};
-
-export const getSpendMulePda = (user: PublicKey) => {
-    const [mulePda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("spend_mule"), user.toBuffer()],
-        QUARTZ_PROGRAM_ID
-    );
-    return mulePda;
 };

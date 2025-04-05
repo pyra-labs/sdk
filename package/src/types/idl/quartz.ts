@@ -1,5 +1,5 @@
 export type Quartz = {
-  "version": "0.9.0",
+  "version": "0.9.6",
   "name": "quartz",
   "instructions": [
     {
@@ -515,24 +515,30 @@ export type Quartz = {
           "isSigner": false
         },
         {
+          "name": "caller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
           "name": "vault",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "vaultSpl",
+          "name": "mule",
           "isMut": true,
           "isSigner": false
         },
         {
           "name": "owner",
           "isMut": true,
-          "isSigner": true
+          "isSigner": false
         },
         {
           "name": "ownerSpl",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "splMint",
@@ -903,6 +909,11 @@ export type Quartz = {
           "isSigner": false
         },
         {
+          "name": "caller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
           "name": "vault",
           "isMut": true,
           "isSigner": false
@@ -910,7 +921,7 @@ export type Quartz = {
         {
           "name": "owner",
           "isMut": true,
-          "isSigner": true
+          "isSigner": false
         },
         {
           "name": "systemProgram",
@@ -992,6 +1003,12 @@ export type Quartz = {
           "name": "ledger",
           "isMut": true,
           "isSigner": false
+        },
+        {
+          "name": "rentFloat",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
         }
       ],
       "args": []
@@ -1174,6 +1191,12 @@ export type Quartz = {
           "name": "ledger",
           "isMut": true,
           "isSigner": false
+        },
+        {
+          "name": "rentFloat",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
         }
       ],
       "args": [
@@ -1501,12 +1524,22 @@ export type Quartz = {
       "code": 6036,
       "name": "InvalidTimeLockOwner",
       "msg": "Time lock owner does not match"
+    },
+    {
+      "code": 6037,
+      "name": "AccountAlreadyInitialized",
+      "msg": "An initialize instruction was sent to an account that has already been initialized"
+    },
+    {
+      "code": 6038,
+      "name": "InvalidOwnerSplWSOL",
+      "msg": "owner_spl is required if spl_mint is not wSOL"
     }
   ]
 };
 
 export const IDL: Quartz = {
-  "version": "0.9.0",
+  "version": "0.9.6",
   "name": "quartz",
   "instructions": [
     {
@@ -2022,24 +2055,30 @@ export const IDL: Quartz = {
           "isSigner": false
         },
         {
+          "name": "caller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
           "name": "vault",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "vaultSpl",
+          "name": "mule",
           "isMut": true,
           "isSigner": false
         },
         {
           "name": "owner",
           "isMut": true,
-          "isSigner": true
+          "isSigner": false
         },
         {
           "name": "ownerSpl",
           "isMut": true,
-          "isSigner": false
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "splMint",
@@ -2410,6 +2449,11 @@ export const IDL: Quartz = {
           "isSigner": false
         },
         {
+          "name": "caller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
           "name": "vault",
           "isMut": true,
           "isSigner": false
@@ -2417,7 +2461,7 @@ export const IDL: Quartz = {
         {
           "name": "owner",
           "isMut": true,
-          "isSigner": true
+          "isSigner": false
         },
         {
           "name": "systemProgram",
@@ -2499,6 +2543,12 @@ export const IDL: Quartz = {
           "name": "ledger",
           "isMut": true,
           "isSigner": false
+        },
+        {
+          "name": "rentFloat",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
         }
       ],
       "args": []
@@ -2681,6 +2731,12 @@ export const IDL: Quartz = {
           "name": "ledger",
           "isMut": true,
           "isSigner": false
+        },
+        {
+          "name": "rentFloat",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
         }
       ],
       "args": [
@@ -3008,6 +3064,16 @@ export const IDL: Quartz = {
       "code": 6036,
       "name": "InvalidTimeLockOwner",
       "msg": "Time lock owner does not match"
+    },
+    {
+      "code": 6037,
+      "name": "AccountAlreadyInitialized",
+      "msg": "An initialize instruction was sent to an account that has already been initialized"
+    },
+    {
+      "code": 6038,
+      "name": "InvalidOwnerSplWSOL",
+      "msg": "owner_spl is required if spl_mint is not wSOL"
     }
   ]
 };

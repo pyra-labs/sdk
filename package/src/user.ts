@@ -1,11 +1,11 @@
 import { DriftUser } from "./types/classes/DriftUser.class.js";
 import type { DriftClient, UserAccount } from "@drift-labs/sdk";
 import type { Connection, AddressLookupTableAccount, TransactionInstruction, } from "@solana/web3.js";
-import { DRIFT_PROGRAM_ID, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, SPEND_FEE_DESTINATION, TOKEN_MESSAGE_MINTER_PROGRAM_ID, } from "./config/constants.js";
+import { DRIFT_PROGRAM_ID, MARKET_INDEX_SOL, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_PROGRAM_ID, SPEND_FEE_DESTINATION, TOKEN_MESSAGE_MINTER_PROGRAM_ID, } from "./config/constants.js";
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
-import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getVaultSplPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority, getInitRentPayerPublicKey, getSpendMulePda, getTimeLockRentPayerPublicKey } from "./utils/accounts.js";
+import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getVaultSplPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority, getInitRentPayerPublicKey, getSpendMulePublicKey, getTimeLockRentPayerPublicKey, getWithdrawMulePublicKey, } from "./utils/accounts.js";
 import { calculateWithdrawOrderBalances, getTokenProgram, } from "./utils/helpers.js";
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, } from "@solana/spl-token";
 import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
@@ -168,7 +168,8 @@ export class QuartzUser {
         openWithdrawOrders?: WithdrawOrder[]
     ): Promise<WithdrawOrder[]> {
         if (openWithdrawOrders === undefined) {
-            return await this.client.getOpenWithdrawOrders(this.pubkey);
+            const accounts = await this.client.getOpenWithdrawOrders(this.pubkey);
+            return Object.values(accounts);
         } 
 
         return openWithdrawOrders
@@ -564,6 +565,7 @@ export class QuartzUser {
      */
     public async makeFulfilWithdrawIx(
         orderAccount: PublicKey,
+        caller: PublicKey
     ): Promise<{
         ixs: TransactionInstruction[],
         lookupTables: AddressLookupTableAccount[],
@@ -579,16 +581,21 @@ export class QuartzUser {
         const mint = TOKENS[marketIndex].mint;
         const tokenProgram = await getTokenProgram(this.connection, mint);
         const ownerSpl = await getAssociatedTokenAddress(mint, this.pubkey, false, tokenProgram);
+
+        const ownerSplValue = order.driftMarketIndex === MARKET_INDEX_SOL
+            ? QUARTZ_PROGRAM_ID // Program ID is treated as None for optional account (not required as wSOL is unwrapped in the ix)
+            : ownerSpl; // If not wSOL, include ownerSpl
       
         const ix = await this.program.methods
             .fulfilWithdraw()
             .accounts({
                 withdrawOrder: orderAccount,
                 timeLockRentPayer: timeLockRentPayer,
+                caller: caller,
                 vault: this.vaultPubkey,
-                vaultSpl: getVaultSplPublicKey(this.pubkey, mint),
+                mule: getWithdrawMulePublicKey(this.pubkey),
                 owner: this.pubkey,
-                ownerSpl: ownerSpl,
+                ownerSpl: ownerSplValue,
                 splMint: mint,
                 driftUser: this.driftUser.pubkey,
                 driftUserStats: this.driftUser.statsPubkey,
@@ -728,6 +735,7 @@ export class QuartzUser {
     */
     public async makeFulfilSpendLimitsIx(
         orderAccount: PublicKey,
+        caller: PublicKey
     ): Promise<{
         ixs: TransactionInstruction[],
         lookupTables: AddressLookupTableAccount[],
@@ -743,6 +751,7 @@ export class QuartzUser {
             .accounts({
                 spendLimitsOrder: orderAccount,
                 timeLockRentPayer: timeLockRentPayer,
+                caller: caller,
                 vault: this.vaultPubkey,
                 owner: this.pubkey,
                 systemProgram: SystemProgram.programId
@@ -794,7 +803,7 @@ export class QuartzUser {
                 owner: this.pubkey,
                 spendCaller: spendCaller.publicKey,
                 spendFeeDestination: SPEND_FEE_DESTINATION,
-                mule: getSpendMulePda(this.pubkey),
+                mule: getSpendMulePublicKey(this.pubkey),
                 usdcMint: TOKENS[MARKET_INDEX_USDC].mint,
                 driftUser: this.driftUser.pubkey,
                 driftUserStats: this.driftUser.statsPubkey,
@@ -818,7 +827,7 @@ export class QuartzUser {
                 vault: this.vaultPubkey,
                 owner: this.pubkey,
                 spendCaller: spendCaller.publicKey,
-                mule: getSpendMulePda(this.pubkey),
+                mule: getSpendMulePublicKey(this.pubkey),
                 usdcMint: TOKENS[MARKET_INDEX_USDC].mint,
                 bridgeRentPayer: getBridgeRentPayerPublicKey(),
                 senderAuthorityPda: getSenderAuthority(),
