@@ -13,8 +13,8 @@ import { retryWithBackoff } from "./utils/helpers.js";
 import type { Keypair } from "@solana/web3.js";
 import { DriftClientService } from "./services/driftClientService.js";
 import type { VersionedTransactionResponse } from "@solana/web3.js";
-import type { WithdrawOrder } from "./types/accounts/WithdrawOrder.account.js";
-import type { SpendLimitsOrder } from "./types/accounts/SpendLimitsOrder.account.js";
+import type { WithdrawOrder, WithdrawOrderAccount } from "./types/accounts/WithdrawOrder.account.js";
+import type { SpendLimitsOrder, SpendLimitsOrderAccount } from "./types/accounts/SpendLimitsOrder.account.js";
 import type { MarketIndex } from "./index.browser.js";
 
 export class QuartzClient {
@@ -182,7 +182,7 @@ export class QuartzClient {
 
     public async getOpenWithdrawOrders(
         user?: PublicKey
-    ): Promise<Record<string, WithdrawOrder>> {
+    ): Promise<WithdrawOrderAccount[]> {
         const query = user
             ? [{
                 memcmp: {
@@ -196,19 +196,19 @@ export class QuartzClient {
         const sortedOrders = orders.sort((a, b) =>
             a.account.timeLock.releaseSlot.cmp(b.account.timeLock.releaseSlot)
         )
-        
-        return sortedOrders.reduce((acc, order) => {
-            acc[order.publicKey.toBase58()] = {
+
+        return sortedOrders.map((order) => ({
+            publicKey: order.publicKey,
+            account: {
                 ...order.account,
                 driftMarketIndex: new BN(order.account.driftMarketIndex)
-            };
-            return acc;
-        }, {} as Record<string, WithdrawOrder>);
+            }
+        }));
     }
 
     public async getOpenSpendLimitsOrders(
         user?: PublicKey
-    ): Promise<Record<string, SpendLimitsOrder>> {
+    ): Promise<SpendLimitsOrderAccount[]> {
         const query = user
             ? [{
                 memcmp: {
@@ -219,14 +219,9 @@ export class QuartzClient {
             : undefined;
         
         const orders = await this.program.account.spendLimitsOrder.all(query);
-        const sortedOrders = orders.sort((a, b) =>
+        return orders.sort((a, b) =>
             a.account.timeLock.releaseSlot.cmp(b.account.timeLock.releaseSlot)
-        )
-
-        return sortedOrders.reduce((acc, order) => {
-            acc[order.publicKey.toBase58()] = order.account;
-            return acc;
-        }, {} as Record<string, SpendLimitsOrder>);
+        );
     }
 
     public async parseOpenWithdrawOrder(
