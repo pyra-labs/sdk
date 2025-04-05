@@ -169,7 +169,7 @@ export class QuartzUser {
     ): Promise<WithdrawOrder[]> {
         if (openWithdrawOrders === undefined) {
             const accounts = await this.client.getOpenWithdrawOrders(this.pubkey);
-            return Object.values(accounts);
+            return accounts.map((account) => account.account);
         } 
 
         return openWithdrawOrders
