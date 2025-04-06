@@ -5,7 +5,7 @@ import { DRIFT_PROGRAM_ID, MARKET_INDEX_SOL, MARKET_INDEX_USDC, MESSAGE_TRANSMIT
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
-import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getVaultSplPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority, getInitRentPayerPublicKey, getSpendMulePublicKey, getTimeLockRentPayerPublicKey, getWithdrawMulePublicKey, } from "./utils/accounts.js";
+import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getVaultSplPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority, getInitRentPayerPublicKey, getSpendMulePublicKey, getTimeLockRentPayerPublicKey, getWithdrawMulePublicKey, getRentFloatPublicKey, } from "./utils/accounts.js";
 import { calculateWithdrawOrderBalances, getTokenProgram, } from "./utils/helpers.js";
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, } from "@solana/spl-token";
 import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
@@ -906,7 +906,8 @@ export class QuartzUser {
 
         const driftState = getDriftStatePublicKey();
         const collateralRepayLedger = getCollateralRepayLedgerPublicKey(this.pubkey);
-
+        const rentFloat = getRentFloatPublicKey();
+         
         const startCollateralRepayPromise = this.program.methods
             .startCollateralRepay()
             .accounts({
@@ -921,7 +922,8 @@ export class QuartzUser {
                 tokenProgramWithdraw: withdrawTokenProgram,
                 systemProgram: SystemProgram.programId,
                 instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-                ledger: collateralRepayLedger
+                ledger: collateralRepayLedger,
+                rentFloat: rentFloat
             })
             .instruction();
 
@@ -969,7 +971,8 @@ export class QuartzUser {
                 depositPriceUpdate: getPythOracle(depositMarketIndex),
                 withdrawPriceUpdate: getPythOracle(withdrawMarketIndex),
                 instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-                ledger: collateralRepayLedger
+                ledger: collateralRepayLedger,
+                rentFloat: rentFloat
             })
             .remainingAccounts(
                 this.driftUser.getRemainingAccounts(withdrawMarketIndex)
