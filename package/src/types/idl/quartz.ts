@@ -1003,12 +1003,6 @@ export type Quartz = {
           "name": "ledger",
           "isMut": true,
           "isSigner": false
-        },
-        {
-          "name": "rentFloat",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true
         }
       ],
       "args": []
@@ -1191,12 +1185,6 @@ export type Quartz = {
           "name": "ledger",
           "isMut": true,
           "isSigner": false
-        },
-        {
-          "name": "rentFloat",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true
         }
       ],
       "args": [
@@ -2543,12 +2531,6 @@ export const IDL: Quartz = {
           "name": "ledger",
           "isMut": true,
           "isSigner": false
-        },
-        {
-          "name": "rentFloat",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true
         }
       ],
       "args": []
@@ -2731,12 +2713,6 @@ export const IDL: Quartz = {
           "name": "ledger",
           "isMut": true,
           "isSigner": false
-        },
-        {
-          "name": "rentFloat",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true
         }
       ],
       "args": [
