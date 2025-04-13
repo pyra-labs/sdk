@@ -25,8 +25,8 @@ export async function getComputeUnitLimit(
 
     const estimatedComputeUnits = simulation.value.unitsConsumed;
     if (!estimatedComputeUnits) console.log("Could not simulate for CUs, using default limit");
-    const computeUnitLimit = estimatedComputeUnits 
-        ? Math.ceil(estimatedComputeUnits * 1.5) 
+    const computeUnitLimit = estimatedComputeUnits
+        ? Math.ceil(estimatedComputeUnits * 1.5)
         : DEFAULT_COMPUTE_UNIT_LIMIT;
     return computeUnitLimit;
 }
@@ -62,12 +62,12 @@ export async function getComputeUnitPrice(connection: Connection, instructions: 
     const q1 = sortedFees[q1Index];
     const q3 = sortedFees[q3Index];
     if (q1 === undefined || q3 === undefined) return Math.min(...recentFees);
-    
+
     // Calculate IQR and bounds
     const iqr = q3 - q1;
     const lowerBound = q1 - 1.5 * iqr;
     const upperBound = q3 + 1.5 * iqr;
-    
+
     // Filter out outliers and calculate average
     const filteredFees = sortedFees.filter(fee => fee >= lowerBound && fee <= upperBound);
     const average = filteredFees.reduce((sum, fee) => sum + fee, 0) / filteredFees.length;
@@ -85,19 +85,19 @@ export async function getComputeUnitPriceIx(connection: Connection, instructions
 export async function buildTransaction(
     connection: Connection,
     instructions: TransactionInstruction[],
-    address: PublicKey,
+    payer: PublicKey,
     lookupTables: AddressLookupTableAccount[] = []
 ): Promise<VersionedTransaction> {
     const blockhash = (await connection.getLatestBlockhash()).blockhash;
-    const ix_computeLimit = await getComputerUnitLimitIx(connection, instructions, address, blockhash, lookupTables);
+    const ix_computeLimit = await getComputerUnitLimitIx(connection, instructions, payer, blockhash, lookupTables);
     const ix_computePrice = await getComputeUnitPriceIx(connection, instructions);
 
     const messageV0 = new TransactionMessage({
-        payerKey: address,
+        payerKey: payer,
         recentBlockhash: blockhash,
         instructions: [
-            ix_computeLimit, 
-            ix_computePrice, 
+            ix_computeLimit,
+            ix_computePrice,
             ...instructions
         ]
     }).compileToV0Message(lookupTables);
@@ -188,14 +188,14 @@ export async function retryWithBackoff<T>(
 
 export function evmAddressToSolana(evmAddress: string) {
     const bytes32 = `0x000000000000000000000000${evmAddress.replace("0x", "")}`;
-    
+
     const bytes = new Uint8Array((bytes32.length - 2) / 2);
     let offset = 2;
     for (let i = 0; i < bytes.length; i++) {
         bytes[i] = Number.parseInt(bytes32.substring(offset, offset + 2), 16);
         offset += 2;
     }
-    
+
     return new PublicKey(bytes);
 }
 
