@@ -7,6 +7,7 @@ export interface WithdrawOrder extends TimeLocked {
     amountBaseUnits: BN;
     driftMarketIndex: BN;
     reduceOnly: boolean;
+    destination: PublicKey;
 }
 
 export interface WithdrawOrderAccount {
