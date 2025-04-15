@@ -53,8 +53,8 @@ export class QuartzClient {
         const driftClient = await DriftClientService.getDriftClient(connection, pollingFrequency);
 
         return new QuartzClient(
-            connection, 
-            program, 
+            connection,
+            program,
             quartzLookupTable,
             driftClient
         );
@@ -89,7 +89,7 @@ export class QuartzClient {
         const vaultAddress = getVaultPublicKey(owner);
         const vaultAccount = await this.program.account.vault.fetch(vaultAddress); // Check account exists
 
-        const [ driftUserAccount ] = await fetchDriftAccountsUsingKeys(
+        const [driftUserAccount] = await fetchDriftAccountsUsingKeys(
             this.connection,
             this.driftClient.program,
             [getDriftUserPublicKey(vaultAddress)]
@@ -97,11 +97,11 @@ export class QuartzClient {
         if (!driftUserAccount) throw Error("Drift user not found");
 
         return new QuartzUser(
-            owner, 
-            this.connection, 
+            owner,
+            this.connection,
             this,
-            this.program, 
-            this.quartzLookupTable, 
+            this.program,
+            this.quartzLookupTable,
             this.driftClient,
             driftUserAccount,
             vaultAccount.spendLimitPerTransaction,
@@ -141,10 +141,10 @@ export class QuartzClient {
             if (!vaultAccount) throw Error(`Vault account not found for pubkey: ${vaultAddresses[index]?.toBase58()}`);
 
             return new QuartzUser(
-                owners[index], 
-                this.connection, 
+                owners[index],
+                this.connection,
                 this,
-                this.program, 
+                this.program,
                 this.quartzLookupTable,
                 this.driftClient,
                 driftUser,
@@ -191,7 +191,7 @@ export class QuartzClient {
                 }
             }]
             : undefined;
-        
+
         const orders = await this.program.account.withdrawOrder.all(query);
         const sortedOrders = orders.sort((a, b) =>
             a.account.timeLock.releaseSlot.cmp(b.account.timeLock.releaseSlot)
@@ -217,7 +217,7 @@ export class QuartzClient {
                 }
             }]
             : undefined;
-        
+
         const orders = await this.program.account.spendLimitsOrder.all(query);
         return orders.sort((a, b) =>
             a.account.timeLock.releaseSlot.cmp(b.account.timeLock.releaseSlot)
@@ -225,9 +225,15 @@ export class QuartzClient {
     }
 
     public async parseOpenWithdrawOrder(
-        order: PublicKey
+        order: PublicKey,
+        retries = 5
     ): Promise<WithdrawOrder> {
-        const orderAccount = await this.program.account.withdrawOrder.fetch(order);
+        const orderAccount = await retryWithBackoff(
+            async () => {
+                return await this.program.account.withdrawOrder.fetch(order);
+            },
+            retries
+        );
         return {
             ...orderAccount,
             driftMarketIndex: new BN(orderAccount.driftMarketIndex)
@@ -235,9 +241,15 @@ export class QuartzClient {
     }
 
     public async parseOpenSpendLimitsOrder(
-        order: PublicKey
+        order: PublicKey,
+        retries = 5
     ): Promise<SpendLimitsOrder> {
-        const orderAccount = await this.program.account.spendLimitsOrder.fetch(order);
+        const orderAccount = await retryWithBackoff(
+            async () => {
+                return await this.program.account.spendLimitsOrder.fetch(order);
+            },
+            retries
+        );
         return orderAccount;
     }
 
