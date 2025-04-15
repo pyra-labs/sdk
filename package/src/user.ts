@@ -53,7 +53,7 @@ export class QuartzUser {
         this.client = client;
         this.program = program;
         this.quartzLookupTable = quartzLookupTable;
-        
+
         this.vaultPubkey = getVaultPublicKey(pubkey);
         this.driftSigner = getDriftSignerPublicKey();
 
@@ -65,7 +65,7 @@ export class QuartzUser {
 
         this.driftUser = new DriftUser(
             this.vaultPubkey,
-            driftClient, 
+            driftClient,
             driftUserAccount
         );
     }
@@ -158,7 +158,7 @@ export class QuartzUser {
         openWithdrawOrders?: WithdrawOrder[]
     ): Promise<number> {
         return await this.getWithdrawalLimit(
-            MARKET_INDEX_USDC, 
+            MARKET_INDEX_USDC,
             false,
             openWithdrawOrders
         );
@@ -170,7 +170,7 @@ export class QuartzUser {
         if (openWithdrawOrders === undefined) {
             const accounts = await this.client.getOpenWithdrawOrders(this.pubkey);
             return accounts.map((account) => account.account);
-        } 
+        }
 
         return openWithdrawOrders
             .filter(order => order.timeLock.owner.equals(this.pubkey));
@@ -198,16 +198,16 @@ export class QuartzUser {
                 balance: await this.getTokenBalance(index, openWithdrawOrders)
             }))
         );
-    
-        const balances = balancesArray.reduce((acc, { index, balance }) => 
+
+        const balances = balancesArray.reduce((acc, { index, balance }) =>
             Object.assign(acc, { [index]: balance }
-        ), {} as Record<MarketIndex, BN>);
-    
+            ), {} as Record<MarketIndex, BN>);
+
         return balances;
     }
 
     public async getWithdrawalLimit(
-        spotMarketIndex: MarketIndex, 
+        spotMarketIndex: MarketIndex,
         reduceOnly = false,
         openWithdrawOrders?: WithdrawOrder[]
     ): Promise<number> {
@@ -215,14 +215,14 @@ export class QuartzUser {
         const openOrderBalances = calculateWithdrawOrderBalances(openWithdrawOrders);
 
         return this.driftUser.getWithdrawalLimit(
-            spotMarketIndex, 
+            spotMarketIndex,
             reduceOnly,
             openOrderBalances
         ).toNumber();
     }
-    
+
     public async getMultipleWithdrawalLimits(
-        spotMarketIndices: MarketIndex[], 
+        spotMarketIndices: MarketIndex[],
         reduceOnly = false,
         openWithdrawOrders?: WithdrawOrder[]
     ): Promise<Record<MarketIndex, number>> {
@@ -232,16 +232,16 @@ export class QuartzUser {
             spotMarketIndices.map(async index => ({
                 index,
                 limit: await this.getWithdrawalLimit(
-                    index, 
-                    reduceOnly, 
+                    index,
+                    reduceOnly,
                     openWithdrawOrders
                 )
             }))
         );
 
-        const limits = limitsArray.reduce((acc, { index, limit }) => 
+        const limits = limitsArray.reduce((acc, { index, limit }) =>
             Object.assign(acc, { [index]: limit }
-        ), {} as Record<MarketIndex, number>);
+            ), {} as Record<MarketIndex, number>);
 
         return limits;
     }
@@ -439,65 +439,6 @@ export class QuartzUser {
         };
     }
 
-
-    /**
-     * Creates instructions to withdraw a token from the Quartz user account.
-     * @param amountBaseUnits - The amount of tokens to withdraw.
-     * @param marketIndex - The market index of the token to withdraw.
-     * @param reduceOnly - True means amount will be capped so a positive balance (collateral) cannot become a negative balance (loan).
-     * @returns {Promise<{
-     *     ixs: TransactionInstruction[],
-     *     lookupTables: AddressLookupTableAccount[],
-     *     signers: Keypair[]
-     * }>} Object containing:
-     * - ixs: Array of instructions to withdraw the token from the Quartz user account.
-     * - lookupTables: Array of lookup tables for building VersionedTransaction.
-     * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
-     * @throw Error if the RPC connection fails. The transaction will fail if the account does not have enough tokens or, (when taking out a loan) the account health is not high enough for a loan.
-     */
-    public async makeWithdrawIx(
-        amountBaseUnits: number,
-        marketIndex: MarketIndex,
-        reduceOnly: boolean
-    ): Promise<{
-        ixs: TransactionInstruction[],
-        lookupTables: AddressLookupTableAccount[],
-        signers: Keypair[]
-    }> {
-        const mint = TOKENS[marketIndex].mint;
-        const tokenProgram = await getTokenProgram(this.connection, mint);
-        const ownerSpl = await getAssociatedTokenAddress(mint, this.pubkey, false, tokenProgram);
-        
-        const ix = await this.program.methods
-            .withdraw(new BN(amountBaseUnits), marketIndex, reduceOnly)
-            .accounts({
-                vault: this.vaultPubkey,
-                vaultSpl: getVaultSplPublicKey(this.pubkey, mint),
-                owner: this.pubkey,
-                ownerSpl: ownerSpl,
-                splMint: mint,
-                driftUser: this.driftUser.pubkey,
-                driftUserStats: this.driftUser.statsPubkey,
-                driftState: getDriftStatePublicKey(),
-                spotMarketVault: getDriftSpotMarketVaultPublicKey(marketIndex),
-                driftSigner: this.driftSigner,
-                tokenProgram: tokenProgram,
-                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-                driftProgram: DRIFT_PROGRAM_ID,
-                systemProgram: SystemProgram.programId
-            })
-            .remainingAccounts(
-                this.driftUser.getRemainingAccounts(marketIndex)
-            )
-            .instruction();
-
-        return {
-            ixs: [ix],
-            lookupTables: [this.quartzLookupTable],
-            signers: []
-        };
-    }
-
     /**
      * Creates instructions to iniaite a withdraw order from the Quartz user account, which will be fulfilled after the time lock.
      * @param amountBaseUnits - The amount of tokens to withdraw.
@@ -517,21 +458,22 @@ export class QuartzUser {
         amountBaseUnits: number,
         marketIndex: MarketIndex,
         reduceOnly: boolean,
-        paidByUser = false
+        paidByUser = false,
+        destinationAddress = this.pubkey
     ): Promise<{
         ixs: TransactionInstruction[],
         lookupTables: AddressLookupTableAccount[],
         signers: Keypair[]
     }> {
         const orderAccount = Keypair.generate();
-        const timeLockRentPayer = paidByUser 
-            ? this.pubkey 
+        const timeLockRentPayer = paidByUser
+            ? this.pubkey
             : getTimeLockRentPayerPublicKey();
-        
+
         const ix = await this.program.methods
             .initiateWithdraw(
-                new BN(amountBaseUnits), 
-                marketIndex, 
+                new BN(amountBaseUnits),
+                marketIndex,
                 reduceOnly
             )
             .accounts({
@@ -539,7 +481,8 @@ export class QuartzUser {
                 owner: this.pubkey,
                 withdrawOrder: orderAccount.publicKey,
                 timeLockRentPayer: timeLockRentPayer,
-                systemProgram: SystemProgram.programId
+                systemProgram: SystemProgram.programId,
+                destination: destinationAddress,
             })
             .instruction();
 
@@ -572,20 +515,22 @@ export class QuartzUser {
         signers: Keypair[]
     }> {
         const order = await this.program.account.withdrawOrder.fetch(orderAccount);
-        
+
         const marketIndex = order.driftMarketIndex as MarketIndex;
-        const timeLockRentPayer = order.timeLock.isOwnerPayer 
-            ? this.pubkey 
+        const timeLockRentPayer = order.timeLock.isOwnerPayer
+            ? this.pubkey
             : getTimeLockRentPayerPublicKey();
 
         const mint = TOKENS[marketIndex].mint;
         const tokenProgram = await getTokenProgram(this.connection, mint);
-        const ownerSpl = await getAssociatedTokenAddress(mint, this.pubkey, false, tokenProgram);
 
-        const ownerSplValue = order.driftMarketIndex === MARKET_INDEX_SOL
+        const destination = order.destination;
+        const destinationSpl = await getAssociatedTokenAddress(mint, destination, false, tokenProgram);
+
+        const destinationSplValue = order.driftMarketIndex === MARKET_INDEX_SOL
             ? QUARTZ_PROGRAM_ID // Program ID is treated as None for optional account (not required as wSOL is unwrapped in the ix)
-            : ownerSpl; // If not wSOL, include ownerSpl
-      
+            : destinationSpl; // If not wSOL, include ownerSpl
+
         const ix = await this.program.methods
             .fulfilWithdraw()
             .accounts({
@@ -595,7 +540,6 @@ export class QuartzUser {
                 vault: this.vaultPubkey,
                 mule: getWithdrawMulePublicKey(this.pubkey),
                 owner: this.pubkey,
-                ownerSpl: ownerSplValue,
                 splMint: mint,
                 driftUser: this.driftUser.pubkey,
                 driftUserStats: this.driftUser.statsPubkey,
@@ -605,7 +549,9 @@ export class QuartzUser {
                 tokenProgram: tokenProgram,
                 associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
                 driftProgram: DRIFT_PROGRAM_ID,
-                systemProgram: SystemProgram.programId
+                systemProgram: SystemProgram.programId,
+                destination: destination,
+                destinationSpl: destinationSplValue
             })
             .remainingAccounts(
                 this.driftUser.getRemainingAccounts(marketIndex)
@@ -614,52 +560,6 @@ export class QuartzUser {
 
         return {
             ixs: [ix],
-            lookupTables: [this.quartzLookupTable],
-            signers: []
-        };
-    }
-
-    /**
-     * Creates instructions to adjust the spend limits of a Quartz user account.
-     * @param spendLimitPerTransaction - The new spend limit per transaction.
-     * @param spendLimitPerTimeframe - The new spend limit per timeframe.
-     * @param timeframeInSeconds - The new timeframe in seconds.
-     * @param nextTimeframeResetTimestamp - The new next timeframe reset timestamp.
-     * @returns {Promise<{
-     *     ixs: TransactionInstruction[],
-     *     lookupTables: AddressLookupTableAccount[],
-     *     signers: Keypair[]
-     * }>} Object containing:
-     * - ixs: Array of instructions to adjust the spend limits.
-     * - lookupTables: Array of lookup tables for building VersionedTransaction.
-     * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
-     * @throw Error if the RPC connection fails.
-     */
-    public async makeAdjustSpendLimitsIxs(
-        spendLimitPerTransaction: BN,
-        spendLimitPerTimeframe: BN,
-        timeframeInSeconds: BN,
-        nextTimeframeResetTimestamp: BN
-    ): Promise<{
-        ixs: TransactionInstruction[],
-        lookupTables: AddressLookupTableAccount[],
-        signers: Keypair[]
-    }> {
-        const ix_adjustSpendLimits = await this.program.methods
-            .adjustSpendLimits(
-                spendLimitPerTransaction,
-                spendLimitPerTimeframe,
-                timeframeInSeconds,
-                nextTimeframeResetTimestamp
-            )
-            .accounts({
-                vault: this.vaultPubkey,
-                owner: this.pubkey
-            })
-            .instruction();
-
-        return {
-            ixs: [ix_adjustSpendLimits],
             lookupTables: [this.quartzLookupTable],
             signers: []
         };
@@ -693,8 +593,8 @@ export class QuartzUser {
         signers: Keypair[]
     }> {
         const orderAccount = Keypair.generate();
-        const timeLockRentPayer = paidByUser 
-            ? this.pubkey 
+        const timeLockRentPayer = paidByUser
+            ? this.pubkey
             : getTimeLockRentPayerPublicKey();
 
         const ix = await this.program.methods
@@ -742,8 +642,8 @@ export class QuartzUser {
         signers: Keypair[]
     }> {
         const order = await this.program.account.spendLimitsOrder.fetch(orderAccount);
-        const timeLockRentPayer = order.timeLock.isOwnerPayer 
-            ? this.pubkey 
+        const timeLockRentPayer = order.timeLock.isOwnerPayer
+            ? this.pubkey
             : getTimeLockRentPayerPublicKey();
 
         const ix_fulfilSpendLimits = await this.program.methods
@@ -820,7 +720,7 @@ export class QuartzUser {
                 this.driftUser.getRemainingAccounts(MARKET_INDEX_USDC)
             )
             .instruction();
-    
+
         const ix_completeSpend = await this.program.methods
             .completeSpend()
             .accounts({
@@ -895,7 +795,7 @@ export class QuartzUser {
             getTokenProgram(this.connection, depositMint),
             getTokenProgram(this.connection, withdrawMint)
         ]);
-        
+
         const [
             callerDepositSpl,
             callerWithdrawSpl
@@ -906,7 +806,7 @@ export class QuartzUser {
 
         const driftState = getDriftStatePublicKey();
         const collateralRepayLedger = getCollateralRepayLedgerPublicKey(this.pubkey);
-         
+
         const startCollateralRepayPromise = this.program.methods
             .startCollateralRepay()
             .accounts({

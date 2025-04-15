@@ -1,5 +1,5 @@
 export type Quartz = {
-  "version": "0.9.6",
+  "version": "0.10.0",
   "name": "quartz",
   "instructions": [
     {
@@ -369,95 +369,6 @@ export type Quartz = {
       ]
     },
     {
-      "name": "withdraw",
-      "accounts": [
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "vaultSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "ownerSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "splMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "driftUser",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftUserStats",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftState",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "spotMarketVault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftSigner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "driftProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "amountBaseUnits",
-          "type": "u64"
-        },
-        {
-          "name": "driftMarketIndex",
-          "type": "u16"
-        },
-        {
-          "name": "reduceOnly",
-          "type": "bool"
-        }
-      ]
-    },
-    {
       "name": "initiateWithdraw",
       "accounts": [
         {
@@ -482,6 +393,11 @@ export type Quartz = {
         },
         {
           "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "destination",
           "isMut": false,
           "isSigner": false
         }
@@ -535,12 +451,6 @@ export type Quartz = {
           "isSigner": false
         },
         {
-          "name": "ownerSpl",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true
-        },
-        {
           "name": "splMint",
           "isMut": false,
           "isSigner": false
@@ -589,6 +499,17 @@ export type Quartz = {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "destination",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destinationSpl",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
         }
       ],
       "args": []
@@ -803,49 +724,6 @@ export type Quartz = {
         }
       ],
       "args": []
-    },
-    {
-      "name": "adjustSpendLimits",
-      "accounts": [
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "eventAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "program",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "spendLimitPerTransaction",
-          "type": "u64"
-        },
-        {
-          "name": "spendLimitPerTimeframe",
-          "type": "u64"
-        },
-        {
-          "name": "timeframeInSeconds",
-          "type": "u64"
-        },
-        {
-          "name": "nextTimeframeResetTimestamp",
-          "type": "u64"
-        }
-      ]
     },
     {
       "name": "initiateSpendLimits",
@@ -1270,6 +1148,10 @@ export type Quartz = {
           {
             "name": "reduceOnly",
             "type": "bool"
+          },
+          {
+            "name": "destination",
+            "type": "publicKey"
           }
         ]
       }
@@ -1520,14 +1402,14 @@ export type Quartz = {
     },
     {
       "code": 6038,
-      "name": "InvalidOwnerSplWSOL",
-      "msg": "owner_spl is required if spl_mint is not wSOL"
+      "name": "InvalidDestinationSplWSOL",
+      "msg": "destination_spl is required if spl_mint is not wSOL"
     }
   ]
 };
 
 export const IDL: Quartz = {
-  "version": "0.9.6",
+  "version": "0.10.0",
   "name": "quartz",
   "instructions": [
     {
@@ -1897,95 +1779,6 @@ export const IDL: Quartz = {
       ]
     },
     {
-      "name": "withdraw",
-      "accounts": [
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "vaultSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "ownerSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "splMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "driftUser",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftUserStats",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftState",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "spotMarketVault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftSigner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "driftProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "amountBaseUnits",
-          "type": "u64"
-        },
-        {
-          "name": "driftMarketIndex",
-          "type": "u16"
-        },
-        {
-          "name": "reduceOnly",
-          "type": "bool"
-        }
-      ]
-    },
-    {
       "name": "initiateWithdraw",
       "accounts": [
         {
@@ -2010,6 +1803,11 @@ export const IDL: Quartz = {
         },
         {
           "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "destination",
           "isMut": false,
           "isSigner": false
         }
@@ -2063,12 +1861,6 @@ export const IDL: Quartz = {
           "isSigner": false
         },
         {
-          "name": "ownerSpl",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true
-        },
-        {
           "name": "splMint",
           "isMut": false,
           "isSigner": false
@@ -2117,6 +1909,17 @@ export const IDL: Quartz = {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "destination",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "destinationSpl",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
         }
       ],
       "args": []
@@ -2331,49 +2134,6 @@ export const IDL: Quartz = {
         }
       ],
       "args": []
-    },
-    {
-      "name": "adjustSpendLimits",
-      "accounts": [
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "eventAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "program",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "spendLimitPerTransaction",
-          "type": "u64"
-        },
-        {
-          "name": "spendLimitPerTimeframe",
-          "type": "u64"
-        },
-        {
-          "name": "timeframeInSeconds",
-          "type": "u64"
-        },
-        {
-          "name": "nextTimeframeResetTimestamp",
-          "type": "u64"
-        }
-      ]
     },
     {
       "name": "initiateSpendLimits",
@@ -2798,6 +2558,10 @@ export const IDL: Quartz = {
           {
             "name": "reduceOnly",
             "type": "bool"
+          },
+          {
+            "name": "destination",
+            "type": "publicKey"
           }
         ]
       }
@@ -3048,8 +2812,8 @@ export const IDL: Quartz = {
     },
     {
       "code": 6038,
-      "name": "InvalidOwnerSplWSOL",
-      "msg": "owner_spl is required if spl_mint is not wSOL"
+      "name": "InvalidDestinationSplWSOL",
+      "msg": "destination_spl is required if spl_mint is not wSOL"
     }
   ]
 };
