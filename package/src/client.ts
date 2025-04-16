@@ -7,7 +7,7 @@ import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledI
 import { QuartzUser } from "./user.js";
 import { getBridgeRentPayerPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getInitRentPayerPublicKey, getMessageTransmitter, getVaultPublicKey } from "./utils/accounts.js";
 import { SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
-import { DummyWallet } from "./types/classes/DummyWallet.class.js";
+import { DummyWallet } from "./types/classes/dummyWallet.class.js";
 import type { TransactionInstruction } from "@solana/web3.js";
 import { retryWithBackoff } from "./utils/helpers.js";
 import type { Keypair } from "@solana/web3.js";
