@@ -1,32 +1,32 @@
 import { AMM_RESERVE_PRECISION, AMM_RESERVE_PRECISION_EXP, BN, calculateAssetWeight, calculateLiabilityWeight, calculateLiveOracleTwap, calculateMarketMarginRatio, calculateMarketOpenBidAsk, calculatePerpLiabilityValue, calculatePositionPNL, calculateUnrealizedAssetWeight, calculateUnsettledFundingPnl, calculateWithdrawLimit, calculateWorstCasePerpLiabilityValue, type DriftClient, FIVE_MINUTE, getSignedTokenAmount, getStrictTokenValue, getTokenAmount, isSpotPositionAvailable, isVariant, MARGIN_PRECISION, type MarginCategory, ONE, OPEN_ORDER_MARGIN_REQUIREMENT, type PerpPosition, PRICE_PRECISION, QUOTE_PRECISION, QUOTE_SPOT_MARKET_INDEX, SPOT_MARKET_WEIGHT_PRECISION, SpotBalanceType, StrictOraclePrice, type UserAccount, UserStatus, ZERO, TEN, divCeil, type SpotMarketAccount, type SpotPosition, type OrderFillSimulation, calculateWeightedTokenValue, simulateOrderFill } from "@drift-labs/sdk";
 import type { PublicKey } from "@solana/web3.js";
 import { getDriftUserPublicKey, getDriftUserStatsPublicKey } from "../../utils/accounts.js";
-import type { AccountMeta } from "../interfaces/accountMeta.interface.js";
+import type { AccountMeta } from "../interfaces/AccountMeta.interface.js";
 import type { MarketIndex } from "../../config/tokens.js";
 import { getMarketIndicesRecord } from "../../index.browser.js";
 
 export class DriftUser {
-    private authority: PublicKey;
-    private driftClient: DriftClient;
+	private authority: PublicKey;
+	private driftClient: DriftClient;
 
-    private userAccount: UserAccount | undefined;
+	private userAccount: UserAccount | undefined;
 	public pubkey: PublicKey;
 	public statsPubkey: PublicKey;
 
-    constructor (
-        authority: PublicKey,
-        driftClient: DriftClient,
+	constructor(
+		authority: PublicKey,
+		driftClient: DriftClient,
 		userAccount: UserAccount
-    ) {
-        this.authority = authority;
-        this.driftClient = driftClient;
+	) {
+		this.authority = authority;
+		this.driftClient = driftClient;
 
 		this.pubkey = getDriftUserPublicKey(this.authority);
 		this.statsPubkey = getDriftUserStatsPublicKey(this.authority);
 		this.userAccount = userAccount;
 
 		driftClient.addUser(0, this.authority, userAccount);
-    }
+	}
 
 	public getDriftUserAccount(): UserAccount {
 		if (!this.userAccount) throw new Error("DriftUser not initialized");
@@ -48,11 +48,11 @@ export class DriftUser {
 		return remainingAccounts;
 	}
 
-    public getHealth(): number{
-        if (this.isBeingLiquidated()) return 0;
+	public getHealth(): number {
+		if (this.isBeingLiquidated()) return 0;
 
 		// Drift health uses Maintenance margin, Quartz health uses Initial margin
-        const totalCollateral = this.getTotalCollateralValue('Initial', true); 
+		const totalCollateral = this.getTotalCollateralValue('Initial', true);
 		const maintenanceMarginReq = this.getInitialMarginRequirement();
 
 		if (maintenanceMarginReq.eq(ZERO) && totalCollateral.gte(ZERO)) {
@@ -72,13 +72,13 @@ export class DriftUser {
 				)
 			)
 		);
-    }
+	}
 
-    public getTokenAmount(
+	public getTokenAmount(
 		marketIndex: number,
 		openOrderBalances?: Record<MarketIndex, BN>
 	): BN {
-        if (!this.userAccount) throw new Error("DriftUser not initialized");
+		if (!this.userAccount) throw new Error("DriftUser not initialized");
 		if (!openOrderBalances) openOrderBalances = getMarketIndicesRecord(ZERO);
 
 		const spotPosition = this.userAccount.spotPositions.find(
@@ -102,7 +102,7 @@ export class DriftUser {
 	}
 
 	public getWithdrawalLimit(
-		marketIndex: MarketIndex, 
+		marketIndex: MarketIndex,
 		reduceOnly?: boolean,
 		openOrderBalances?: Record<MarketIndex, BN>
 	): BN {
@@ -119,13 +119,13 @@ export class DriftUser {
 		);
 
 		const freeCollateral = this.getFreeCollateral(
-			"Initial", 
-			undefined, 
+			"Initial",
+			undefined,
 			openOrderBalances
 		);
 		const initialMarginRequirement = this.getMarginRequirement(
-			'Initial', 
-			undefined, 
+			'Initial',
+			undefined,
 			true,
 			true,
 			openOrderBalances
@@ -201,7 +201,7 @@ export class DriftUser {
 		openOrderBalances?: Record<MarketIndex, BN>
 	): BN {
 		const totalCollateral = this.getTotalCollateralValue(
-			marginCategory, 
+			marginCategory,
 			strict,
 			true,
 			openOrderBalances
@@ -211,7 +211,7 @@ export class DriftUser {
 			marginCategory === 'Initial'
 				? this.getMarginRequirement('Initial', undefined, strict, true, openOrderBalances)
 				: this.getInitialMarginRequirement(openOrderBalances);
-		
+
 		const freeCollateral = totalCollateral.sub(marginRequirement);
 		return freeCollateral.gte(ZERO) ? freeCollateral : ZERO;
 	}
@@ -275,7 +275,7 @@ export class DriftUser {
 		};
 	}
 
-    private isBeingLiquidated(): boolean {
+	private isBeingLiquidated(): boolean {
 		if (!this.userAccount) throw new Error("DriftUser not initialized");
 		return (
 			(this.userAccount.status &
@@ -284,7 +284,7 @@ export class DriftUser {
 		);
 	}
 
-    public getTotalCollateralValue(
+	public getTotalCollateralValue(
 		marginCategory?: MarginCategory,
 		strict = false,
 		includeOpenOrders = true,
@@ -302,7 +302,7 @@ export class DriftUser {
 		).add(this.getUnrealizedPNL(true, undefined, marginCategory, strict));
 	}
 
-    private getSpotMarketAssetValue(
+	private getSpotMarketAssetValue(
 		marginCategory?: MarginCategory,
 		marketIndex?: number,
 		includeOpenOrders?: boolean,
@@ -322,7 +322,7 @@ export class DriftUser {
 		return totalAssetValue;
 	}
 
-    private getSpotMarketAssetAndLiabilityValue(
+	private getSpotMarketAssetAndLiabilityValue(
 		marginCategory?: MarginCategory,
 		marketIndex?: number,
 		liquidationBuffer?: BN,
@@ -423,8 +423,8 @@ export class DriftUser {
 					totalLiabilityValue = totalLiabilityValue.add(liabilityValue);
 
 					continue;
-				} 
-				
+				}
+
 				const assetValue = this.getSpotAssetValue(
 					tokenAmount,
 					strictOraclePrice,
@@ -523,13 +523,13 @@ export class DriftUser {
 			),
 			spotPosition.balanceType
 		).sub(openOrderBalances[spotPosition.marketIndex as MarketIndex]);
-	
+
 		const tokenValue = getStrictTokenValue(
 			tokenAmount,
 			spotMarketAccount.decimals,
 			strictOraclePrice
 		);
-	
+
 		if (spotPosition.openBids.eq(ZERO) && spotPosition.openAsks.eq(ZERO)) {
 			const { weight, weightedTokenValue } = calculateWeightedTokenValue(
 				tokenAmount,
@@ -548,7 +548,7 @@ export class DriftUser {
 				freeCollateralContribution: weightedTokenValue,
 			};
 		}
-	
+
 		const bidsSimulation = simulateOrderFill(
 			tokenAmount,
 			tokenValue,
@@ -567,7 +567,7 @@ export class DriftUser {
 			marginCategory,
 			customMarginRatio
 		);
-	
+
 		if (
 			asksSimulation.freeCollateralContribution.lt(
 				bidsSimulation.freeCollateralContribution
@@ -575,11 +575,11 @@ export class DriftUser {
 		) {
 			return asksSimulation;
 		}
-		
+
 		return bidsSimulation;
 	}
 
-    private getSpotLiabilityValue(
+	private getSpotLiabilityValue(
 		tokenAmount: BN,
 		strictOraclePrice: StrictOraclePrice,
 		spotMarketAccount: SpotMarketAccount,
@@ -625,14 +625,14 @@ export class DriftUser {
 		return liabilityValue;
 	}
 
-    private getSpotAssetValue(
+	private getSpotAssetValue(
 		tokenAmount: BN,
 		strictOraclePrice: StrictOraclePrice,
 		spotMarketAccount: SpotMarketAccount,
 		marginCategory?: MarginCategory
 	): BN {
 		if (!this.userAccount) throw new Error("DriftUser not initialized");
-		
+
 		let assetValue = getStrictTokenValue(
 			tokenAmount,
 			spotMarketAccount.decimals,
@@ -666,7 +666,7 @@ export class DriftUser {
 		return assetValue;
 	}
 
-    private getUnrealizedPNL(
+	private getUnrealizedPNL(
 		withFunding: boolean,
 		marketIndex?: number,
 		withWeightMarginCategory?: MarginCategory,
@@ -747,18 +747,18 @@ export class DriftUser {
 			}, ZERO);
 	}
 
-    private getActivePerpPositions() {
+	private getActivePerpPositions() {
 		if (!this.userAccount) throw new Error("DriftUser not initialized");
-        return this.userAccount.perpPositions.filter(
+		return this.userAccount.perpPositions.filter(
 			(pos) =>
 				!pos.baseAssetAmount.eq(ZERO) ||
 				!pos.quoteAssetAmount.eq(ZERO) ||
 				!(pos.openOrders === 0) ||
 				!pos.lpShares.eq(ZERO)
 		);
-    }
+	}
 
-    private getPerpPositionWithLPSettle(
+	private getPerpPositionWithLPSettle(
 		marketIndex: number,
 		originalPosition?: PerpPosition,
 		burnLpShares = false,
@@ -956,21 +956,21 @@ export class DriftUser {
 		return [position, remainderBeforeRemoval, pnl];
 	}
 
-    private getPerpPosition(marketIndex: number): PerpPosition | undefined {
+	private getPerpPosition(marketIndex: number): PerpPosition | undefined {
 		if (!this.userAccount) throw new Error("DriftUser not initialized");
-        const activePositions = this.userAccount.perpPositions.filter(
+		const activePositions = this.userAccount.perpPositions.filter(
 			(pos) =>
 				!pos.baseAssetAmount.eq(ZERO) ||
 				!pos.quoteAssetAmount.eq(ZERO) ||
 				!(pos.openOrders === 0) ||
 				!pos.lpShares.eq(ZERO)
 		);
-        return activePositions.find(
+		return activePositions.find(
 			(position) => position.marketIndex === marketIndex
 		);
-    }
+	}
 
-    private getEmptyPosition(marketIndex: number): PerpPosition {
+	private getEmptyPosition(marketIndex: number): PerpPosition {
 		return {
 			baseAssetAmount: ZERO,
 			remainderBaseAssetAmount: 0,
@@ -990,16 +990,16 @@ export class DriftUser {
 		};
 	}
 
-    private getClonedPosition(position: PerpPosition): PerpPosition {
+	private getClonedPosition(position: PerpPosition): PerpPosition {
 		const clonedPosition = Object.assign({}, position);
 		return clonedPosition;
 	}
 
-    public getInitialMarginRequirement(
+	public getInitialMarginRequirement(
 		openOrderBalances?: Record<MarketIndex, BN>
 	): BN {
 		if (!this.userAccount) throw new Error("DriftUser not initialized");
-		
+
 		// if user being liq'd, can continue to be liq'd until total collateral above the margin requirement plus buffer
 		let liquidationBuffer: BN | undefined = undefined;
 		if (this.isBeingLiquidated()) {
@@ -1009,7 +1009,7 @@ export class DriftUser {
 		}
 
 		return this.getMarginRequirement(
-			'Initial', 
+			'Initial',
 			liquidationBuffer,
 			false,
 			true,
@@ -1017,7 +1017,7 @@ export class DriftUser {
 		);
 	}
 
-    private getMarginRequirement(
+	private getMarginRequirement(
 		marginCategory: MarginCategory,
 		liquidationBuffer?: BN,
 		strict = false,
@@ -1031,7 +1031,7 @@ export class DriftUser {
 			strict
 		).add(
 			this.getSpotMarketLiabilityValue(
-                marginCategory,
+				marginCategory,
 				undefined,
 				liquidationBuffer,
 				includeOpenOrders,
@@ -1042,7 +1042,7 @@ export class DriftUser {
 		);
 	}
 
-    private getTotalPerpPositionLiability(
+	private getTotalPerpPositionLiability(
 		marginCategory?: MarginCategory,
 		liquidationBuffer?: BN,
 		includeOpenOrders?: boolean,
@@ -1063,7 +1063,7 @@ export class DriftUser {
 		);
 	}
 
-    private calculateWeightedPerpPositionLiability(
+	private calculateWeightedPerpPositionLiability(
 		perpPosition: PerpPosition,
 		marginCategory?: MarginCategory,
 		liquidationBuffer?: BN,
@@ -1180,7 +1180,7 @@ export class DriftUser {
 		return liabilityValue;
 	}
 
-    private getSpotMarketLiabilityValue(
+	private getSpotMarketLiabilityValue(
 		marginCategory: MarginCategory,
 		marketIndex?: number,
 		liquidationBuffer?: BN,
@@ -1190,7 +1190,7 @@ export class DriftUser {
 		openOrderBalances?: Record<MarketIndex, BN>
 	): BN {
 		const { totalLiabilityValue } = this.getSpotMarketAssetAndLiabilityValue(
-            marginCategory,
+			marginCategory,
 			marketIndex,
 			liquidationBuffer,
 			includeOpenOrders,

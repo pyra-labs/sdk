@@ -7,7 +7,7 @@ import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledI
 import { QuartzUser } from "./user.js";
 import { getBridgeRentPayerPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getInitRentPayerPublicKey, getMessageTransmitter, getVaultPublicKey } from "./utils/accounts.js";
 import { SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
-import { DummyWallet } from "./types/classes/dummyWallet.class.js";
+import { DummyWallet } from "./types/classes/DummyWallet.class.js";
 import type { TransactionInstruction } from "@solana/web3.js";
 import { retryWithBackoff } from "./utils/helpers.js";
 import type { Keypair } from "@solana/web3.js";
@@ -122,21 +122,23 @@ export class QuartzClient {
             vaultAddresses.slice(i * MAX_ACCOUNTS_PER_FETCH_CALL, (i + 1) * MAX_ACCOUNTS_PER_FETCH_CALL)
         );
 
-        const results = await Promise.all(vaultChunks.map(async (chunk) => {
+        const vaultResults = await Promise.all(vaultChunks.map(async (chunk) => {
             const vaultAccounts = await this.program.account.vault.fetchMultiple(chunk);
             return vaultAccounts.map((account, index) => {
                 if (account === null) throw Error(`Account not found for pubkey: ${vaultAddresses[index]?.toBase58()}`)
                 return account;
             });
         }));
+        const vaultAccounts = vaultResults.flat();
 
-        const vaultAccounts = results.flat();
-
-        const driftUsers = await fetchDriftAccountsUsingKeys(
-            this.connection,
-            this.driftClient.program,
-            vaultAddresses.map((vault) => getDriftUserPublicKey(vault))
-        )
+        const driftResults = await Promise.all(vaultChunks.map(async (chunk) => {
+            return await fetchDriftAccountsUsingKeys(
+                this.connection,
+                this.driftClient.program,
+                chunk.map((vault) => getDriftUserPublicKey(vault))
+            )
+        }));
+        const driftUsers = driftResults.flat();
 
         // TODO: Uncomment once Drift accounts are guaranteed
         // const undefinedIndex = driftUsers.findIndex(user => !user);

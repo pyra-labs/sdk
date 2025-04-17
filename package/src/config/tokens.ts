@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import type { Token } from "../types/interfaces/token.interface.js";
+import type { Token } from "../types/interfaces/Token.interface.js";
 import BN from "bn.js";
 
 export const MarketIndex = [
