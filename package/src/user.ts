@@ -14,7 +14,7 @@ import { TOKENS, type MarketIndex } from "./config/tokens.js";
 import { Keypair } from "@solana/web3.js";
 import type { QuartzClient } from "./client.js";
 import type { WithdrawOrder } from "./index.browser.js";
-import { DriftUser } from "./types/classes/DriftUser.class.js";
+import { DriftUser } from "./types/classes/driftUser.class.js";
 
 export class QuartzUser {
     public readonly pubkey: PublicKey;

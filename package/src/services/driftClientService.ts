@@ -1,7 +1,7 @@
 import { BulkAccountLoader, DriftClient } from "@drift-labs/sdk";
 import type { Connection } from "@solana/web3.js";
 import { MarketIndex } from "../config/tokens.js";
-import { DummyWallet } from "../types/classes/DummyWallet.class.js";
+import { DummyWallet } from "../types/classes/dummyWallet.class.js";
 import { QUARTZ_DRIFT_ACCOUNT } from "../config/constants.js";
 
 export class DriftClientService {

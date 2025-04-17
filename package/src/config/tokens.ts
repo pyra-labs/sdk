@@ -1,9 +1,9 @@
 import { PublicKey } from "@solana/web3.js";
-import type { Token } from "../types/interfaces/Token.interface.js";
+import type { Token } from "../types/interfaces/token.interface.js";
 import BN from "bn.js";
 
 export const MarketIndex = [
-    1, 0, 5, 22, 28, 3, 6, 19, 29
+    1, 0, 5, 22, 28, 3, 6, 19, 29, 8
 ] as const;
 export type MarketIndex = (typeof MarketIndex)[number];
 
@@ -77,5 +77,12 @@ export const TOKENS: Record<MarketIndex, Token> = {
         pythPriceFeedId: "0xe379d8d3a1a44952474f057bdfe6e902a97f093b2872c152dcf04f612e3e3be9",
         decimalPrecision: new BN(9),
         coingeckoPriceId: "meta-2",
+    },
+    8: {
+        name: "bSOL",
+        mint: new PublicKey("bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1"),
+        pythPriceFeedId: "0x89875379e70f8fbadc17aef315adf3a8d5d160b811435537e03c97e8aac97d9c",
+        decimalPrecision: new BN(9),
+        coingeckoPriceId: "blazestake-staked-sol",
     }
 };
