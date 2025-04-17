@@ -1,6 +1,6 @@
 import { BN, type DriftClient } from "@drift-labs/sdk";
 import { calculateBorrowRate, calculateDepositRate, DRIFT_PROGRAM_ID, fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
-import { MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID } from "./config/constants.js";
+import { MAX_ACCOUNTS_PER_FETCH_CALL, MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID } from "./config/constants.js";
 import { IDL, type Quartz } from "./types/idl/quartz.js";
 import { AnchorProvider, BorshInstructionCoder, Program, setProvider } from "@coral-xyz/anchor";
 import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledInstruction, Logs, Signer, } from "@solana/web3.js";
@@ -115,11 +115,22 @@ export class QuartzClient {
     public async getMultipleQuartzAccounts(owners: PublicKey[]): Promise<(QuartzUser | null)[]> {
         if (owners.length === 0) return [];
         const vaultAddresses = owners.map((owner) => getVaultPublicKey(owner));
-        const vaultAccounts = await this.program.account.vault.fetchMultiple(vaultAddresses);
 
-        vaultAccounts.forEach((account, index) => {
-            if (account === null) throw Error(`Account not found for pubkey: ${vaultAddresses[index]?.toBase58()}`)
-        });
+        const vaultChunks = Array.from({
+            length: Math.ceil(vaultAddresses.length / MAX_ACCOUNTS_PER_FETCH_CALL)
+        }, (_, i) =>
+            vaultAddresses.slice(i * MAX_ACCOUNTS_PER_FETCH_CALL, (i + 1) * MAX_ACCOUNTS_PER_FETCH_CALL)
+        );
+
+        const results = await Promise.all(vaultChunks.map(async (chunk) => {
+            const vaultAccounts = await this.program.account.vault.fetchMultiple(chunk);
+            return vaultAccounts.map((account, index) => {
+                if (account === null) throw Error(`Account not found for pubkey: ${vaultAddresses[index]?.toBase58()}`)
+                return account;
+            });
+        }));
+
+        const vaultAccounts = results.flat();
 
         const driftUsers = await fetchDriftAccountsUsingKeys(
             this.connection,

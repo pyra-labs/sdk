@@ -24,3 +24,5 @@ export const DEFAULT_COMPUTE_UNIT_LIMIT = 400_000;
 export const DEFAULT_COMPUTE_UNIT_PRICE = 1_250_000;
 
 export const ZERO = new BN(0);
+
+export const MAX_ACCOUNTS_PER_FETCH_CALL = 100;
