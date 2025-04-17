@@ -12,9 +12,9 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import BN from "bn.js";
 import { TOKENS, type MarketIndex } from "./config/tokens.js";
 import { Keypair } from "@solana/web3.js";
-import type { QuartzClient } from "./client.js";
+import type { QuartzClient } from "./QuartzClient.class.js";
 import type { WithdrawOrder } from "./index.browser.js";
-import { DriftUser } from "./types/classes/driftUser.class.js";
+import { DriftUser } from "./types/classes/DriftUser.class.js";
 
 export class QuartzUser {
     public readonly pubkey: PublicKey;

@@ -4,7 +4,7 @@ import { MAX_ACCOUNTS_PER_FETCH_CALL, MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_ADD
 import { IDL, type Quartz } from "./types/idl/quartz.js";
 import { AnchorProvider, BorshInstructionCoder, Program, setProvider } from "@coral-xyz/anchor";
 import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledInstruction, Logs, Signer, } from "@solana/web3.js";
-import { QuartzUser } from "./user.js";
+import { QuartzUser } from "./QuartzUser.class.js";
 import { getBridgeRentPayerPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getInitRentPayerPublicKey, getMessageTransmitter, getVaultPublicKey } from "./utils/accounts.js";
 import { SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
 import { DummyWallet } from "./types/classes/DummyWallet.class.js";
