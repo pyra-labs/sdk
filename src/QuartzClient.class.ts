@@ -5,7 +5,7 @@ import { IDL, type Quartz } from "./types/idl/quartz.js";
 import { AnchorProvider, BorshInstructionCoder, Program, setProvider } from "@coral-xyz/anchor";
 import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledInstruction, Logs, Signer, } from "@solana/web3.js";
 import { QuartzUser } from "./QuartzUser.class.js";
-import { getBridgeRentPayerPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getInitRentPayerPublicKey, getMessageTransmitter, getVaultPublicKey } from "./utils/accounts.js";
+import { getBridgeRentPayerPublicKey, getDepositAddressPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getInitRentPayerPublicKey, getMessageTransmitter, getVaultPublicKey } from "./utils/accounts.js";
 import { SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
 import { DummyWallet } from "./types/classes/DummyWallet.class.js";
 import type { TransactionInstruction } from "@solana/web3.js";
@@ -404,6 +404,7 @@ export class QuartzClient {
                 driftProgram: DRIFT_PROGRAM_ID,
                 rent: SYSVAR_RENT_PUBKEY,
                 systemProgram: SystemProgram.programId,
+                depositAddress: getDepositAddressPublicKey(owner),
             })
             .instruction();
 

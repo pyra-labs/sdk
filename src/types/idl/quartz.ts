@@ -1,5 +1,5 @@
 export type Quartz = {
-  "version": "0.10.0",
+  "version": "0.11.0",
   "name": "quartz",
   "instructions": [
     {
@@ -85,6 +85,11 @@ export type Quartz = {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "depositAddress",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
@@ -148,6 +153,11 @@ export type Quartz = {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "depositAddress",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": []
@@ -200,7 +210,7 @@ export type Quartz = {
       "accounts": [
         {
           "name": "vault",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -219,7 +229,7 @@ export type Quartz = {
           "isSigner": false
         },
         {
-          "name": "splMint",
+          "name": "mint",
           "isMut": false,
           "isSigner": false
         },
@@ -284,11 +294,25 @@ export type Quartz = {
       "accounts": [
         {
           "name": "vault",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
-          "name": "vaultSpl",
+          "name": "depositAddress",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "depositAddressSpl",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Option because SOL in the deposit_address will be regular lamports, not wSOL"
+          ]
+        },
+        {
+          "name": "mule",
           "isMut": true,
           "isSigner": false
         },
@@ -303,12 +327,7 @@ export type Quartz = {
           "isSigner": true
         },
         {
-          "name": "callerSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "splMint",
+          "name": "mint",
           "isMut": false,
           "isSigner": false
         },
@@ -355,16 +374,8 @@ export type Quartz = {
       ],
       "args": [
         {
-          "name": "amountBaseUnits",
-          "type": "u64"
-        },
-        {
           "name": "driftMarketIndex",
           "type": "u16"
-        },
-        {
-          "name": "reduceOnly",
-          "type": "bool"
         }
       ]
     },
@@ -437,7 +448,7 @@ export type Quartz = {
         },
         {
           "name": "vault",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -447,11 +458,11 @@ export type Quartz = {
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
-          "name": "splMint",
+          "name": "mint",
           "isMut": false,
           "isSigner": false
         },
@@ -462,7 +473,7 @@ export type Quartz = {
         },
         {
           "name": "driftUserStats",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -510,6 +521,20 @@ export type Quartz = {
           "isMut": true,
           "isSigner": false,
           "isOptional": true
+        },
+        {
+          "name": "depositAddress",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "depositAddressSpl",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Option because SOL in the deposit_address will be regular lamports, not wSOL"
+          ]
         }
       ],
       "args": []
@@ -544,7 +569,7 @@ export type Quartz = {
         },
         {
           "name": "usdcMint",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -598,6 +623,16 @@ export type Quartz = {
           "isSigner": false
         },
         {
+          "name": "depositAddress",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "depositAddressUsdc",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "eventAuthority",
           "isMut": false,
           "isSigner": false
@@ -624,7 +659,7 @@ export type Quartz = {
       "accounts": [
         {
           "name": "vault",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -788,7 +823,7 @@ export type Quartz = {
         },
         {
           "name": "caller",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -798,7 +833,7 @@ export type Quartz = {
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -844,7 +879,7 @@ export type Quartz = {
         },
         {
           "name": "vault",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -905,16 +940,16 @@ export type Quartz = {
         },
         {
           "name": "vault",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mule",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "vaultSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "splMint",
+          "name": "mint",
           "isMut": false,
           "isSigner": false
         },
@@ -991,16 +1026,16 @@ export type Quartz = {
         },
         {
           "name": "vault",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mule",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "vaultSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "splMint",
+          "name": "mint",
           "isMut": false,
           "isSigner": false
         },
@@ -1075,7 +1110,95 @@ export type Quartz = {
   ],
   "accounts": [
     {
+      "name": "collateralRepayLedger",
+      "docs": [
+        "Ledger for tracking the balance changes of each token during the swap instruction of collateral repay"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "deposit",
+            "type": "u64"
+          },
+          {
+            "name": "withdraw",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "spendLimitsOrder",
+      "docs": [
+        "Time locked order for updating the spend limits of a vault"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timeLock",
+            "type": {
+              "defined": "TimeLock"
+            }
+          },
+          {
+            "name": "spendLimitPerTransaction",
+            "type": "u64"
+          },
+          {
+            "name": "spendLimitPerTimeframe",
+            "type": "u64"
+          },
+          {
+            "name": "timeframeInSeconds",
+            "type": "u64"
+          },
+          {
+            "name": "nextTimeframeResetTimestamp",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "withdrawOrder",
+      "docs": [
+        "Time locked order for withdrawing funds from a vault"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timeLock",
+            "type": {
+              "defined": "TimeLock"
+            }
+          },
+          {
+            "name": "amountBaseUnits",
+            "type": "u64"
+          },
+          {
+            "name": "driftMarketIndex",
+            "type": "u16"
+          },
+          {
+            "name": "reduceOnly",
+            "type": "bool"
+          },
+          {
+            "name": "destination",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
       "name": "vault",
+      "docs": [
+        "Main user account for the Quartz protocol. Is the authority for DeFi integration accounts, and handles spend limits for the card."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -1109,87 +1232,14 @@ export type Quartz = {
           }
         ]
       }
-    },
-    {
-      "name": "collateralRepayLedger",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "deposit",
-            "type": "u64"
-          },
-          {
-            "name": "withdraw",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "withdrawOrder",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "timeLock",
-            "type": {
-              "defined": "TimeLock"
-            }
-          },
-          {
-            "name": "amountBaseUnits",
-            "type": "u64"
-          },
-          {
-            "name": "driftMarketIndex",
-            "type": "u16"
-          },
-          {
-            "name": "reduceOnly",
-            "type": "bool"
-          },
-          {
-            "name": "destination",
-            "type": "publicKey"
-          }
-        ]
-      }
-    },
-    {
-      "name": "spendLimitsOrder",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "timeLock",
-            "type": {
-              "defined": "TimeLock"
-            }
-          },
-          {
-            "name": "spendLimitPerTransaction",
-            "type": "u64"
-          },
-          {
-            "name": "spendLimitPerTimeframe",
-            "type": "u64"
-          },
-          {
-            "name": "timeframeInSeconds",
-            "type": "u64"
-          },
-          {
-            "name": "nextTimeframeResetTimestamp",
-            "type": "u64"
-          }
-        ]
-      }
     }
   ],
   "types": [
     {
       "name": "TimeLock",
+      "docs": [
+        "Time lock used to prevent an order being executed before the release_slot"
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -1212,13 +1262,13 @@ export type Quartz = {
   "errors": [
     {
       "code": 6000,
-      "name": "VaultAlreadyInitialized",
-      "msg": "Vault already initialized"
+      "name": "IllegalCollateralRepayInstructions",
+      "msg": "Illegal collateral repay instructions"
     },
     {
       "code": 6001,
-      "name": "IllegalCollateralRepayInstructions",
-      "msg": "Illegal collateral repay instructions"
+      "name": "IllegalCollateralRepayCPI",
+      "msg": "Collateral repay cannot be called as a CPI"
     },
     {
       "code": 6002,
@@ -1232,8 +1282,8 @@ export type Quartz = {
     },
     {
       "code": 6004,
-      "name": "InvalidPlatformFee",
-      "msg": "Swap platform fee must be zero"
+      "name": "InvalidSlippageBPS",
+      "msg": "Max slippage config is above maximum BPS"
     },
     {
       "code": 6005,
@@ -1247,169 +1297,169 @@ export type Quartz = {
     },
     {
       "code": 6007,
-      "name": "InvalidDestinationTokenAccount",
-      "msg": "Swap destination token account does not match deposit"
-    },
-    {
-      "code": 6008,
-      "name": "InvalidStartBalance",
-      "msg": "Declared start balance is not accurate"
-    },
-    {
-      "code": 6009,
       "name": "NegativeOraclePrice",
       "msg": "Price received from oracle should be a positive number"
     },
     {
-      "code": 6010,
+      "code": 6008,
       "name": "InvalidMarketIndex",
       "msg": "Invalid market index"
     },
     {
-      "code": 6011,
+      "code": 6009,
       "name": "MathOverflow",
       "msg": "Math overflow"
     },
     {
-      "code": 6012,
+      "code": 6010,
       "name": "InvalidPriceExponent",
       "msg": "Price exponents received from oracle should be the same"
     },
     {
-      "code": 6013,
+      "code": 6011,
       "name": "UnableToLoadAccountLoader",
       "msg": "Unable to load account loader"
     },
     {
-      "code": 6014,
-      "name": "DeserializationError",
-      "msg": "Could not deserialize introspection instruction data"
-    },
-    {
-      "code": 6015,
+      "code": 6012,
       "name": "AutoRepayThresholdNotReached",
       "msg": "Total collateral cannot be less than margin requirement for auto repay"
     },
     {
-      "code": 6016,
+      "code": 6013,
       "name": "AutoRepayTooMuchSold",
       "msg": "Too much collateral sold in auto repay"
     },
     {
-      "code": 6017,
+      "code": 6014,
       "name": "AutoRepayNotEnoughSold",
       "msg": "Not enough collateral sold in auto repay"
     },
     {
-      "code": 6018,
+      "code": 6015,
       "name": "IdenticalCollateralRepayMarkets",
       "msg": "Collateral repay deposit and withdraw markets must be different"
     },
     {
-      "code": 6019,
+      "code": 6016,
       "name": "InvalidStartingVaultBalance",
       "msg": "Invalid starting vault balance"
     },
     {
-      "code": 6020,
-      "name": "FreshTokenLedgerRequired",
-      "msg": "Provided token ledger is not empty"
-    },
-    {
-      "code": 6021,
+      "code": 6017,
       "name": "InvalidEvmAddress",
       "msg": "Provided EVM address does not match expected format"
     },
     {
-      "code": 6022,
+      "code": 6018,
       "name": "InvalidVaultOwner",
       "msg": "Invalid vault owner"
     },
     {
-      "code": 6023,
-      "name": "InvalidVaultAddress",
-      "msg": "Invalid vault address"
-    },
-    {
-      "code": 6024,
-      "name": "LookupTableAlreadyInitialized",
-      "msg": "Lookup table already initialized"
-    },
-    {
-      "code": 6025,
-      "name": "MissingTokenMint",
-      "msg": "Missing token mint"
-    },
-    {
-      "code": 6026,
-      "name": "InvalidTokenProgramId",
-      "msg": "Invalid token program id"
-    },
-    {
-      "code": 6027,
-      "name": "InvalidLookupTable",
-      "msg": "Invalid lookup table"
-    },
-    {
-      "code": 6028,
-      "name": "InvalidLookupTableContent",
-      "msg": "Invalid lookup table content"
-    },
-    {
-      "code": 6029,
-      "name": "InvalidLookupTableAuthority",
-      "msg": "Invalid lookup table authority"
-    },
-    {
-      "code": 6030,
+      "code": 6019,
       "name": "InsufficientTimeframeSpendLimit",
       "msg": "Insufficient spend limit remaining for the timeframe"
     },
     {
-      "code": 6031,
+      "code": 6020,
       "name": "InsufficientTransactionSpendLimit",
       "msg": "Transaction is larger than the transaction spend limit"
     },
     {
-      "code": 6032,
+      "code": 6021,
       "name": "IllegalSpendInstructions",
       "msg": "start_spend instruction must be followed by complete_spend instruction"
     },
     {
-      "code": 6033,
+      "code": 6022,
       "name": "InvalidTimestamp",
       "msg": "Current timestamp cannot be negative"
     },
     {
-      "code": 6034,
+      "code": 6023,
       "name": "InvalidTimeLockRentPayer",
       "msg": "Time lock rent payer must either be the owner or the time_lock_rent_payer PDA"
     },
     {
-      "code": 6035,
+      "code": 6024,
       "name": "TimeLockNotReleased",
       "msg": "Release slot has not passed for time lock"
     },
     {
-      "code": 6036,
+      "code": 6025,
       "name": "InvalidTimeLockOwner",
       "msg": "Time lock owner does not match"
     },
     {
-      "code": 6037,
+      "code": 6026,
+      "name": "MissingDestinationSpl",
+      "msg": "destination_spl is required if spl_mint is not wSOL"
+    },
+    {
+      "code": 6027,
+      "name": "MissingDepositAddressSpl",
+      "msg": "deposit_address_spl is required if spl_mint is not wSOL"
+    },
+    {
+      "code": 6028,
+      "name": "InvalidWithdrawDestination",
+      "msg": "Withdraw destination does not match order account"
+    },
+    {
+      "code": 6029,
+      "name": "InvalidSpendFeeDestination",
+      "msg": "Invalid spend fee destination"
+    },
+    {
+      "code": 6030,
+      "name": "InvalidSpendCaller",
+      "msg": "Invalid spend caller"
+    },
+    {
+      "code": 6031,
       "name": "AccountAlreadyInitialized",
-      "msg": "An initialize instruction was sent to an account that has already been initialized"
+      "msg": "Account is already initialized"
+    },
+    {
+      "code": 6032,
+      "name": "InvalidRentReclaimer",
+      "msg": "Invalid rent reclaimer"
+    },
+    {
+      "code": 6033,
+      "name": "FailedToDeserializeMarketIndex",
+      "msg": "Failed to deserialize market index"
+    },
+    {
+      "code": 6034,
+      "name": "FailedToDeserializeVaultBytes",
+      "msg": "Failed to deserialize vault bytes"
+    },
+    {
+      "code": 6035,
+      "name": "InvalidVaultAccount",
+      "msg": "Invalid vault account"
+    },
+    {
+      "code": 6036,
+      "name": "IllegalVaultCPIModification",
+      "msg": "Vault data was illegally modified during a CPI"
+    },
+    {
+      "code": 6037,
+      "name": "InvalidDepositAddressOwner",
+      "msg": "Deposit address must be owned by the system program"
     },
     {
       "code": 6038,
-      "name": "InvalidDestinationSplWSOL",
-      "msg": "destination_spl is required if spl_mint is not wSOL"
+      "name": "InvalidSpendFeeBPS",
+      "msg": "Spend fee BPS is above maximum"
     }
   ]
 };
 
 export const IDL: Quartz = {
-  "version": "0.10.0",
+  "version": "0.11.0",
   "name": "quartz",
   "instructions": [
     {
@@ -1495,6 +1545,11 @@ export const IDL: Quartz = {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "depositAddress",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
@@ -1558,6 +1613,11 @@ export const IDL: Quartz = {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "depositAddress",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": []
@@ -1610,7 +1670,7 @@ export const IDL: Quartz = {
       "accounts": [
         {
           "name": "vault",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1629,7 +1689,7 @@ export const IDL: Quartz = {
           "isSigner": false
         },
         {
-          "name": "splMint",
+          "name": "mint",
           "isMut": false,
           "isSigner": false
         },
@@ -1694,11 +1754,25 @@ export const IDL: Quartz = {
       "accounts": [
         {
           "name": "vault",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
-          "name": "vaultSpl",
+          "name": "depositAddress",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "depositAddressSpl",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Option because SOL in the deposit_address will be regular lamports, not wSOL"
+          ]
+        },
+        {
+          "name": "mule",
           "isMut": true,
           "isSigner": false
         },
@@ -1713,12 +1787,7 @@ export const IDL: Quartz = {
           "isSigner": true
         },
         {
-          "name": "callerSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "splMint",
+          "name": "mint",
           "isMut": false,
           "isSigner": false
         },
@@ -1765,16 +1834,8 @@ export const IDL: Quartz = {
       ],
       "args": [
         {
-          "name": "amountBaseUnits",
-          "type": "u64"
-        },
-        {
           "name": "driftMarketIndex",
           "type": "u16"
-        },
-        {
-          "name": "reduceOnly",
-          "type": "bool"
         }
       ]
     },
@@ -1847,7 +1908,7 @@ export const IDL: Quartz = {
         },
         {
           "name": "vault",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1857,11 +1918,11 @@ export const IDL: Quartz = {
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
-          "name": "splMint",
+          "name": "mint",
           "isMut": false,
           "isSigner": false
         },
@@ -1872,7 +1933,7 @@ export const IDL: Quartz = {
         },
         {
           "name": "driftUserStats",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1920,6 +1981,20 @@ export const IDL: Quartz = {
           "isMut": true,
           "isSigner": false,
           "isOptional": true
+        },
+        {
+          "name": "depositAddress",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "depositAddressSpl",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true,
+          "docs": [
+            "Option because SOL in the deposit_address will be regular lamports, not wSOL"
+          ]
         }
       ],
       "args": []
@@ -1954,7 +2029,7 @@ export const IDL: Quartz = {
         },
         {
           "name": "usdcMint",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -2008,6 +2083,16 @@ export const IDL: Quartz = {
           "isSigner": false
         },
         {
+          "name": "depositAddress",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "depositAddressUsdc",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "eventAuthority",
           "isMut": false,
           "isSigner": false
@@ -2034,7 +2119,7 @@ export const IDL: Quartz = {
       "accounts": [
         {
           "name": "vault",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -2198,7 +2283,7 @@ export const IDL: Quartz = {
         },
         {
           "name": "caller",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -2208,7 +2293,7 @@ export const IDL: Quartz = {
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -2254,7 +2339,7 @@ export const IDL: Quartz = {
         },
         {
           "name": "vault",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -2315,16 +2400,16 @@ export const IDL: Quartz = {
         },
         {
           "name": "vault",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mule",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "vaultSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "splMint",
+          "name": "mint",
           "isMut": false,
           "isSigner": false
         },
@@ -2401,16 +2486,16 @@ export const IDL: Quartz = {
         },
         {
           "name": "vault",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mule",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "vaultSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "splMint",
+          "name": "mint",
           "isMut": false,
           "isSigner": false
         },
@@ -2485,7 +2570,95 @@ export const IDL: Quartz = {
   ],
   "accounts": [
     {
+      "name": "collateralRepayLedger",
+      "docs": [
+        "Ledger for tracking the balance changes of each token during the swap instruction of collateral repay"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "deposit",
+            "type": "u64"
+          },
+          {
+            "name": "withdraw",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "spendLimitsOrder",
+      "docs": [
+        "Time locked order for updating the spend limits of a vault"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timeLock",
+            "type": {
+              "defined": "TimeLock"
+            }
+          },
+          {
+            "name": "spendLimitPerTransaction",
+            "type": "u64"
+          },
+          {
+            "name": "spendLimitPerTimeframe",
+            "type": "u64"
+          },
+          {
+            "name": "timeframeInSeconds",
+            "type": "u64"
+          },
+          {
+            "name": "nextTimeframeResetTimestamp",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "withdrawOrder",
+      "docs": [
+        "Time locked order for withdrawing funds from a vault"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timeLock",
+            "type": {
+              "defined": "TimeLock"
+            }
+          },
+          {
+            "name": "amountBaseUnits",
+            "type": "u64"
+          },
+          {
+            "name": "driftMarketIndex",
+            "type": "u16"
+          },
+          {
+            "name": "reduceOnly",
+            "type": "bool"
+          },
+          {
+            "name": "destination",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
       "name": "vault",
+      "docs": [
+        "Main user account for the Quartz protocol. Is the authority for DeFi integration accounts, and handles spend limits for the card."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -2519,87 +2692,14 @@ export const IDL: Quartz = {
           }
         ]
       }
-    },
-    {
-      "name": "collateralRepayLedger",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "deposit",
-            "type": "u64"
-          },
-          {
-            "name": "withdraw",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "withdrawOrder",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "timeLock",
-            "type": {
-              "defined": "TimeLock"
-            }
-          },
-          {
-            "name": "amountBaseUnits",
-            "type": "u64"
-          },
-          {
-            "name": "driftMarketIndex",
-            "type": "u16"
-          },
-          {
-            "name": "reduceOnly",
-            "type": "bool"
-          },
-          {
-            "name": "destination",
-            "type": "publicKey"
-          }
-        ]
-      }
-    },
-    {
-      "name": "spendLimitsOrder",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "timeLock",
-            "type": {
-              "defined": "TimeLock"
-            }
-          },
-          {
-            "name": "spendLimitPerTransaction",
-            "type": "u64"
-          },
-          {
-            "name": "spendLimitPerTimeframe",
-            "type": "u64"
-          },
-          {
-            "name": "timeframeInSeconds",
-            "type": "u64"
-          },
-          {
-            "name": "nextTimeframeResetTimestamp",
-            "type": "u64"
-          }
-        ]
-      }
     }
   ],
   "types": [
     {
       "name": "TimeLock",
+      "docs": [
+        "Time lock used to prevent an order being executed before the release_slot"
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -2622,13 +2722,13 @@ export const IDL: Quartz = {
   "errors": [
     {
       "code": 6000,
-      "name": "VaultAlreadyInitialized",
-      "msg": "Vault already initialized"
+      "name": "IllegalCollateralRepayInstructions",
+      "msg": "Illegal collateral repay instructions"
     },
     {
       "code": 6001,
-      "name": "IllegalCollateralRepayInstructions",
-      "msg": "Illegal collateral repay instructions"
+      "name": "IllegalCollateralRepayCPI",
+      "msg": "Collateral repay cannot be called as a CPI"
     },
     {
       "code": 6002,
@@ -2642,8 +2742,8 @@ export const IDL: Quartz = {
     },
     {
       "code": 6004,
-      "name": "InvalidPlatformFee",
-      "msg": "Swap platform fee must be zero"
+      "name": "InvalidSlippageBPS",
+      "msg": "Max slippage config is above maximum BPS"
     },
     {
       "code": 6005,
@@ -2657,163 +2757,163 @@ export const IDL: Quartz = {
     },
     {
       "code": 6007,
-      "name": "InvalidDestinationTokenAccount",
-      "msg": "Swap destination token account does not match deposit"
-    },
-    {
-      "code": 6008,
-      "name": "InvalidStartBalance",
-      "msg": "Declared start balance is not accurate"
-    },
-    {
-      "code": 6009,
       "name": "NegativeOraclePrice",
       "msg": "Price received from oracle should be a positive number"
     },
     {
-      "code": 6010,
+      "code": 6008,
       "name": "InvalidMarketIndex",
       "msg": "Invalid market index"
     },
     {
-      "code": 6011,
+      "code": 6009,
       "name": "MathOverflow",
       "msg": "Math overflow"
     },
     {
-      "code": 6012,
+      "code": 6010,
       "name": "InvalidPriceExponent",
       "msg": "Price exponents received from oracle should be the same"
     },
     {
-      "code": 6013,
+      "code": 6011,
       "name": "UnableToLoadAccountLoader",
       "msg": "Unable to load account loader"
     },
     {
-      "code": 6014,
-      "name": "DeserializationError",
-      "msg": "Could not deserialize introspection instruction data"
-    },
-    {
-      "code": 6015,
+      "code": 6012,
       "name": "AutoRepayThresholdNotReached",
       "msg": "Total collateral cannot be less than margin requirement for auto repay"
     },
     {
-      "code": 6016,
+      "code": 6013,
       "name": "AutoRepayTooMuchSold",
       "msg": "Too much collateral sold in auto repay"
     },
     {
-      "code": 6017,
+      "code": 6014,
       "name": "AutoRepayNotEnoughSold",
       "msg": "Not enough collateral sold in auto repay"
     },
     {
-      "code": 6018,
+      "code": 6015,
       "name": "IdenticalCollateralRepayMarkets",
       "msg": "Collateral repay deposit and withdraw markets must be different"
     },
     {
-      "code": 6019,
+      "code": 6016,
       "name": "InvalidStartingVaultBalance",
       "msg": "Invalid starting vault balance"
     },
     {
-      "code": 6020,
-      "name": "FreshTokenLedgerRequired",
-      "msg": "Provided token ledger is not empty"
-    },
-    {
-      "code": 6021,
+      "code": 6017,
       "name": "InvalidEvmAddress",
       "msg": "Provided EVM address does not match expected format"
     },
     {
-      "code": 6022,
+      "code": 6018,
       "name": "InvalidVaultOwner",
       "msg": "Invalid vault owner"
     },
     {
-      "code": 6023,
-      "name": "InvalidVaultAddress",
-      "msg": "Invalid vault address"
-    },
-    {
-      "code": 6024,
-      "name": "LookupTableAlreadyInitialized",
-      "msg": "Lookup table already initialized"
-    },
-    {
-      "code": 6025,
-      "name": "MissingTokenMint",
-      "msg": "Missing token mint"
-    },
-    {
-      "code": 6026,
-      "name": "InvalidTokenProgramId",
-      "msg": "Invalid token program id"
-    },
-    {
-      "code": 6027,
-      "name": "InvalidLookupTable",
-      "msg": "Invalid lookup table"
-    },
-    {
-      "code": 6028,
-      "name": "InvalidLookupTableContent",
-      "msg": "Invalid lookup table content"
-    },
-    {
-      "code": 6029,
-      "name": "InvalidLookupTableAuthority",
-      "msg": "Invalid lookup table authority"
-    },
-    {
-      "code": 6030,
+      "code": 6019,
       "name": "InsufficientTimeframeSpendLimit",
       "msg": "Insufficient spend limit remaining for the timeframe"
     },
     {
-      "code": 6031,
+      "code": 6020,
       "name": "InsufficientTransactionSpendLimit",
       "msg": "Transaction is larger than the transaction spend limit"
     },
     {
-      "code": 6032,
+      "code": 6021,
       "name": "IllegalSpendInstructions",
       "msg": "start_spend instruction must be followed by complete_spend instruction"
     },
     {
-      "code": 6033,
+      "code": 6022,
       "name": "InvalidTimestamp",
       "msg": "Current timestamp cannot be negative"
     },
     {
-      "code": 6034,
+      "code": 6023,
       "name": "InvalidTimeLockRentPayer",
       "msg": "Time lock rent payer must either be the owner or the time_lock_rent_payer PDA"
     },
     {
-      "code": 6035,
+      "code": 6024,
       "name": "TimeLockNotReleased",
       "msg": "Release slot has not passed for time lock"
     },
     {
-      "code": 6036,
+      "code": 6025,
       "name": "InvalidTimeLockOwner",
       "msg": "Time lock owner does not match"
     },
     {
-      "code": 6037,
+      "code": 6026,
+      "name": "MissingDestinationSpl",
+      "msg": "destination_spl is required if spl_mint is not wSOL"
+    },
+    {
+      "code": 6027,
+      "name": "MissingDepositAddressSpl",
+      "msg": "deposit_address_spl is required if spl_mint is not wSOL"
+    },
+    {
+      "code": 6028,
+      "name": "InvalidWithdrawDestination",
+      "msg": "Withdraw destination does not match order account"
+    },
+    {
+      "code": 6029,
+      "name": "InvalidSpendFeeDestination",
+      "msg": "Invalid spend fee destination"
+    },
+    {
+      "code": 6030,
+      "name": "InvalidSpendCaller",
+      "msg": "Invalid spend caller"
+    },
+    {
+      "code": 6031,
       "name": "AccountAlreadyInitialized",
-      "msg": "An initialize instruction was sent to an account that has already been initialized"
+      "msg": "Account is already initialized"
+    },
+    {
+      "code": 6032,
+      "name": "InvalidRentReclaimer",
+      "msg": "Invalid rent reclaimer"
+    },
+    {
+      "code": 6033,
+      "name": "FailedToDeserializeMarketIndex",
+      "msg": "Failed to deserialize market index"
+    },
+    {
+      "code": 6034,
+      "name": "FailedToDeserializeVaultBytes",
+      "msg": "Failed to deserialize vault bytes"
+    },
+    {
+      "code": 6035,
+      "name": "InvalidVaultAccount",
+      "msg": "Invalid vault account"
+    },
+    {
+      "code": 6036,
+      "name": "IllegalVaultCPIModification",
+      "msg": "Vault data was illegally modified during a CPI"
+    },
+    {
+      "code": 6037,
+      "name": "InvalidDepositAddressOwner",
+      "msg": "Deposit address must be owned by the system program"
     },
     {
       "code": 6038,
-      "name": "InvalidDestinationSplWSOL",
-      "msg": "destination_spl is required if spl_mint is not wSOL"
+      "name": "InvalidSpendFeeBPS",
+      "msg": "Spend fee BPS is above maximum"
     }
   ]
 };

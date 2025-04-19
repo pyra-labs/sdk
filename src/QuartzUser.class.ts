@@ -4,7 +4,7 @@ import { DRIFT_PROGRAM_ID, MARKET_INDEX_SOL, MARKET_INDEX_USDC, MESSAGE_TRANSMIT
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
-import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getVaultSplPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority, getInitRentPayerPublicKey, getSpendMulePublicKey, getTimeLockRentPayerPublicKey, getWithdrawMulePublicKey, } from "./utils/accounts.js";
+import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority, getInitRentPayerPublicKey, getSpendMulePublicKey, getTimeLockRentPayerPublicKey, getWithdrawMulePublicKey, getDepositAddressPublicKey, getDepositMulePublicKey, getCollateralRepayMulePublicKey, } from "./utils/accounts.js";
 import { calculateWithdrawOrderBalances, getTokenProgram, } from "./utils/helpers.js";
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, } from "@solana/spl-token";
 import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
@@ -68,6 +68,10 @@ export class QuartzUser {
             driftClient,
             driftUserAccount
         );
+    }
+
+    public getDepositAddress(): PublicKey {
+        return getDepositAddressPublicKey(this.pubkey);
     }
 
     public getHealth(): number {
@@ -280,7 +284,8 @@ export class QuartzUser {
                 driftUserStats: this.driftUser.statsPubkey,
                 driftState: getDriftStatePublicKey(),
                 driftProgram: DRIFT_PROGRAM_ID,
-                systemProgram: SystemProgram.programId
+                systemProgram: SystemProgram.programId,
+                depositAddress: getDepositAddressPublicKey(this.pubkey),
             })
             .instruction();
 
@@ -338,67 +343,8 @@ export class QuartzUser {
         };
     }
 
-    /**
-     * Creates instructions to deposit a token into the Quartz user account.
-     * @param amountBaseUnits - The amount of tokens to deposit.
-     * @param marketIndex - The market index of the token to deposit.
-     * @param reduceOnly - True means amount will be capped so a negative balance (loan) cannot become a positive balance (collateral).
-     * @returns {Promise<{
-     *     ixs: TransactionInstruction[],
-     *     lookupTables: AddressLookupTableAccount[],
-     *     signers: Keypair[]
-     * }>} Object containing:
-     * - ixs: Array of instructions to deposit the token into the Quartz user account.
-     * - lookupTables: Array of lookup tables for building VersionedTransaction.
-     * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
-     * @throw Error if the RPC connection fails. The transaction will fail if the owner does not have enough tokens.
-     */
-    public async makeDepositIx(
-        amountBaseUnits: number,
-        marketIndex: MarketIndex,
-        reduceOnly: boolean
-    ): Promise<{
-        ixs: TransactionInstruction[],
-        lookupTables: AddressLookupTableAccount[],
-        signers: Keypair[]
-    }> {
-        const mint = TOKENS[marketIndex].mint;
-        const tokenProgram = await getTokenProgram(this.connection, mint);
-        const ownerSpl = await getAssociatedTokenAddress(mint, this.pubkey, false, tokenProgram);
-
-        const ix = await this.program.methods
-            .deposit(new BN(amountBaseUnits), marketIndex, reduceOnly)
-            .accounts({
-                vault: this.vaultPubkey,
-                vaultSpl: getVaultSplPublicKey(this.pubkey, mint),
-                owner: this.pubkey,
-                ownerSpl: ownerSpl,
-                splMint: mint,
-                driftUser: this.driftUser.pubkey,
-                driftUserStats: this.driftUser.statsPubkey,
-                driftState: getDriftStatePublicKey(),
-                spotMarketVault: getDriftSpotMarketVaultPublicKey(marketIndex),
-                tokenProgram: tokenProgram,
-                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-                driftProgram: DRIFT_PROGRAM_ID,
-                systemProgram: SystemProgram.programId
-            })
-            .remainingAccounts(
-                this.driftUser.getRemainingAccounts(marketIndex)
-            )
-            .instruction();
-
-        return {
-            ixs: [ix],
-            lookupTables: [this.quartzLookupTable],
-            signers: []
-        };
-    }
-
     public async makeFulfilDepositIx(
-        amountBaseUnits: number,
         marketIndex: MarketIndex,
-        reduceOnly: boolean,
         caller: PublicKey
     ): Promise<{
         ixs: TransactionInstruction[],
@@ -407,17 +353,28 @@ export class QuartzUser {
     }> {
         const mint = TOKENS[marketIndex].mint;
         const tokenProgram = await getTokenProgram(this.connection, mint);
-        const callerSpl = await getAssociatedTokenAddress(mint, caller, false, tokenProgram);
+        const depositAddress = getDepositAddressPublicKey(this.pubkey);
+
+        let depositAddressAta: PublicKey | null = null;
+        if (marketIndex !== MARKET_INDEX_SOL) {
+            depositAddressAta = await getAssociatedTokenAddress(
+                mint,
+                depositAddress,
+                true,
+                tokenProgram
+            );
+        }
 
         const ix = await this.program.methods
-            .fulfilDeposit(new BN(amountBaseUnits), marketIndex, reduceOnly)
+            .fulfilDeposit(marketIndex)
             .accounts({
                 vault: this.vaultPubkey,
-                vaultSpl: getVaultSplPublicKey(this.pubkey, mint),
+                depositAddress: depositAddress,
+                depositAddressSpl: depositAddressAta,
                 owner: this.pubkey,
+                mule: getDepositMulePublicKey(this.pubkey, mint),
                 caller: caller,
-                callerSpl: callerSpl,
-                splMint: mint,
+                mint: mint,
                 driftUser: this.driftUser.pubkey,
                 driftUserStats: this.driftUser.statsPubkey,
                 driftState: getDriftStatePublicKey(),
@@ -525,7 +482,10 @@ export class QuartzUser {
         const tokenProgram = await getTokenProgram(this.connection, mint);
 
         const destination = order.destination;
-        const destinationSpl = await getAssociatedTokenAddress(mint, destination, false, tokenProgram);
+        const destinationSpl = await getAssociatedTokenAddress(mint, destination, true, tokenProgram);
+
+        const depositAddress = getDepositAddressPublicKey(this.pubkey);
+        const depositAddressAta = await getAssociatedTokenAddress(mint, depositAddress, true, tokenProgram);
 
         const destinationSplValue = order.driftMarketIndex === MARKET_INDEX_SOL
             ? QUARTZ_PROGRAM_ID // Program ID is treated as None for optional account (not required as wSOL is unwrapped in the ix)
@@ -538,9 +498,9 @@ export class QuartzUser {
                 timeLockRentPayer: timeLockRentPayer,
                 caller: caller,
                 vault: this.vaultPubkey,
-                mule: getWithdrawMulePublicKey(this.pubkey),
+                mule: getWithdrawMulePublicKey(this.pubkey, mint),
                 owner: this.pubkey,
-                splMint: mint,
+                mint: mint,
                 driftUser: this.driftUser.pubkey,
                 driftUserStats: this.driftUser.statsPubkey,
                 driftState: getDriftStatePublicKey(),
@@ -551,7 +511,9 @@ export class QuartzUser {
                 driftProgram: DRIFT_PROGRAM_ID,
                 systemProgram: SystemProgram.programId,
                 destination: destination,
-                destinationSpl: destinationSplValue
+                destinationSpl: destinationSplValue,
+                depositAddress: depositAddress,
+                depositAddressSpl: depositAddressAta,
             })
             .remainingAccounts(
                 this.driftUser.getRemainingAccounts(marketIndex)
@@ -832,8 +794,8 @@ export class QuartzUser {
                 callerSpl: callerDepositSpl,
                 owner: this.pubkey,
                 vault: this.vaultPubkey,
-                vaultSpl: getVaultSplPublicKey(this.pubkey, depositMint),
-                splMint: depositMint,
+                mule: getCollateralRepayMulePublicKey(this.pubkey, depositMint),
+                mint: depositMint,
                 driftUser: this.driftUser.pubkey,
                 driftUserStats: this.driftUser.statsPubkey,
                 driftState: driftState,
@@ -856,8 +818,8 @@ export class QuartzUser {
                 callerSpl: callerWithdrawSpl,
                 owner: this.pubkey,
                 vault: this.vaultPubkey,
-                vaultSpl: getVaultSplPublicKey(this.pubkey, withdrawMint),
-                splMint: withdrawMint,
+                mule: getCollateralRepayMulePublicKey(this.pubkey, withdrawMint),
+                mint: withdrawMint,
                 driftUser: this.driftUser.pubkey,
                 driftUserStats: this.driftUser.statsPubkey,
                 driftState: driftState,

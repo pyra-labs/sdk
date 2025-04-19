@@ -15,15 +15,6 @@ export const getVaultPublicKey = (owner: PublicKey) => {
     return vaultPda;
 }
 
-export const getVaultSplPublicKey = (owner: PublicKey, mint: PublicKey) => {
-    const vaultPda = getVaultPublicKey(owner);
-    const [vaultSplPda] = PublicKey.findProgramAddressSync(
-        [vaultPda.toBuffer(), mint.toBuffer()],
-        QUARTZ_PROGRAM_ID
-    );
-    return vaultSplPda;
-}
-
 export const getSpendMulePublicKey = (owner: PublicKey) => {
     const [mulePda] = PublicKey.findProgramAddressSync(
         [Buffer.from("spend_mule"), owner.toBuffer()],
@@ -32,11 +23,27 @@ export const getSpendMulePublicKey = (owner: PublicKey) => {
     return mulePda;
 };
 
-export const getWithdrawMulePublicKey = (owner: PublicKey) => {
+export const getWithdrawMulePublicKey = (owner: PublicKey, mint: PublicKey) => {
     const [mulePda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("withdraw_mule"), owner.toBuffer()],
+        [Buffer.from("withdraw_mule"), owner.toBuffer(), mint.toBuffer()],
         QUARTZ_PROGRAM_ID
     )
+    return mulePda;
+}
+
+export const getDepositMulePublicKey = (owner: PublicKey, mint: PublicKey) => {
+    const [mulePda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("deposit_mule"), owner.toBuffer(), mint.toBuffer()],
+        QUARTZ_PROGRAM_ID
+    );
+    return mulePda;
+}
+
+export const getCollateralRepayMulePublicKey = (owner: PublicKey, mint: PublicKey) => {
+    const [mulePda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("collateral_repay_mule"), owner.toBuffer(), mint.toBuffer()],
+        QUARTZ_PROGRAM_ID
+    );
     return mulePda;
 }
 
@@ -80,6 +87,14 @@ export const getRentFloatPublicKey = () => {
     return rentFloatPda;
 }
 
+export const getDepositAddressPublicKey = (owner: PublicKey) => {
+    const vaultPda = getVaultPublicKey(owner);
+    const [depositAddressPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("deposit_address"), vaultPda.toBuffer()],
+        QUARTZ_PROGRAM_ID
+    );
+    return depositAddressPda;
+}
 
 
 // Drift
