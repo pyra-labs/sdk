@@ -1,12 +1,12 @@
 import type { DriftClient, UserAccount } from "@drift-labs/sdk";
 import type { Connection, AddressLookupTableAccount, TransactionInstruction, } from "@solana/web3.js";
-import { DEPOSIT_ADDRESS_DATA_SIZE, DRIFT_PROGRAM_ID, MARKET_INDEX_SOL, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_PROGRAM_ID, SPEND_FEE_DESTINATION, TOKEN_MESSAGE_MINTER_PROGRAM_ID, ZERO, } from "./config/constants.js";
+import { DEPOSIT_ADDRESS_DATA_SIZE, DRIFT_PROGRAM_ID, MARKET_INDEX_SOL, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, SPEND_FEE_DESTINATION, TOKEN_MESSAGE_MINTER_PROGRAM_ID, ZERO, } from "./config/constants.js";
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
 import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority, getInitRentPayerPublicKey, getSpendMulePublicKey, getTimeLockRentPayerPublicKey, getWithdrawMulePublicKey, getDepositAddressPublicKey, getDepositMulePublicKey, getCollateralRepayMulePublicKey, getDepositAddressAtaPublicKey, } from "./utils/accounts.js";
 import { calculateWithdrawOrderBalances, getTokenProgram, } from "./utils/helpers.js";
-import { getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, } from "@solana/spl-token";
+import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, } from "@solana/spl-token";
 import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import BN from "bn.js";
@@ -421,7 +421,7 @@ export class QuartzUser {
 
         let depositAddressAta: PublicKey | null = null;
         if (marketIndex !== MARKET_INDEX_SOL) {
-            depositAddressAta = await getAssociatedTokenAddress(
+            depositAddressAta = getAssociatedTokenAddressSync(
                 mint,
                 depositAddress,
                 true,
@@ -546,14 +546,10 @@ export class QuartzUser {
         const tokenProgram = await getTokenProgram(this.connection, mint);
 
         const destination = order.destination;
-        const destinationSpl = await getAssociatedTokenAddress(mint, destination, true, tokenProgram);
+        const destinationSpl = getAssociatedTokenAddressSync(mint, destination, true, tokenProgram);
 
         const depositAddress = getDepositAddressPublicKey(this.pubkey);
-        const depositAddressAta = await getAssociatedTokenAddress(mint, depositAddress, true, tokenProgram);
-
-        const destinationSplValue = order.driftMarketIndex === MARKET_INDEX_SOL
-            ? QUARTZ_PROGRAM_ID // Program ID is treated as None for optional account (not required as wSOL is unwrapped in the ix)
-            : destinationSpl; // If not wSOL, include ownerSpl
+        const depositAddressAta = getAssociatedTokenAddressSync(mint, depositAddress, true, tokenProgram);
 
         const ix = await this.program.methods
             .fulfilWithdraw()
@@ -575,7 +571,7 @@ export class QuartzUser {
                 driftProgram: DRIFT_PROGRAM_ID,
                 systemProgram: SystemProgram.programId,
                 destination: destination,
-                destinationSpl: destinationSplValue,
+                destinationSpl: destinationSpl,
                 depositAddress: depositAddress,
                 depositAddressSpl: depositAddressAta,
             })
@@ -722,7 +718,7 @@ export class QuartzUser {
         const mint = TOKENS[MARKET_INDEX_USDC].mint;
         const tokenProgram = await getTokenProgram(this.connection, mint);
         const depositAddress = getDepositAddressPublicKey(this.pubkey);
-        const depositAddressUsdc = await getAssociatedTokenAddress(mint, depositAddress, true, tokenProgram);
+        const depositAddressUsdc = getAssociatedTokenAddressSync(mint, depositAddress, true, tokenProgram);
 
         const ix_startSpend = await this.program.methods
             .startSpend(
@@ -829,13 +825,8 @@ export class QuartzUser {
             getTokenProgram(this.connection, withdrawMint)
         ]);
 
-        const [
-            callerDepositSpl,
-            callerWithdrawSpl
-        ] = await Promise.all([
-            getAssociatedTokenAddress(depositMint, caller, false, depositTokenProgram),
-            getAssociatedTokenAddress(withdrawMint, caller, false, withdrawTokenProgram)
-        ]);
+        const callerDepositSpl = getAssociatedTokenAddressSync(depositMint, caller, false, depositTokenProgram);
+        const callerWithdrawSpl = getAssociatedTokenAddressSync(withdrawMint, caller, false, withdrawTokenProgram);
 
         const driftState = getDriftStatePublicKey();
         const collateralRepayLedger = getCollateralRepayLedgerPublicKey(this.pubkey);

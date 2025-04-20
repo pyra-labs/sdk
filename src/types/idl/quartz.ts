@@ -1,5 +1,5 @@
 export type Quartz = {
-  "version": "0.11.0",
+  "version": "0.11.1",
   "name": "quartz",
   "instructions": [
     {
@@ -446,11 +446,7 @@ export type Quartz = {
         {
           "name": "depositAddressSpl",
           "isMut": true,
-          "isSigner": false,
-          "isOptional": true,
-          "docs": [
-            "Option because SOL in the deposit_address will be regular lamports, not wSOL"
-          ]
+          "isSigner": false
         }
       ],
       "args": []
@@ -1370,12 +1366,17 @@ export type Quartz = {
       "code": 6038,
       "name": "InvalidSpendFeeBPS",
       "msg": "Spend fee BPS is above maximum"
+    },
+    {
+      "code": 6039,
+      "name": "InvalidDepositAddressUSDC",
+      "msg": "Invalid USDC ATA for deposit address"
     }
   ]
 };
 
 export const IDL: Quartz = {
-  "version": "0.11.0",
+  "version": "0.11.1",
   "name": "quartz",
   "instructions": [
     {
@@ -1822,11 +1823,7 @@ export const IDL: Quartz = {
         {
           "name": "depositAddressSpl",
           "isMut": true,
-          "isSigner": false,
-          "isOptional": true,
-          "docs": [
-            "Option because SOL in the deposit_address will be regular lamports, not wSOL"
-          ]
+          "isSigner": false
         }
       ],
       "args": []
@@ -2746,6 +2743,11 @@ export const IDL: Quartz = {
       "code": 6038,
       "name": "InvalidSpendFeeBPS",
       "msg": "Spend fee BPS is above maximum"
+    },
+    {
+      "code": 6039,
+      "name": "InvalidDepositAddressUSDC",
+      "msg": "Invalid USDC ATA for deposit address"
     }
   ]
 };
