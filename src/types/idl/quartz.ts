@@ -88,7 +88,7 @@ export type Quartz = {
         },
         {
           "name": "depositAddress",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         }
       ],
@@ -156,7 +156,7 @@ export type Quartz = {
         },
         {
           "name": "depositAddress",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         }
       ],
@@ -206,90 +206,6 @@ export type Quartz = {
       ]
     },
     {
-      "name": "deposit",
-      "accounts": [
-        {
-          "name": "vault",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "vaultSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "ownerSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "mint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "driftUser",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftUserStats",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftState",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "spotMarketVault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "driftProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "amountBaseUnits",
-          "type": "u64"
-        },
-        {
-          "name": "driftMarketIndex",
-          "type": "u16"
-        },
-        {
-          "name": "reduceOnly",
-          "type": "bool"
-        }
-      ]
-    },
-    {
       "name": "fulfilDeposit",
       "accounts": [
         {
@@ -299,7 +215,7 @@ export type Quartz = {
         },
         {
           "name": "depositAddress",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -524,7 +440,7 @@ export type Quartz = {
         },
         {
           "name": "depositAddress",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1548,7 +1464,7 @@ export const IDL: Quartz = {
         },
         {
           "name": "depositAddress",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         }
       ],
@@ -1616,7 +1532,7 @@ export const IDL: Quartz = {
         },
         {
           "name": "depositAddress",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         }
       ],
@@ -1666,90 +1582,6 @@ export const IDL: Quartz = {
       ]
     },
     {
-      "name": "deposit",
-      "accounts": [
-        {
-          "name": "vault",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "vaultSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "ownerSpl",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "mint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "driftUser",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftUserStats",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "driftState",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "spotMarketVault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "driftProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "amountBaseUnits",
-          "type": "u64"
-        },
-        {
-          "name": "driftMarketIndex",
-          "type": "u16"
-        },
-        {
-          "name": "reduceOnly",
-          "type": "bool"
-        }
-      ]
-    },
-    {
       "name": "fulfilDeposit",
       "accounts": [
         {
@@ -1759,7 +1591,7 @@ export const IDL: Quartz = {
         },
         {
           "name": "depositAddress",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1984,7 +1816,7 @@ export const IDL: Quartz = {
         },
         {
           "name": "depositAddress",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {

@@ -193,7 +193,8 @@ export class QuartzUser {
             this.pubkey,
             marketIndex
         );
-        const depositAddressAtaBalance = await this.connection.getTokenAccountBalance(depositAddressAta);
+        const depositAddressAtaBalance = await this.connection.getTokenAccountBalance(depositAddressAta)
+            .catch(() => ({ value: { amount: "0" } }));
         return new BN(depositAddressAtaBalance.value.amount);
     }
 
