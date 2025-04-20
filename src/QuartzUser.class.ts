@@ -1,16 +1,16 @@
 import type { DriftClient, UserAccount } from "@drift-labs/sdk";
 import type { Connection, AddressLookupTableAccount, TransactionInstruction, } from "@solana/web3.js";
-import { DRIFT_PROGRAM_ID, MARKET_INDEX_SOL, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_PROGRAM_ID, SPEND_FEE_DESTINATION, TOKEN_MESSAGE_MINTER_PROGRAM_ID, } from "./config/constants.js";
+import { DEPOSIT_ADDRESS_DATA_SIZE, DRIFT_PROGRAM_ID, MARKET_INDEX_SOL, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_PROGRAM_ID, SPEND_FEE_DESTINATION, TOKEN_MESSAGE_MINTER_PROGRAM_ID, ZERO, } from "./config/constants.js";
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
-import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority, getInitRentPayerPublicKey, getSpendMulePublicKey, getTimeLockRentPayerPublicKey, getWithdrawMulePublicKey, getDepositAddressPublicKey, getDepositMulePublicKey, getCollateralRepayMulePublicKey, } from "./utils/accounts.js";
+import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority, getInitRentPayerPublicKey, getSpendMulePublicKey, getTimeLockRentPayerPublicKey, getWithdrawMulePublicKey, getDepositAddressPublicKey, getDepositMulePublicKey, getCollateralRepayMulePublicKey, getDepositAddressAtaPublicKey, } from "./utils/accounts.js";
 import { calculateWithdrawOrderBalances, getTokenProgram, } from "./utils/helpers.js";
-import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID, } from "@solana/spl-token";
+import { getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, } from "@solana/spl-token";
 import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import BN from "bn.js";
-import { TOKENS, type MarketIndex } from "./config/tokens.js";
+import { getMarketIndicesRecord, MarketIndex, TOKENS } from "./config/tokens.js";
 import { Keypair } from "@solana/web3.js";
 import type { QuartzClient } from "./QuartzClient.class.js";
 import type { WithdrawOrder } from "./index.browser.js";
@@ -19,6 +19,7 @@ import { DriftUser } from "./types/classes/DriftUser.class.js";
 export class QuartzUser {
     public readonly pubkey: PublicKey;
     public readonly vaultPubkey: PublicKey;
+    public readonly depositAddress: PublicKey;
 
     public readonly spendLimitPerTransaction: BN;
     public readonly spendLimitPerTimeframe: BN;
@@ -55,6 +56,7 @@ export class QuartzUser {
         this.quartzLookupTable = quartzLookupTable;
 
         this.vaultPubkey = getVaultPublicKey(pubkey);
+        this.depositAddress = getDepositAddressPublicKey(pubkey);
         this.driftSigner = getDriftSignerPublicKey();
 
         this.spendLimitPerTransaction = spendLimitPerTransaction;
@@ -68,10 +70,6 @@ export class QuartzUser {
             driftClient,
             driftUserAccount
         );
-    }
-
-    public getDepositAddress(): PublicKey {
-        return getDepositAddressPublicKey(this.pubkey);
     }
 
     public getHealth(): number {
@@ -160,7 +158,7 @@ export class QuartzUser {
 
     public async getAvailableCreditUsdcBaseUnits(
         openWithdrawOrders?: WithdrawOrder[]
-    ): Promise<number> {
+    ): Promise<BN> {
         return await this.getWithdrawalLimit(
             MARKET_INDEX_USDC,
             false,
@@ -180,14 +178,72 @@ export class QuartzUser {
             .filter(order => order.timeLock.owner.equals(this.pubkey));
     }
 
+    public async getDepositAddressBalance(
+        marketIndex: MarketIndex
+    ): Promise<BN> {
+        if (marketIndex === MARKET_INDEX_SOL) {
+            const rent = await this.connection.getMinimumBalanceForRentExemption(DEPOSIT_ADDRESS_DATA_SIZE);
+            const balance = await this.connection.getBalance(this.depositAddress);
+            const availableBalance = balance - rent;
+            return new BN(Math.max(availableBalance, 0));
+        }
+
+        const depositAddressAta = await getDepositAddressAtaPublicKey(
+            this.connection,
+            this.pubkey,
+            marketIndex
+        );
+        const depositAddressAtaBalance = await this.connection.getTokenAccountBalance(depositAddressAta);
+        return new BN(depositAddressAtaBalance.value.amount);
+    }
+
+    public async getAllDepositAddressBalances(): Promise<Record<MarketIndex, BN>> {
+        const depositBalances: Record<MarketIndex, BN> = getMarketIndicesRecord(ZERO);
+        
+        depositBalances[MARKET_INDEX_SOL] = await this.getDepositAddressBalance(MARKET_INDEX_SOL);
+        const splIndices = MarketIndex.filter(index => index !== MARKET_INDEX_SOL);
+
+        const [standardTokenAccounts, token2022Accounts] = await Promise.all([
+            this.connection.getParsedTokenAccountsByOwner(
+                this.depositAddress,
+                { programId: TOKEN_PROGRAM_ID }
+            ),
+            this.connection.getParsedTokenAccountsByOwner(
+                this.depositAddress,
+                { programId: TOKEN_2022_PROGRAM_ID }
+            )
+        ]);
+
+        const mintToMarketIndex: Record<string, MarketIndex> = {};
+        for (const index of splIndices) {
+            mintToMarketIndex[TOKENS[index].mint.toBase58()] = index;
+        }
+        
+        const allTokenAccounts = [...standardTokenAccounts.value, ...token2022Accounts.value];
+        for (const account of allTokenAccounts) {
+            const parsedInfo = account.account.data.parsed.info;
+            const mintAddress = parsedInfo.mint;
+            const amount = parsedInfo.tokenAmount.amount;
+            
+            const marketIndex = mintToMarketIndex[mintAddress];
+            if (marketIndex !== undefined) {
+                depositBalances[marketIndex] = new BN(amount);
+            }
+        }
+
+        return depositBalances;
+    }
+
     public async getTokenBalance(
-        spotMarketIndex: number,
+        marketIndex: MarketIndex,
         openWithdrawOrders?: WithdrawOrder[]
     ): Promise<BN> {
         openWithdrawOrders = await this.validateOpenWithdrawOrders(openWithdrawOrders);
         const openOrderBalances = calculateWithdrawOrderBalances(openWithdrawOrders);
+        const driftDeposit = this.driftUser.getTokenAmount(marketIndex, openOrderBalances);
 
-        return this.driftUser.getTokenAmount(spotMarketIndex, openOrderBalances);
+        const depositAddressBalance = await this.getDepositAddressBalance(marketIndex);
+        return driftDeposit.add(depositAddressBalance);
     }
 
     public async getMultipleTokenBalances(
@@ -195,65 +251,72 @@ export class QuartzUser {
         openWithdrawOrders?: WithdrawOrder[]
     ): Promise<Record<MarketIndex, BN>> {
         openWithdrawOrders = await this.validateOpenWithdrawOrders(openWithdrawOrders);
+        const openOrderBalances = calculateWithdrawOrderBalances(openWithdrawOrders);
 
-        const balancesArray = await Promise.all(
-            marketIndices.map(async index => ({
-                index,
-                balance: await this.getTokenBalance(index, openWithdrawOrders)
-            }))
-        );
+        const driftBalances = marketIndices.reduce((acc, index) => {
+            acc[index] = this.driftUser.getTokenAmount(index, openOrderBalances);
+            return acc;
+        }, {} as Record<MarketIndex, BN>);
 
-        const balances = balancesArray.reduce((acc, { index, balance }) =>
-            Object.assign(acc, { [index]: balance }
-            ), {} as Record<MarketIndex, BN>);
+        const depositBalances = await this.getAllDepositAddressBalances();
 
-        return balances;
+        return marketIndices.reduce((acc, index) => {
+            const driftDeposit = driftBalances[index] || ZERO;
+            const addressDeposit = depositBalances[index] || ZERO;
+            acc[index] = driftDeposit.add(addressDeposit);
+            return acc;
+        }, {} as Record<MarketIndex, BN>);
     }
 
     public async getWithdrawalLimit(
-        spotMarketIndex: MarketIndex,
+        marketIndex: MarketIndex,
         reduceOnly = false,
         openWithdrawOrders?: WithdrawOrder[]
-    ): Promise<number> {
+    ): Promise<BN> {
         openWithdrawOrders = await this.validateOpenWithdrawOrders(openWithdrawOrders);
         const openOrderBalances = calculateWithdrawOrderBalances(openWithdrawOrders);
 
-        return this.driftUser.getWithdrawalLimit(
-            spotMarketIndex,
+        const driftLimit = this.driftUser.getWithdrawalLimit(
+            marketIndex,
             reduceOnly,
             openOrderBalances
-        ).toNumber();
+        );
+
+        const depositAddressBalance = await this.getDepositAddressBalance(marketIndex);
+        return driftLimit.add(depositAddressBalance);
     }
 
     public async getMultipleWithdrawalLimits(
-        spotMarketIndices: MarketIndex[],
+        marketIndices: MarketIndex[],
         reduceOnly = false,
         openWithdrawOrders?: WithdrawOrder[]
-    ): Promise<Record<MarketIndex, number>> {
+    ): Promise<Record<MarketIndex, BN>> {
         openWithdrawOrders = await this.validateOpenWithdrawOrders(openWithdrawOrders);
+        const openOrderBalances = calculateWithdrawOrderBalances(openWithdrawOrders);
 
-        const limitsArray = await Promise.all(
-            spotMarketIndices.map(async index => ({
+        const driftLimits = marketIndices.reduce((acc, index) => {
+            acc[index] = this.driftUser.getWithdrawalLimit(
                 index,
-                limit: await this.getWithdrawalLimit(
-                    index,
-                    reduceOnly,
-                    openWithdrawOrders
-                )
-            }))
-        );
+                reduceOnly,
+                openOrderBalances
+            );
+            return acc;
+        }, {} as Record<MarketIndex, BN>);
 
-        const limits = limitsArray.reduce((acc, { index, limit }) =>
-            Object.assign(acc, { [index]: limit }
-            ), {} as Record<MarketIndex, number>);
+        const depositAddressBalances = await this.getAllDepositAddressBalances();
 
-        return limits;
+        return marketIndices.reduce((acc, index) => {
+            const driftLimit = driftLimits[index] || ZERO;
+            const addressBalance = depositAddressBalances[index] || ZERO;
+            acc[index] = driftLimit.add(addressBalance);
+            return acc;
+        }, {} as Record<MarketIndex, BN>);
     }
 
 
     // --- Instructions ---
 
-    public async getLookupTables(): Promise<AddressLookupTableAccount[]> {
+    public getLookupTables(): AddressLookupTableAccount[] {
         return [this.quartzLookupTable];
     }
 
@@ -291,7 +354,7 @@ export class QuartzUser {
 
         return {
             ixs: [ix_closeVault],
-            lookupTables: [this.quartzLookupTable],
+            lookupTables: this.getLookupTables(),
             signers: []
         };
     }
@@ -338,7 +401,7 @@ export class QuartzUser {
 
         return {
             ixs: [ix_upgradeAccount],
-            lookupTables: [this.quartzLookupTable],
+            lookupTables: this.getLookupTables(),
             signers: []
         };
     }
@@ -391,7 +454,7 @@ export class QuartzUser {
 
         return {
             ixs: [ix],
-            lookupTables: [this.quartzLookupTable],
+            lookupTables: this.getLookupTables(),
             signers: []
         };
     }
@@ -445,7 +508,7 @@ export class QuartzUser {
 
         return {
             ixs: [ix],
-            lookupTables: [this.quartzLookupTable],
+            lookupTables: this.getLookupTables(),
             signers: [orderAccount]
         };
     }
@@ -522,7 +585,7 @@ export class QuartzUser {
 
         return {
             ixs: [ix],
-            lookupTables: [this.quartzLookupTable],
+            lookupTables: this.getLookupTables(),
             signers: []
         };
     }
@@ -577,7 +640,7 @@ export class QuartzUser {
 
         return {
             ixs: [ix],
-            lookupTables: [this.quartzLookupTable],
+            lookupTables: this.getLookupTables(),
             signers: [orderAccount]
         };
     }
@@ -622,7 +685,7 @@ export class QuartzUser {
 
         return {
             ixs: [ix_fulfilSpendLimits],
-            lookupTables: [this.quartzLookupTable],
+            lookupTables: this.getLookupTables(),
             signers: []
         };
     }
@@ -711,7 +774,7 @@ export class QuartzUser {
 
         return {
             ixs: [ix_startSpend, ix_completeSpend],
-            lookupTables: [this.quartzLookupTable],
+            lookupTables: this.getLookupTables(),
             signers: [spendCaller, messageSentEventData]
         }
     }
@@ -865,7 +928,7 @@ export class QuartzUser {
                 ix_depositCollateralRepay,
                 ix_withdrawCollateralRepay
             ],
-            lookupTables: [this.quartzLookupTable],
+            lookupTables: this.getLookupTables(),
             signers: []
         };
     }

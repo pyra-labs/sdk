@@ -3,6 +3,9 @@ import { DRIFT_PROGRAM_ID, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, PY
 import BN from "bn.js";
 import { TOKENS } from "../config/tokens.js";
 import type { MarketIndex } from "../config/tokens.js";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { getTokenProgram } from "../index.browser.js";
+import type { Connection } from "@solana/web3.js";
 
 
 // Quartz
@@ -96,9 +99,18 @@ export const getDepositAddressPublicKey = (owner: PublicKey) => {
     return depositAddressPda;
 }
 
+export const getDepositAddressAtaPublicKey = async (
+    connection: Connection,
+    owner: PublicKey,
+    marketIndex: MarketIndex
+) => {
+    const depositAddress = getDepositAddressPublicKey(owner);
+    const mint = TOKENS[marketIndex].mint;
+    const tokenProgram = await getTokenProgram(connection, mint);
+    return getAssociatedTokenAddressSync(mint, depositAddress, true, tokenProgram);
+}
 
 // Drift
-
 
 export const getDriftUserPublicKey = (vaultPda: PublicKey) => {
     const [userPda] = PublicKey.findProgramAddressSync(
