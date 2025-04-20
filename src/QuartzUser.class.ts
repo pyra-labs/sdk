@@ -719,6 +719,11 @@ export class QuartzUser {
     }> {
         const messageSentEventData = Keypair.generate();
 
+        const mint = TOKENS[MARKET_INDEX_USDC].mint;
+        const tokenProgram = await getTokenProgram(this.connection, mint);
+        const depositAddress = getDepositAddressPublicKey(this.pubkey);
+        const depositAddressUsdc = await getAssociatedTokenAddress(mint, depositAddress, true, tokenProgram);
+
         const ix_startSpend = await this.program.methods
             .startSpend(
                 new BN(amountBaseUnits),
@@ -741,6 +746,8 @@ export class QuartzUser {
                 driftProgram: DRIFT_PROGRAM_ID,
                 instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
                 systemProgram: SystemProgram.programId,
+                depositAddress: depositAddress,
+                depositAddressUsdc: depositAddressUsdc,
             })
             .remainingAccounts(
                 this.driftUser.getRemainingAccounts(MARKET_INDEX_USDC)
