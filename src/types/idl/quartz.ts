@@ -389,7 +389,7 @@ export type Quartz = {
         },
         {
           "name": "driftUserStats",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1766,7 +1766,7 @@ export const IDL: Quartz = {
         },
         {
           "name": "driftUserStats",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
