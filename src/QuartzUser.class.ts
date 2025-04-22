@@ -1,6 +1,6 @@
 import type { DriftClient, UserAccount } from "@drift-labs/sdk";
 import type { Connection, AddressLookupTableAccount, TransactionInstruction, } from "@solana/web3.js";
-import { DEPOSIT_ADDRESS_DATA_SIZE, DRIFT_PROGRAM_ID, MARKET_INDEX_SOL, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, SPEND_FEE_DESTINATION, TOKEN_MESSAGE_MINTER_PROGRAM_ID, ZERO, } from "./config/constants.js";
+import { DEPOSIT_ADDRESS_DATA_SIZE, DRIFT_PROGRAM_ID, MARKET_INDEX_SOL, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_PROGRAM_ID, SPEND_FEE_DESTINATION, TOKEN_MESSAGE_MINTER_PROGRAM_ID, ZERO, } from "./config/constants.js";
 import type { Quartz } from "./types/idl/quartz.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
@@ -322,45 +322,6 @@ export class QuartzUser {
     }
 
     /**
-     * Creates instructions to close a Quartz user account. This cannot be undone.
-     * @returns {Promise<{
-     *     ixs: TransactionInstruction[],
-     *     lookupTables: AddressLookupTableAccount[],
-     *     signers: Keypair[]
-     * }>} Object containing:
-     * - ixs: Array of instructions to close the Quartz user account.
-     * - lookupTables: Array of lookup tables for building VersionedTransaction.
-     * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
-     * @throw Error if the RPC connection fails. The transaction will fail if the account has any balance or loans, or is less than 13 days old.
-     */
-    public async makeCloseAccountIxs(): Promise<{
-        ixs: TransactionInstruction[],
-        lookupTables: AddressLookupTableAccount[],
-        signers: Keypair[]
-    }> {
-        const ix_closeVault = await this.program.methods
-            .closeUser()
-            .accounts({
-                vault: this.vaultPubkey,
-                owner: this.pubkey,
-                initRentPayer: getInitRentPayerPublicKey(),
-                driftUser: this.driftUser.pubkey,
-                driftUserStats: this.driftUser.statsPubkey,
-                driftState: getDriftStatePublicKey(),
-                driftProgram: DRIFT_PROGRAM_ID,
-                systemProgram: SystemProgram.programId,
-                depositAddress: getDepositAddressPublicKey(this.pubkey),
-            })
-            .instruction();
-
-        return {
-            ixs: [ix_closeVault],
-            lookupTables: this.getLookupTables(),
-            signers: []
-        };
-    }
-
-    /**
      * Creates instructions to upgrade a Quartz user account.
      * @param spendLimitPerTransaction - The card spend limit per transaction.
      * @param spendLimitPerTimeframe - The card spend limit per timeframe.
@@ -407,7 +368,7 @@ export class QuartzUser {
         };
     }
 
-    public async makeFulfilDepositIx(
+    public async makeFulfilDepositIxs(
         marketIndex: MarketIndex,
         caller: PublicKey
     ): Promise<{
@@ -475,7 +436,7 @@ export class QuartzUser {
     * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
     * @throw Error if the RPC connection fails.
     */
-    public async makeInitiateWithdrawIx(
+    public async makeInitiateWithdrawIxs(
         amountBaseUnits: number,
         marketIndex: MarketIndex,
         reduceOnly: boolean,
@@ -527,7 +488,7 @@ export class QuartzUser {
      * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
      * @throw Error if the RPC connection fails. The transaction will fail if the account does not have enough tokens or, (when taking out a loan) the account health is not high enough for a loan.
      */
-    public async makeFulfilWithdrawIx(
+    public async makeFulfilWithdrawIxs(
         orderAccount: PublicKey,
         caller: PublicKey
     ): Promise<{
@@ -551,7 +512,11 @@ export class QuartzUser {
         const depositAddress = getDepositAddressPublicKey(this.pubkey);
         const depositAddressAta = getAssociatedTokenAddressSync(mint, depositAddress, true, tokenProgram);
 
-        const ix = await this.program.methods
+        const destinationSplValue = marketIndex === MARKET_INDEX_SOL // TODO: Remove once validation fixed in program
+            ? QUARTZ_PROGRAM_ID
+            : destinationSpl;
+
+        const ix_fulfilWithdraw = await this.program.methods
             .fulfilWithdraw()
             .accounts({
                 withdrawOrder: orderAccount,
@@ -571,7 +536,7 @@ export class QuartzUser {
                 driftProgram: DRIFT_PROGRAM_ID,
                 systemProgram: SystemProgram.programId,
                 destination: destination,
-                destinationSpl: destinationSpl,
+                destinationSpl: destinationSplValue,
                 depositAddress: depositAddress,
                 depositAddressSpl: depositAddressAta,
             })
@@ -581,7 +546,7 @@ export class QuartzUser {
             .instruction();
 
         return {
-            ixs: [ix],
+            ixs: [ix_fulfilWithdraw],
             lookupTables: this.getLookupTables(),
             signers: []
         };
@@ -655,7 +620,7 @@ export class QuartzUser {
     * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
     * @throw Error if the RPC connection fails.
     */
-    public async makeFulfilSpendLimitsIx(
+    public async makeFulfilSpendLimitsIxs(
         orderAccount: PublicKey,
         caller: PublicKey
     ): Promise<{
