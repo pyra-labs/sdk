@@ -62,7 +62,8 @@ export class QuartzClient {
 
     public static async doesQuartzUserExist(
         connection: Connection,
-        owner: PublicKey
+        owner: PublicKey,
+        attempts = 5
     ): Promise<boolean> {
         const vault = getVaultPublicKey(owner);
         const program = await QuartzClient.getProgram(connection);
@@ -71,7 +72,7 @@ export class QuartzClient {
                 async () => {
                     await program.account.vault.fetch(vault);
                 },
-                3
+                attempts
             );
             return true;
         } catch {
