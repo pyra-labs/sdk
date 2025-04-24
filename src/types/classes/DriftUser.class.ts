@@ -173,7 +173,9 @@ export class DriftUser {
 			'Initial',
 			marketIndex,
 			false,
-			true
+			true,
+			undefined,
+			openOrderBalances
 		);
 
 		const freeCollatAfterWithdraw = userDepositAmount.gt(ZERO)
@@ -300,6 +302,26 @@ export class DriftUser {
 			undefined,
 			openOrderBalances
 		).add(this.getUnrealizedPNL(true, undefined, marginCategory, strict));
+	}
+
+	public getTotalSpotLiabilityValue(
+		marginCategory?: MarginCategory,
+		strict = false,
+		includeOpenOrders = true,
+		openOrderBalances?: Record<MarketIndex, BN>
+	): BN {
+		if (!this.userAccount) throw new Error("DriftUser not initialized");
+
+		const { totalLiabilityValue } = this.getSpotMarketAssetAndLiabilityValue(
+			marginCategory,
+			undefined,
+			undefined,
+			includeOpenOrders,
+			strict,
+			undefined,
+			openOrderBalances
+		);
+		return totalLiabilityValue;
 	}
 
 	private getSpotMarketAssetValue(
