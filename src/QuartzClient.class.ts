@@ -1,4 +1,4 @@
-import { BN, type DriftClient } from "@drift-labs/sdk";
+import { BN, type DriftClient, type SpotMarketAccount } from "@drift-labs/sdk";
 import { calculateBorrowRate, calculateDepositRate, DRIFT_PROGRAM_ID, fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
 import { MAX_ACCOUNTS_PER_FETCH_CALL, MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID } from "./config/constants.js";
 import { IDL, type Quartz } from "./types/idl/quartz.js";
@@ -11,7 +11,7 @@ import { DummyWallet } from "./types/classes/DummyWallet.class.js";
 import type { TransactionInstruction } from "@solana/web3.js";
 import { retryWithBackoff } from "./utils/helpers.js";
 import type { Keypair } from "@solana/web3.js";
-import { DriftClientService } from "./services/driftClientService.js";
+import { DriftClientService } from "./services/DriftClientService.js";
 import type { VersionedTransactionResponse } from "@solana/web3.js";
 import type { WithdrawOrder, WithdrawOrderAccount } from "./types/accounts/WithdrawOrder.account.js";
 import type { SpendLimitsOrder, SpendLimitsOrderAccount } from "./types/accounts/SpendLimitsOrder.account.js";
@@ -63,7 +63,7 @@ export class QuartzClient {
     public static async doesQuartzUserExist(
         connection: Connection,
         owner: PublicKey
-    ) {
+    ): Promise<boolean> {
         const vault = getVaultPublicKey(owner);
         const program = await QuartzClient.getProgram(connection);
         try {
@@ -170,24 +170,24 @@ export class QuartzClient {
         });
     }
 
-    public async getDepositRate(marketIndex: MarketIndex) {
+    public async getDepositRate(marketIndex: MarketIndex): Promise<BN> {
         const spotMarket = await this.getSpotMarketAccount(marketIndex);
         const depositRate = calculateDepositRate(spotMarket);
         return depositRate;
     }
 
-    public async getBorrowRate(marketIndex: MarketIndex) {
+    public async getBorrowRate(marketIndex: MarketIndex): Promise<BN> {
         const spotMarket = await this.getSpotMarketAccount(marketIndex);
         const borrowRate = calculateBorrowRate(spotMarket);
         return borrowRate;
     }
 
-    public async getCollateralWeight(marketIndex: MarketIndex) {
+    public async getCollateralWeight(marketIndex: MarketIndex): Promise<number> {
         const spotMarket = await this.getSpotMarketAccount(marketIndex);
         return spotMarket.initialAssetWeight;
     }
 
-    private async getSpotMarketAccount(marketIndex: MarketIndex) {
+    private async getSpotMarketAccount(marketIndex: MarketIndex): Promise<SpotMarketAccount> {
         const spotMarket = await this.driftClient.getSpotMarketAccount(marketIndex);
         if (!spotMarket) throw Error("Spot market not found");
         return spotMarket;

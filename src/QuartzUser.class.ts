@@ -133,6 +133,20 @@ export class QuartzUser {
         ).toNumber();
     }
 
+    public async getTotalSpotLiabilityValue(
+        openWithdrawOrders?: WithdrawOrder[]
+    ): Promise<number> {
+        openWithdrawOrders = await this.validateOpenWithdrawOrders(openWithdrawOrders);
+        const openOrderBalances = calculateWithdrawOrderBalances(openWithdrawOrders);
+
+        return this.driftUser.getTotalSpotLiabilityValue(
+            undefined,
+            false,
+            true,
+            openOrderBalances
+        ).toNumber();
+    }
+
     public async getTotalWeightedCollateralValue(
         openWithdrawOrders?: WithdrawOrder[]
     ): Promise<number> {
