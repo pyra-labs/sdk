@@ -1,6 +1,6 @@
 {
   "name": "@quartz-labs/sdk",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "description": "SDK for interacting with the Quartz Protocol",
   "types": "dist/index.d.ts",
   "main": "dist/index.js",
@@ -58,7 +58,7 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
-    "@drift-labs/sdk": "2.117.0-beta.8",
+    "@drift-labs/sdk": "2.121.0-beta.5",
     "@jup-ag/api": "6.0.30",
     "@pythnetwork/pyth-solana-receiver": "^0.9.1",
     "@solana/spl-token": "^0.4.9",
