@@ -20,6 +20,7 @@
         "rootDir": "src",
         "outDir": "dist",
         "sourceMap": true,
+        "forceConsistentCasingInFileNames": true,
 
         /* Bundling */
         "declaration": true,

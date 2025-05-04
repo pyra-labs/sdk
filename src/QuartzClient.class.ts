@@ -1,7 +1,7 @@
 import { BN, type DriftClient, type SpotMarketAccount } from "@drift-labs/sdk";
 import { calculateBorrowRate, calculateDepositRate, DRIFT_PROGRAM_ID, fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys } from "@drift-labs/sdk";
 import { MAX_ACCOUNTS_PER_FETCH_CALL, MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID } from "./config/constants.js";
-import { IDL, type Quartz } from "./types/idl/quartz.js";
+import { IDL, type Pyra } from "./types/idl/pyra.js";
 import { AnchorProvider, BorshInstructionCoder, Program, setProvider } from "@coral-xyz/anchor";
 import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledInstruction, Logs, Signer, } from "@solana/web3.js";
 import { QuartzUser } from "./QuartzUser.class.js";
@@ -19,13 +19,13 @@ import type { MarketIndex } from "./index.browser.js";
 
 export class QuartzClient {
     private connection: Connection;
-    private program: Program<Quartz>;
+    private program: Program<Pyra>;
     private quartzLookupTable: AddressLookupTableAccount;
     private driftClient: DriftClient;
 
     private constructor(
         connection: Connection,
-        program: Program<Quartz>,
+        program: Program<Pyra>,
         quartzAddressTable: AddressLookupTableAccount,
         driftClient: DriftClient
     ) {
@@ -39,7 +39,7 @@ export class QuartzClient {
         const wallet = new DummyWallet();
         const provider = new AnchorProvider(connection, wallet, { commitment: "confirmed" });
         setProvider(provider);
-        return new Program(IDL, QUARTZ_PROGRAM_ID, provider) as unknown as Program<Quartz>;
+        return new Program(IDL, QUARTZ_PROGRAM_ID, provider) as unknown as Program<Pyra>;
     }
 
     public static async fetchClient(
@@ -62,7 +62,8 @@ export class QuartzClient {
 
     public static async doesQuartzUserExist(
         connection: Connection,
-        owner: PublicKey
+        owner: PublicKey,
+        attempts = 5
     ): Promise<boolean> {
         const vault = getVaultPublicKey(owner);
         const program = await QuartzClient.getProgram(connection);
@@ -71,7 +72,7 @@ export class QuartzClient {
                 async () => {
                     await program.account.vault.fetch(vault);
                 },
-                3
+                attempts
             );
             return true;
         } catch {
