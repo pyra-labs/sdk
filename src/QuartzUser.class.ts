@@ -469,8 +469,12 @@ export class QuartzUser {
             .accounts({
                 vault: this.vaultPubkey,
                 owner: this.pubkey,
+                ownerSpl: getAssociatedTokenAddressSync(mint, this.pubkey, true, tokenProgram),
                 depositAddress: depositAddress,
                 depositAddressSpl: depositAddressAta,
+                mint: mint,
+                tokenProgram: tokenProgram,
+                associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
                 systemProgram: SystemProgram.programId
             })
             .instruction();
