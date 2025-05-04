@@ -848,7 +848,7 @@ export type Pyra = {
       "accounts": [
         {
           "name": "vault",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -2355,7 +2355,7 @@ export const IDL: Pyra = {
       "accounts": [
         {
           "name": "vault",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
