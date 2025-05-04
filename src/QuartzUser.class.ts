@@ -794,8 +794,7 @@ export class QuartzUser {
             )
             .accounts({
                 vault: this.vaultPubkey,
-                owner: this.pubkey,
-                systemProgram: SystemProgram.programId
+                owner: this.pubkey
             })
             .instruction();
 
