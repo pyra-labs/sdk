@@ -1,6 +1,6 @@
-export type Quartz = {
-  "version": "0.11.1",
-  "name": "quartz",
+export type Pyra = {
+  "version": "0.12.0",
+  "name": "pyra",
   "instructions": [
     {
       "name": "reclaimBridgeRent",
@@ -296,6 +296,57 @@ export type Quartz = {
       ]
     },
     {
+      "name": "rescueDeposit",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "ownerSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "depositAddress",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "depositAddressSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "initiateWithdraw",
       "accounts": [
         {
@@ -446,6 +497,32 @@ export type Quartz = {
         {
           "name": "depositAddressSpl",
           "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancelWithdraw",
+      "accounts": [
+        {
+          "name": "withdrawOrder",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "timeLockRentPayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -765,6 +842,44 @@ export type Quartz = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "increaseSpendLimits",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "spendLimitPerTransaction",
+          "type": "u64"
+        },
+        {
+          "name": "spendLimitPerTimeframe",
+          "type": "u64"
+        },
+        {
+          "name": "timeframeInSeconds",
+          "type": "u64"
+        },
+        {
+          "name": "nextTimeframeResetTimestamp",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "startCollateralRepay",
@@ -1109,7 +1224,7 @@ export type Quartz = {
     {
       "name": "vault",
       "docs": [
-        "Main user account for the Quartz protocol. Is the authority for DeFi integration accounts, and handles spend limits for the card."
+        "Main user account for the Pyra protocol. Is the authority for DeFi integration accounts, and handles spend limits for the card."
       ],
       "type": {
         "kind": "struct",
@@ -1371,13 +1486,28 @@ export type Quartz = {
       "code": 6039,
       "name": "InvalidDepositAddressUSDC",
       "msg": "Invalid USDC ATA for deposit address"
+    },
+    {
+      "code": 6040,
+      "name": "IllegalSpendLimitDecrease",
+      "msg": "Spend limit cannot be decreased in the increase spend limits instruction"
+    },
+    {
+      "code": 6041,
+      "name": "IllegalRescueSupportedToken",
+      "msg": "Cannot rescue a supported token"
+    },
+    {
+      "code": 6042,
+      "name": "TransferZero",
+      "msg": "Cannot transfer zero tokens"
     }
   ]
 };
 
-export const IDL: Quartz = {
-  "version": "0.11.1",
-  "name": "quartz",
+export const IDL: Pyra = {
+  "version": "0.12.0",
+  "name": "pyra",
   "instructions": [
     {
       "name": "reclaimBridgeRent",
@@ -1673,6 +1803,57 @@ export const IDL: Quartz = {
       ]
     },
     {
+      "name": "rescueDeposit",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "ownerSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "depositAddress",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "depositAddressSpl",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "initiateWithdraw",
       "accounts": [
         {
@@ -1823,6 +2004,32 @@ export const IDL: Quartz = {
         {
           "name": "depositAddressSpl",
           "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancelWithdraw",
+      "accounts": [
+        {
+          "name": "withdrawOrder",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "timeLockRentPayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -2142,6 +2349,44 @@ export const IDL: Quartz = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "increaseSpendLimits",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "spendLimitPerTransaction",
+          "type": "u64"
+        },
+        {
+          "name": "spendLimitPerTimeframe",
+          "type": "u64"
+        },
+        {
+          "name": "timeframeInSeconds",
+          "type": "u64"
+        },
+        {
+          "name": "nextTimeframeResetTimestamp",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "startCollateralRepay",
@@ -2486,7 +2731,7 @@ export const IDL: Quartz = {
     {
       "name": "vault",
       "docs": [
-        "Main user account for the Quartz protocol. Is the authority for DeFi integration accounts, and handles spend limits for the card."
+        "Main user account for the Pyra protocol. Is the authority for DeFi integration accounts, and handles spend limits for the card."
       ],
       "type": {
         "kind": "struct",
@@ -2748,6 +2993,21 @@ export const IDL: Quartz = {
       "code": 6039,
       "name": "InvalidDepositAddressUSDC",
       "msg": "Invalid USDC ATA for deposit address"
+    },
+    {
+      "code": 6040,
+      "name": "IllegalSpendLimitDecrease",
+      "msg": "Spend limit cannot be decreased in the increase spend limits instruction"
+    },
+    {
+      "code": 6041,
+      "name": "IllegalRescueSupportedToken",
+      "msg": "Cannot rescue a supported token"
+    },
+    {
+      "code": 6042,
+      "name": "TransferZero",
+      "msg": "Cannot transfer zero tokens"
     }
   ]
 };

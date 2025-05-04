@@ -167,6 +167,14 @@ export function isMarketIndex(index: number): boolean {
     return Object.values(MarketIndex).includes(marketIndex);
 }
 
+/**
+ * Retries a function with exponential backoff, retries if an error is thrown.
+ * @param fn - The function to retry.
+ * @param retries - The number of retries, defaults to 5.
+ * @param initialDelay - The initial delay in milliseconds, defaults to 1_000.
+ * @param retryCallback - A callback function that is called on each retry.
+ * @returns The result of the function.
+ */
 export async function retryWithBackoff<T>(
     fn: () => Promise<T>,
     retries = 5,
