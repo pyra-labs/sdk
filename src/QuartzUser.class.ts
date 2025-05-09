@@ -5,7 +5,7 @@ import type { Pyra } from "./types/idl/pyra.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
 import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getPythOracle, getDriftSignerPublicKey, getVaultPublicKey, getCollateralRepayLedgerPublicKey, getBridgeRentPayerPublicKey, getLocalToken, getTokenMinter, getRemoteTokenMessenger, getTokenMessenger, getSenderAuthority, getMessageTransmitter, getEventAuthority, getInitRentPayerPublicKey, getSpendMulePublicKey, getTimeLockRentPayerPublicKey, getWithdrawMulePublicKey, getDepositAddressPublicKey, getDepositMulePublicKey, getCollateralRepayMulePublicKey, getDepositAddressAtaPublicKey, } from "./utils/accounts.js";
-import { calculateWithdrawOrderBalances, getTokenProgram, } from "./utils/helpers.js";
+import { calculateWithdrawOrderBalances, getTokenAccountBalance, getTokenProgram, } from "./utils/helpers.js";
 import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, } from "@solana/spl-token";
 import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
 import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
@@ -208,9 +208,8 @@ export class QuartzUser {
             this.pubkey,
             marketIndex
         );
-        const depositAddressAtaBalance = await this.connection.getTokenAccountBalance(depositAddressAta)
-            .catch(() => ({ value: { amount: "0" } }));
-        return new BN(depositAddressAtaBalance.value.amount);
+        const depositAddressAtaBalance = await getTokenAccountBalance(this.connection, depositAddressAta)
+        return new BN(depositAddressAtaBalance);
     }
 
     public async getAllDepositAddressBalances(): Promise<Record<MarketIndex, BN>> {

@@ -290,3 +290,15 @@ async function getPricesCoinGecko(): Promise<Record<MarketIndex, number>> {
 
     return prices;
 }
+
+export async function getTokenAccountBalance(connection: Connection, tokenAccount: PublicKey) {
+    const account = await retryWithBackoff(
+        async () => connection.getAccountInfo(tokenAccount)
+    )
+    if (account === null) return 0;
+    
+    const balance = await retryWithBackoff(
+        async () => connection.getTokenAccountBalance(tokenAccount)
+    )
+    return Number(balance.value.amount);
+}
