@@ -3,7 +3,7 @@ import { calculateBorrowRate, calculateDepositRate, DRIFT_PROGRAM_ID, fetchUserA
 import { MAX_ACCOUNTS_PER_FETCH_CALL, MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_ADDRESS_TABLE, QUARTZ_PROGRAM_ID } from "./config/constants.js";
 import { IDL, type Pyra } from "./types/idl/pyra.js";
 import { AnchorProvider, BorshInstructionCoder, Program, setProvider } from "@coral-xyz/anchor";
-import type { PublicKey, Connection, AddressLookupTableAccount, MessageCompiledInstruction, Logs, Signer, } from "@solana/web3.js";
+import type { PublicKey, AddressLookupTableAccount, MessageCompiledInstruction, Logs, Signer, } from "@solana/web3.js";
 import { QuartzUser } from "./QuartzUser.class.js";
 import { getBridgeRentPayerPublicKey, getDepositAddressPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getInitRentPayerPublicKey, getMessageTransmitter, getVaultPublicKey } from "./utils/accounts.js";
 import { SystemProgram, SYSVAR_RENT_PUBKEY, } from "@solana/web3.js";
@@ -16,15 +16,17 @@ import type { VersionedTransactionResponse } from "@solana/web3.js";
 import type { WithdrawOrder, WithdrawOrderAccount } from "./types/accounts/WithdrawOrder.account.js";
 import type { SpendLimitsOrder, SpendLimitsOrderAccount } from "./types/accounts/SpendLimitsOrder.account.js";
 import type { MarketIndex } from "./index.browser.js";
+import AdvancedConnection from "@quartz-labs/connection";
+import type { Connection } from "@solana/web3.js";
 
 export class QuartzClient {
-    private connection: Connection;
+    private connection: AdvancedConnection;
     private program: Program<Pyra>;
     private quartzLookupTable: AddressLookupTableAccount;
     private driftClient: DriftClient;
 
     private constructor(
-        connection: Connection,
+        connection: AdvancedConnection,
         program: Program<Pyra>,
         quartzAddressTable: AddressLookupTableAccount,
         driftClient: DriftClient
@@ -42,10 +44,24 @@ export class QuartzClient {
         return new Program(IDL, QUARTZ_PROGRAM_ID, provider) as unknown as Program<Pyra>;
     }
 
-    public static async fetchClient(
-        connection: Connection,
-        pollingFrequency = 1000
-    ): Promise<QuartzClient> {
+    /**
+     * Fetch a QuartzClient instance.
+     * @param config - Configuration object, you must provide either `rpcUrls` or `connection`.
+     * @param config.rpcUrls - Array of RPC URLs.
+     * @param config.connection - AdvancedConnection instance (from @quartz-labs/connection)
+     * @param config.pollingFrequency - Polling frequency in milliseconds.
+     * @returns QuartzClient instance.
+     */
+    public static async fetchClient(config: {
+        rpcUrls?: string[],
+        connection?: AdvancedConnection,
+        pollingFrequency?: number
+    }): Promise<QuartzClient> {
+        if (!config.connection && !config.rpcUrls) throw Error("Either rpcUrls or connection must be provided");
+        const connection = config.connection ?? new AdvancedConnection(config.rpcUrls as string[]);
+
+        const pollingFrequency = config.pollingFrequency ?? 1000;
+
         const program = await QuartzClient.getProgram(connection);
         const quartzLookupTable = await connection.getAddressLookupTable(QUARTZ_ADDRESS_TABLE).then((res) => res.value);
         if (!quartzLookupTable) throw Error("Address Lookup Table account not found");
@@ -307,7 +323,7 @@ export class QuartzClient {
     }
 
     public static async parseSpendIx(
-        connection: Connection,
+        connection: AdvancedConnection,
         signature: string,
         owner: PublicKey
     ): Promise<PublicKey> {

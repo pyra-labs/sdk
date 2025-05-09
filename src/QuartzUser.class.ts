@@ -1,5 +1,5 @@
 import type { DriftClient, UserAccount } from "@drift-labs/sdk";
-import type { Connection, AddressLookupTableAccount, TransactionInstruction, } from "@solana/web3.js";
+import type { AddressLookupTableAccount, TransactionInstruction, } from "@solana/web3.js";
 import { DEPOSIT_ADDRESS_DATA_SIZE, DRIFT_PROGRAM_ID, MARKET_INDEX_SOL, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_PROGRAM_ID, SPEND_FEE_DESTINATION, TOKEN_MESSAGE_MINTER_PROGRAM_ID, ZERO, } from "./config/constants.js";
 import type { Pyra } from "./types/idl/pyra.js";
 import type { Program } from "@coral-xyz/anchor";
@@ -15,6 +15,7 @@ import { Keypair } from "@solana/web3.js";
 import type { QuartzClient } from "./QuartzClient.class.js";
 import type { WithdrawOrder } from "./index.browser.js";
 import { DriftUser } from "./types/classes/DriftUser.class.js";
+import type { Connection } from "@solana/web3.js";
 
 export class QuartzUser {
     public readonly pubkey: PublicKey;
