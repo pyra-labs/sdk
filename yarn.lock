@@ -975,6 +975,25 @@
     bs58 "^5.0.0"
     jito-ts "^3.0.1"
 
+"@quartz-labs/connection@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@quartz-labs/connection/-/connection-2.0.0.tgz#07748674257356f26fac60b04a4cc4911b098f3d"
+  integrity sha512-t7Jwr3217CfncypxQh53fDt+LRVbBu1wWIXMNabvkF8wm7B/WaSlk2DYOfY/ZIdvMQfacwnv890vRNwwoQ5wXA==
+  dependencies:
+    "@solana/web3.js" "1.98.0"
+
+"@quartz-labs/sdk@^0.18.3":
+  version "0.18.3"
+  resolved "https://registry.yarnpkg.com/@quartz-labs/sdk/-/sdk-0.18.3.tgz#50d15ce6c2d4f37b140613da6f484dab8b097a57"
+  integrity sha512-u+AAGobXT56zkGpjWJu0BN9n4H7B3XRWbS487gTZgw7OSIw/UyfHxOkj6VhjdOHINLGkfUg62+zOikXDQG5hww==
+  dependencies:
+    "@coral-xyz/anchor" "^0.29.0"
+    "@drift-labs/sdk" "2.121.0-beta.5"
+    "@jup-ag/api" "6.0.30"
+    "@pythnetwork/pyth-solana-receiver" "^0.9.1"
+    "@solana/spl-token" "^0.4.9"
+    bn.js "^5.2.1"
+
 "@shikijs/engine-oniguruma@^1.24.2":
   version "1.24.2"
   resolved "https://registry.yarnpkg.com/@shikijs/engine-oniguruma/-/engine-oniguruma-1.24.2.tgz#90924001a17a2551a2a9073aed4af3767ce68b1b"
@@ -1172,10 +1191,10 @@
     rpc-websockets "^8.0.1"
     superstruct "^1.0.4"
 
-"@solana/web3.js@^1.17.0", "@solana/web3.js@^1.21.0", "@solana/web3.js@^1.30.2", "@solana/web3.js@^1.32.0", "@solana/web3.js@^1.36.0", "@solana/web3.js@^1.56.2", "@solana/web3.js@^1.68.0", "@solana/web3.js@^1.77.3", "@solana/web3.js@^1.90.0":
-  version "1.95.8"
-  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.95.8.tgz#2d49abda23f7a79a3cc499ab6680f7be11786ee1"
-  integrity sha512-sBHzNh7dHMrmNS5xPD1d0Xa2QffW/RXaxu/OysRXBfwTp+LYqGGmMtCYYwrHPrN5rjAmJCsQRNAwv4FM0t3B6g==
+"@solana/web3.js@1.98.0", "@solana/web3.js@^1.98.0":
+  version "1.98.0"
+  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.98.0.tgz#21ecfe8198c10831df6f0cfde7f68370d0405917"
+  integrity sha512-nz3Q5OeyGFpFCR+erX2f6JPt3sKhzhYcSycBCSPkWjzSVDh/Rr1FqTVMRe58FKO16/ivTUcuJjeS5MyBvpkbzA==
   dependencies:
     "@babel/runtime" "^7.25.0"
     "@noble/curves" "^1.4.2"
@@ -1193,10 +1212,10 @@
     rpc-websockets "^9.0.2"
     superstruct "^2.0.2"
 
-"@solana/web3.js@^1.98.0":
-  version "1.98.0"
-  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.98.0.tgz#21ecfe8198c10831df6f0cfde7f68370d0405917"
-  integrity sha512-nz3Q5OeyGFpFCR+erX2f6JPt3sKhzhYcSycBCSPkWjzSVDh/Rr1FqTVMRe58FKO16/ivTUcuJjeS5MyBvpkbzA==
+"@solana/web3.js@^1.17.0", "@solana/web3.js@^1.21.0", "@solana/web3.js@^1.30.2", "@solana/web3.js@^1.32.0", "@solana/web3.js@^1.36.0", "@solana/web3.js@^1.56.2", "@solana/web3.js@^1.68.0", "@solana/web3.js@^1.77.3", "@solana/web3.js@^1.90.0":
+  version "1.95.8"
+  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.95.8.tgz#2d49abda23f7a79a3cc499ab6680f7be11786ee1"
+  integrity sha512-sBHzNh7dHMrmNS5xPD1d0Xa2QffW/RXaxu/OysRXBfwTp+LYqGGmMtCYYwrHPrN5rjAmJCsQRNAwv4FM0t3B6g==
   dependencies:
     "@babel/runtime" "^7.25.0"
     "@noble/curves" "^1.4.2"
