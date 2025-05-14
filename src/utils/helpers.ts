@@ -28,12 +28,12 @@ export async function getComputeUnitLimit(
         new VersionedTransaction(messageV0)
     );
 
-    const estimatedComputeUnits = simulation.value.unitsConsumed;
-    if (!estimatedComputeUnits) console.log("Could not simulate for CUs, using default limit");
-    const computeUnitLimit = estimatedComputeUnits
-        ? Math.ceil(estimatedComputeUnits * 1.5)
-        : DEFAULT_COMPUTE_UNIT_LIMIT;
-    return computeUnitLimit;
+    if (simulation.value.err || !simulation.value.unitsConsumed) {
+        console.log("Could not simulate for CUs, using default limit");
+        return DEFAULT_COMPUTE_UNIT_LIMIT;
+    }
+
+    return Math.ceil(simulation.value.unitsConsumed * 1.5); // Add 50% buffer
 }
 
 export async function getComputerUnitLimitIx(
