@@ -1,10 +1,10 @@
 <div align="center">
-  <img width="2500" alt="Quartz" src="https://cdn.prod.website-files.com/67504dd7fde047775f88c355/67b380029cf6f3d8e10349bf_docs_banner.jpg" />
+  <img width="2500" alt="Pyra" src="https://pyra.fi/open-graph.jpg" />
 
-  <h1 style="margin-top:20px;">Quartz SDK</h1>
+  <h1 style="margin-top:20px;">Pyra SDK</h1>
 </div>
 
-Typescript SDK for interacting with the Quartz Protocol. 
+Typescript SDK for interacting with the Pyra Protocol. 
 
 Install using:
 
@@ -14,7 +14,7 @@ yarn add @quartz-labs/sdk
 npm install @quartz-labs/sdk
 ```
 
-There is currently an issue with dependancy resolutions, so add the following to your package.json to fix:
+There is currently an issue with dependency resolutions, so add the following to your package.json to fix:
 
 ```json
 "resolutions": {
@@ -63,10 +63,12 @@ const depositInstructions = user.makeDepositIx(
 
 ## Links
 
-Website and waitlist: [quartzpay.io](https://quartzpay.io/)
+Website: [pyra.fi](https://pyra.fi/)
 
-Docs: [docs.quartzpay.io](https://docs.quartzpay.io/)
+Docs: [docs.pyra.fi](https://docs.pyra.fi/)
 
-X: [@quartzpay](https://x.com/quartzpay)
+X: [@GetPyra](https://x.com/GetPyra)
 
-Contact: [iarla@quartzpay.io](mailto:diego@quartzpay.io)
+Discord: [discord.gg/GetPyra](https:discord.gg/GetPyra)
+
+Contact: [diego@pyra.fi](mailto:diego@pyra.fi)
