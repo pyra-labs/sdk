@@ -28,12 +28,17 @@ export async function getComputeUnitLimit(
         new VersionedTransaction(messageV0)
     );
 
-    if (simulation.value.err || !simulation.value.unitsConsumed) {
+    if (
+        simulation.value.err 
+        || simulation.value.unitsConsumed === undefined
+        || simulation.value.unitsConsumed === 0
+    ) {
         console.log("Could not simulate for CUs, using default limit");
         return DEFAULT_COMPUTE_UNIT_LIMIT;
     }
 
-    return Math.ceil(simulation.value.unitsConsumed * 1.5); // Add 50% buffer
+    const simulated = Math.ceil(simulation.value.unitsConsumed * 1.5);
+    return Math.min(simulated, 5000); // Sanity check, no less than 5k CUs
 }
 
 export async function getComputerUnitLimitIx(
@@ -49,7 +54,10 @@ export async function getComputerUnitLimitIx(
     });
 }
 
-export async function getComputeUnitPrice(connection: Connection, instructions: TransactionInstruction[]) {
+export async function getComputeUnitPrice(
+    connection: Connection, 
+    instructions: TransactionInstruction[]
+) {
     const accounts = instructions.flatMap(instruction => instruction.keys);
     const writeableAccounts = accounts.filter(account => account.isWritable).map(account => account.pubkey);
     const recentFees = await connection.getRecentPrioritizationFees({
@@ -80,7 +88,10 @@ export async function getComputeUnitPrice(connection: Connection, instructions: 
     return Math.ceil(average);
 };
 
-export async function getComputeUnitPriceIx(connection: Connection, instructions: TransactionInstruction[]) {
+export async function getComputeUnitPriceIx(
+    connection: Connection, 
+    instructions: TransactionInstruction[]
+) {
     const computeUnitPrice = await getComputeUnitPrice(connection, instructions);
     return ComputeBudgetProgram.setComputeUnitPrice({
         microLamports: computeUnitPrice,
@@ -110,7 +121,11 @@ export async function buildTransaction(
     return transaction;
 }
 
-export const toRemainingAccount = (pubkey: PublicKey, isSigner: boolean, isWritable: boolean): AccountMeta => {
+export const toRemainingAccount = (
+    pubkey: PublicKey, 
+    isSigner: boolean, 
+    isWritable: boolean
+): AccountMeta => {
     return {
         pubkey: pubkey,
         isSigner: isSigner,
@@ -118,7 +133,10 @@ export const toRemainingAccount = (pubkey: PublicKey, isSigner: boolean, isWrita
     }
 }
 
-export const getTokenProgram = async (connection: Connection, mint: PublicKey) => {
+export const getTokenProgram = async (
+    connection: Connection, 
+    mint: PublicKey
+) => {
     const mintAccount = await retryWithBackoff(
         () => connection.getAccountInfo(mint),
         3
