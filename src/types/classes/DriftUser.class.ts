@@ -133,9 +133,8 @@ export class DriftUser {
 		const oracleData = this.driftClient.getOracleDataForSpotMarket(marketIndex);
 		const precisionIncrease = TEN.pow(new BN(spotMarket.decimals - 6));
 
-		let { canBypass, depositAmount: userDepositAmount } =
+		const { canBypass, depositAmount: userDepositAmount } =
 			this.canBypassWithdrawLimits(marketIndex);
-		userDepositAmount = userDepositAmount.sub(openOrderBalances[marketIndex]);
 
 		if (canBypass) {
 			withdrawLimit = BN.max(withdrawLimit, userDepositAmount);
