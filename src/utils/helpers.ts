@@ -38,7 +38,8 @@ export async function getComputeUnitLimit(
     }
 
     const simulated = Math.ceil(simulation.value.unitsConsumed * 1.5);
-    return Math.min(simulated, 5000); // Sanity check, no less than 5k CUs
+    return Math.min(simulated, DEFAULT_COMPUTE_UNIT_LIMIT); 
+    // TODO: Figure out why simulation is so low sometimes, and change to a reasonable sanity check of 5k CUs
 }
 
 export async function getComputeUnitLimitIx(
