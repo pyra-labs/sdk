@@ -41,7 +41,7 @@ export async function getComputeUnitLimit(
     return Math.min(simulated, 5000); // Sanity check, no less than 5k CUs
 }
 
-export async function getComputerUnitLimitIx(
+export async function getComputeUnitLimitIx(
     connection: Connection,
     instructions: TransactionInstruction[],
     address: PublicKey,
@@ -105,7 +105,7 @@ export async function buildTransaction(
     lookupTables: AddressLookupTableAccount[] = []
 ): Promise<VersionedTransaction> {
     const blockhash = (await connection.getLatestBlockhash()).blockhash;
-    const ix_computeLimit = await getComputerUnitLimitIx(connection, instructions, payer, blockhash, lookupTables);
+    const ix_computeLimit = await getComputeUnitLimitIx(connection, instructions, payer, blockhash, lookupTables);
     const ix_computePrice = await getComputeUnitPriceIx(connection, instructions);
 
     const messageV0 = new TransactionMessage({
@@ -149,7 +149,8 @@ export async function makeCreateAtaIxIfNeeded(
     ata: PublicKey,
     authority: PublicKey,
     mint: PublicKey,
-    tokenProgramId: PublicKey
+    tokenProgramId: PublicKey,
+    payer: PublicKey
 ) {
     const oix_createAta: TransactionInstruction[] = [];
     const ataInfo = await retryWithBackoff(
@@ -159,7 +160,7 @@ export async function makeCreateAtaIxIfNeeded(
     if (ataInfo === null) {
         oix_createAta.push(
             createAssociatedTokenAccountInstruction(
-                authority,
+                payer,
                 ata,
                 authority,
                 mint,
