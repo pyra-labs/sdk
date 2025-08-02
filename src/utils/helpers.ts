@@ -253,11 +253,11 @@ export function calculateWithdrawOrderBalances(
 export async function getPrices(): Promise<Record<MarketIndex, number>> {
     try {
         return await getPricesPyth();
-    } catch {
+    } catch (pythError) {
         try {
             return await getPricesCoinGecko();
-        } catch {
-            throw new Error("Failed to fetch prices from main (Pyth) and backup (CoinGecko) sources");
+        } catch (coingeckoError) {
+            throw new Error(`Failed to fetch prices from main (Pyth) and backup (CoinGecko) sources. Pyth error: ${pythError}, CoinGecko error: ${coingeckoError}`);
         }
     }
 }
@@ -321,4 +321,47 @@ export async function getTokenAccountBalance(connection: Connection, tokenAccoun
         async () => connection.getTokenAccountBalance(tokenAccount)
     )
     return Number(balance.value.amount);
+}
+
+export async function fetchAndParse<T>(
+    url: string,
+    req?: RequestInit | undefined,
+    retries = 0
+): Promise<T> {
+    const response = await retryWithBackoff(
+        async () => fetch(url, req),
+        retries
+    );
+
+    if (!response.ok) {
+        let body: any;
+        try {
+            body = await response.json();
+        } catch {
+            body = null;
+        }
+        const error = {
+            status: response.status,
+            body
+        }
+        throw new Error(JSON.stringify(error) ?? `Could not fetch ${url}`);
+    }
+
+    try {
+        const body = await response.json();
+        return body as T;
+    } catch {
+        return response as T;
+    }
+}
+
+export function buildEndpointURL(baseEndpoint: string, params?: Record<string, string>) {
+    if (!params) return baseEndpoint;
+
+    const stringParams: Record<string, string> = {};
+    for (const [key, value] of Object.entries(params)) {
+        stringParams[key] = String(value);
+    }
+    const searchParams = new URLSearchParams(stringParams);
+    return `${baseEndpoint}${params ? `?${searchParams.toString()}` : ''}`;
 }
