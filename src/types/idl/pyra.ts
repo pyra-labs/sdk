@@ -1,5 +1,5 @@
 export type Pyra = {
-  "version": "0.12.1",
+  "version": "0.13.0",
   "name": "pyra",
   "instructions": [
     {
@@ -37,6 +37,37 @@ export type Pyra = {
           "type": "bytes"
         }
       ]
+    },
+    {
+      "name": "updateDriftName",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftUser",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": []
     },
     {
       "name": "initUser",
@@ -639,7 +670,7 @@ export type Pyra = {
         },
         {
           "name": "spendFee",
-          "type": "bool"
+          "type": "u8"
         }
       ]
     },
@@ -1141,10 +1172,16 @@ export type Pyra = {
         "fields": [
           {
             "name": "deposit",
+            "docs": [
+              "The amount of collateral deposited"
+            ],
             "type": "u64"
           },
           {
             "name": "withdraw",
+            "docs": [
+              "The amount of collateral withdrawn"
+            ],
             "type": "u64"
           }
         ]
@@ -1160,24 +1197,39 @@ export type Pyra = {
         "fields": [
           {
             "name": "timeLock",
+            "docs": [
+              "Shared time lock data"
+            ],
             "type": {
               "defined": "TimeLock"
             }
           },
           {
             "name": "spendLimitPerTransaction",
+            "docs": [
+              "The maximum amount of USDC that can be spent in a single transaction"
+            ],
             "type": "u64"
           },
           {
             "name": "spendLimitPerTimeframe",
+            "docs": [
+              "The maximum amount of USDC that can be spent in a single timeframe"
+            ],
             "type": "u64"
           },
           {
             "name": "timeframeInSeconds",
+            "docs": [
+              "The duration of a timeframe in seconds"
+            ],
             "type": "u64"
           },
           {
             "name": "nextTimeframeResetTimestamp",
+            "docs": [
+              "The timestamp at which the next timeframe will reset"
+            ],
             "type": "u64"
           }
         ]
@@ -1193,24 +1245,39 @@ export type Pyra = {
         "fields": [
           {
             "name": "timeLock",
+            "docs": [
+              "Shared time lock data"
+            ],
             "type": {
               "defined": "TimeLock"
             }
           },
           {
             "name": "amountBaseUnits",
+            "docs": [
+              "The amount of base units to withdraw"
+            ],
             "type": "u64"
           },
           {
             "name": "driftMarketIndex",
+            "docs": [
+              "The drift market index to withdraw from"
+            ],
             "type": "u16"
           },
           {
             "name": "reduceOnly",
+            "docs": [
+              "Whether the withdraw is reduce only"
+            ],
             "type": "bool"
           },
           {
             "name": "destination",
+            "docs": [
+              "The destination of the withdraw"
+            ],
             "type": "publicKey"
           }
         ]
@@ -1226,6 +1293,10 @@ export type Pyra = {
         "fields": [
           {
             "name": "owner",
+            "docs": [
+              "TODO: Change discriminator to 1 byte once able to upgrade to anchor 0.31",
+              "Note: If the owner becomes changeable in the future, need to add has_one contstraints to all ixs"
+            ],
             "type": "publicKey"
           },
           {
@@ -1234,22 +1305,37 @@ export type Pyra = {
           },
           {
             "name": "spendLimitPerTransaction",
+            "docs": [
+              "The maximum amount of USDC that can be spent in a single transaction"
+            ],
             "type": "u64"
           },
           {
             "name": "spendLimitPerTimeframe",
+            "docs": [
+              "The maximum amount of USDC that can be spent in a single timeframe"
+            ],
             "type": "u64"
           },
           {
             "name": "remainingSpendLimitPerTimeframe",
+            "docs": [
+              "The remaining amount of USDC that can be spent in the current timeframe"
+            ],
             "type": "u64"
           },
           {
             "name": "nextTimeframeResetTimestamp",
+            "docs": [
+              "The next timestamp the remaining_spend_limit_per_timeframe will be reset at"
+            ],
             "type": "u64"
           },
           {
             "name": "timeframeInSeconds",
+            "docs": [
+              "How much to extend the next_timeframe_reset_timestamp by when it's reached"
+            ],
             "type": "u64"
           }
         ]
@@ -1267,14 +1353,23 @@ export type Pyra = {
         "fields": [
           {
             "name": "owner",
+            "docs": [
+              "The owner of the time lock"
+            ],
             "type": "publicKey"
           },
           {
             "name": "isOwnerPayer",
+            "docs": [
+              "Whether the owner is the payer of the rent"
+            ],
             "type": "bool"
           },
           {
             "name": "releaseSlot",
+            "docs": [
+              "The slot at which the time lock will be released"
+            ],
             "type": "u64"
           }
         ]
@@ -1444,8 +1539,8 @@ export type Pyra = {
     },
     {
       "code": 6032,
-      "name": "InvalidRentReclaimer",
-      "msg": "Invalid rent reclaimer"
+      "name": "InvalidAdminKeypair",
+      "msg": "Invalid admin keypair"
     },
     {
       "code": 6033,
@@ -1501,7 +1596,7 @@ export type Pyra = {
 };
 
 export const IDL: Pyra = {
-  "version": "0.12.1",
+  "version": "0.13.0",
   "name": "pyra",
   "instructions": [
     {
@@ -1539,6 +1634,37 @@ export const IDL: Pyra = {
           "type": "bytes"
         }
       ]
+    },
+    {
+      "name": "updateDriftName",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "driftUser",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "driftProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": []
     },
     {
       "name": "initUser",
@@ -2141,7 +2267,7 @@ export const IDL: Pyra = {
         },
         {
           "name": "spendFee",
-          "type": "bool"
+          "type": "u8"
         }
       ]
     },
@@ -2643,10 +2769,16 @@ export const IDL: Pyra = {
         "fields": [
           {
             "name": "deposit",
+            "docs": [
+              "The amount of collateral deposited"
+            ],
             "type": "u64"
           },
           {
             "name": "withdraw",
+            "docs": [
+              "The amount of collateral withdrawn"
+            ],
             "type": "u64"
           }
         ]
@@ -2662,24 +2794,39 @@ export const IDL: Pyra = {
         "fields": [
           {
             "name": "timeLock",
+            "docs": [
+              "Shared time lock data"
+            ],
             "type": {
               "defined": "TimeLock"
             }
           },
           {
             "name": "spendLimitPerTransaction",
+            "docs": [
+              "The maximum amount of USDC that can be spent in a single transaction"
+            ],
             "type": "u64"
           },
           {
             "name": "spendLimitPerTimeframe",
+            "docs": [
+              "The maximum amount of USDC that can be spent in a single timeframe"
+            ],
             "type": "u64"
           },
           {
             "name": "timeframeInSeconds",
+            "docs": [
+              "The duration of a timeframe in seconds"
+            ],
             "type": "u64"
           },
           {
             "name": "nextTimeframeResetTimestamp",
+            "docs": [
+              "The timestamp at which the next timeframe will reset"
+            ],
             "type": "u64"
           }
         ]
@@ -2695,24 +2842,39 @@ export const IDL: Pyra = {
         "fields": [
           {
             "name": "timeLock",
+            "docs": [
+              "Shared time lock data"
+            ],
             "type": {
               "defined": "TimeLock"
             }
           },
           {
             "name": "amountBaseUnits",
+            "docs": [
+              "The amount of base units to withdraw"
+            ],
             "type": "u64"
           },
           {
             "name": "driftMarketIndex",
+            "docs": [
+              "The drift market index to withdraw from"
+            ],
             "type": "u16"
           },
           {
             "name": "reduceOnly",
+            "docs": [
+              "Whether the withdraw is reduce only"
+            ],
             "type": "bool"
           },
           {
             "name": "destination",
+            "docs": [
+              "The destination of the withdraw"
+            ],
             "type": "publicKey"
           }
         ]
@@ -2728,6 +2890,10 @@ export const IDL: Pyra = {
         "fields": [
           {
             "name": "owner",
+            "docs": [
+              "TODO: Change discriminator to 1 byte once able to upgrade to anchor 0.31",
+              "Note: If the owner becomes changeable in the future, need to add has_one contstraints to all ixs"
+            ],
             "type": "publicKey"
           },
           {
@@ -2736,22 +2902,37 @@ export const IDL: Pyra = {
           },
           {
             "name": "spendLimitPerTransaction",
+            "docs": [
+              "The maximum amount of USDC that can be spent in a single transaction"
+            ],
             "type": "u64"
           },
           {
             "name": "spendLimitPerTimeframe",
+            "docs": [
+              "The maximum amount of USDC that can be spent in a single timeframe"
+            ],
             "type": "u64"
           },
           {
             "name": "remainingSpendLimitPerTimeframe",
+            "docs": [
+              "The remaining amount of USDC that can be spent in the current timeframe"
+            ],
             "type": "u64"
           },
           {
             "name": "nextTimeframeResetTimestamp",
+            "docs": [
+              "The next timestamp the remaining_spend_limit_per_timeframe will be reset at"
+            ],
             "type": "u64"
           },
           {
             "name": "timeframeInSeconds",
+            "docs": [
+              "How much to extend the next_timeframe_reset_timestamp by when it's reached"
+            ],
             "type": "u64"
           }
         ]
@@ -2769,14 +2950,23 @@ export const IDL: Pyra = {
         "fields": [
           {
             "name": "owner",
+            "docs": [
+              "The owner of the time lock"
+            ],
             "type": "publicKey"
           },
           {
             "name": "isOwnerPayer",
+            "docs": [
+              "Whether the owner is the payer of the rent"
+            ],
             "type": "bool"
           },
           {
             "name": "releaseSlot",
+            "docs": [
+              "The slot at which the time lock will be released"
+            ],
             "type": "u64"
           }
         ]
@@ -2946,8 +3136,8 @@ export const IDL: Pyra = {
     },
     {
       "code": 6032,
-      "name": "InvalidRentReclaimer",
-      "msg": "Invalid rent reclaimer"
+      "name": "InvalidAdminKeypair",
+      "msg": "Invalid admin keypair"
     },
     {
       "code": 6033,
