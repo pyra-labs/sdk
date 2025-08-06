@@ -250,20 +250,25 @@ export function calculateWithdrawOrderBalances(
     return openOrdersBalance;
 }
 
-export async function getPrices(): Promise<Record<MarketIndex, number>> {
+export async function getPrices(
+    marketIndices: MarketIndex[] = [...MarketIndex]
+): Promise<Record<MarketIndex, number>> {
     try {
-        return await getPricesPyth();
+        return await getPricesPyth(marketIndices);
     } catch (pythError) {
         try {
-            return await getPricesCoinGecko();
+            return await getPricesCoinGecko(marketIndices);
         } catch (coingeckoError) {
             throw new Error(`Failed to fetch prices from main (Pyth) and backup (CoinGecko) sources. Pyth error: ${pythError}, CoinGecko error: ${coingeckoError}`);
         }
     }
 }
 
-async function getPricesPyth(): Promise<Record<MarketIndex, number>> {
-    const pythPriceFeedIdParams = MarketIndex
+async function getPricesPyth(
+    marketIndices: MarketIndex[] = [...MarketIndex]
+): Promise<Record<MarketIndex, number>> {
+    const pythPriceFeedIdParams = marketIndices
+        .filter(index => index !== 29) // Filter out META, it's not on Pyth
         .map(index => `ids%5B%5D=${TOKENS[index].pythPriceFeedId}`);
     const endpoint = `https://hermes.pyth.network/v2/updates/price/latest?${pythPriceFeedIdParams.join("&")}`;
     const body = await fetchAndParse<PythResponse>(endpoint);
@@ -285,8 +290,10 @@ async function getPricesPyth(): Promise<Record<MarketIndex, number>> {
     return prices;
 }
 
-async function getPricesCoinGecko(): Promise<Record<MarketIndex, number>> {
-    const coinGeckoIdParams = MarketIndex.map(index => TOKENS[index].coingeckoPriceId).join(",");
+async function getPricesCoinGecko(
+    marketIndices: MarketIndex[] = [...MarketIndex]
+): Promise<Record<MarketIndex, number>> {
+    const coinGeckoIdParams = marketIndices.map(index => TOKENS[index].coingeckoPriceId).join(",");
     const endpoint = `https://api.coingecko.com/api/v3/simple/price?ids=${coinGeckoIdParams}&vs_currencies=usd`;
     const body = await fetchAndParse<Record<string, { usd: number }>>(endpoint);
     
