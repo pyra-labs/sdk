@@ -3,7 +3,7 @@ import type { Token } from "../types/interfaces/Token.interface.js";
 import BN from "bn.js";
 
 export const MarketIndex = [
-    1, 0, 5, 22, 28, 3, 6, 19, 29, 8
+    1, 0, 5, 22, 28, 3, 6, 19, 29, 8, 32, 11, 45, 4
 ] as const;
 export type MarketIndex = (typeof MarketIndex)[number];
 
@@ -84,5 +84,33 @@ export const TOKENS: Record<MarketIndex, Token> = {
         pythPriceFeedId: "0x89875379e70f8fbadc17aef315adf3a8d5d160b811435537e03c97e8aac97d9c",
         decimalPrecision: new BN(9),
         coingeckoPriceId: "blazestake-staked-sol",
+    },
+    32: {
+        name: "BONK",
+        mint: new PublicKey("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"),
+        pythPriceFeedId: "0x72b021217ca3fe68922a19aaf990109cb9d84e9ad004b4d2025ad6f529314419",
+        decimalPrecision: new BN(5),
+        coingeckoPriceId: "bonk",
+    },
+    11: {
+        name: "JUP",
+        mint: new PublicKey("JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"),
+        pythPriceFeedId: "0x0a0408d619e9380abad35060f9192039ed5042fa6f82301d0e48bb52be830996",
+        decimalPrecision: new BN(6),
+        coingeckoPriceId: "jupiter",
+    },
+    45: {
+        name: "zBTC",
+        mint: new PublicKey("zBTCug3er3tLyffELcvDNrKkCymbPWysGcWihESYfLg"),
+        pythPriceFeedId: "0x3d824c7f7c26ed1c85421ecec8c754e6b52d66a4e45de20a9c9ea91de8b396f9",
+        decimalPrecision: new BN(8),
+        coingeckoPriceId: "zeus-network-zbtc",
+    },
+    4: {
+        name: "wETH",
+        mint: new PublicKey("7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs"),
+        pythPriceFeedId: "0x9d4294bbcd1174d6f2003ec365831e64cc31d9f6f15a2b85399db8d5000960f6",
+        decimalPrecision: new BN(8),
+        coingeckoPriceId: "weth",
     }
 };

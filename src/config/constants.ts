@@ -28,3 +28,5 @@ export const ZERO = new BN(0);
 export const MAX_ACCOUNTS_PER_FETCH_CALL = 100;
 
 export const DEPOSIT_ADDRESS_DATA_SIZE = 0;
+
+export const SPEND_FEE_CUT_BPS = new BN(50);

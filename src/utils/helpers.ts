@@ -263,11 +263,10 @@ export async function getPrices(): Promise<Record<MarketIndex, number>> {
 }
 
 async function getPricesPyth(): Promise<Record<MarketIndex, number>> {
-    const pythPriceFeedIdParams = MarketIndex.map(index => `ids%5B%5D=${TOKENS[index].pythPriceFeedId}`);
+    const pythPriceFeedIdParams = MarketIndex
+        .map(index => `ids%5B%5D=${TOKENS[index].pythPriceFeedId}`);
     const endpoint = `https://hermes.pyth.network/v2/updates/price/latest?${pythPriceFeedIdParams.join("&")}`;
-    const reponse = await fetch(endpoint);
-    if (!reponse.ok) throw new Error("Failed to fetch prices");
-    const body = await reponse.json() as PythResponse;
+    const body = await fetchAndParse<PythResponse>(endpoint);
     const pricesData = body.parsed;
 
     const prices = {} as Record<MarketIndex, number>;
@@ -289,9 +288,7 @@ async function getPricesPyth(): Promise<Record<MarketIndex, number>> {
 async function getPricesCoinGecko(): Promise<Record<MarketIndex, number>> {
     const coinGeckoIdParams = MarketIndex.map(index => TOKENS[index].coingeckoPriceId).join(",");
     const endpoint = `https://api.coingecko.com/api/v3/simple/price?ids=${coinGeckoIdParams}&vs_currencies=usd`;
-    const response = await fetch(endpoint);
-    if (!response.ok) throw new Error("Failed to fetch prices");
-    const body = await response.json() as Record<string, { usd: number }>;
+    const body = await fetchAndParse<Record<string, { usd: number }>>(endpoint);
     
     const prices = {} as Record<MarketIndex, number>;
     for (const index of MarketIndex) {
