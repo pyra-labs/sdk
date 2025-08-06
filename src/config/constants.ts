@@ -13,7 +13,7 @@ export const MARGINFI_PROGRAM_ID = new PublicKey("MFv2hWf31Z9kbCa1snEPYctwafyhdv
 
 export const PROVIDER_BASE_ADDRESS = "0x55a2eeB9028ee51Ef91352Fa9f84A9450C5Af099";
 export const QUARTZ_CALLER_BASE_ADDRESS = "0x28A0105A0cf8C0485a4956ba14b5274e9ED229DE";
-export const SPEND_FEE_DESTINATION = new PublicKey("EaC6zAamfa5oPHYbXka6U27SrFZn6SkofFGtzvqUNrpM");
+export const SPEND_FEE_DESTINATION = new PublicKey("9hDHD7rPvo8QgcApomXBQJhAQSU8L7Skaghms5U7KQ2k");
 
 export const MARGINFI_GROUP_1 = new PublicKey("4qp6Fx6tnZkY5Wropq9wUYgtFxXKwE6viZxFHg3rdAG8");
 
