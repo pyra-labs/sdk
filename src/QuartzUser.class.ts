@@ -825,7 +825,7 @@ export class QuartzUser {
     public async makeSpendIxs(
         amountBaseUnits: number,
         spendCaller: Keypair,
-        spendFee: boolean
+        spendFee: "none" | "discount" | "full"
     ): Promise<{
         ixs: TransactionInstruction[],
         lookupTables: AddressLookupTableAccount[],
@@ -838,10 +838,17 @@ export class QuartzUser {
         const depositAddress = getDepositAddressPublicKey(this.pubkey);
         const depositAddressUsdc = getAssociatedTokenAddressSync(mint, depositAddress, true, tokenProgram);
 
+        let spendFeeBps = 0;
+        if (spendFee === "discount") {
+            spendFeeBps = Math.floor(SPEND_FEE_CUT_BPS.toNumber() * 0.9);
+        } else if (spendFee === "full") {
+            spendFeeBps = SPEND_FEE_CUT_BPS.toNumber();
+        }
+
         const ix_startSpend = await this.program.methods
             .startSpend(
                 new BN(amountBaseUnits),
-                spendFee ? SPEND_FEE_CUT_BPS.toNumber() : 0
+                spendFeeBps
             )
             .accounts({
                 vault: this.vaultPubkey,
