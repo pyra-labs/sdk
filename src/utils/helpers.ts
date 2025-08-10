@@ -251,15 +251,28 @@ export function calculateWithdrawOrderBalances(
 }
 
 export async function getPrices(
+    pythFirst = true,
     marketIndices: MarketIndex[] = [...MarketIndex]
 ): Promise<Record<MarketIndex, number>> {
-    try {
-        return await getPricesPyth(marketIndices);
-    } catch (pythError) {
+    if (pythFirst) {
+        try {
+            return await getPricesPyth(marketIndices);
+        } catch (pythError) {
+            try {
+                return await getPricesCoinGecko(marketIndices);
+            } catch (coingeckoError) {
+                throw new Error(`Failed to fetch prices from main (Pyth) and backup (CoinGecko) sources. Pyth error: ${pythError}, CoinGecko error: ${coingeckoError}`);
+            }
+        }
+    } else {
         try {
             return await getPricesCoinGecko(marketIndices);
-        } catch (coingeckoError) {
-            throw new Error(`Failed to fetch prices from main (Pyth) and backup (CoinGecko) sources. Pyth error: ${pythError}, CoinGecko error: ${coingeckoError}`);
+        } catch (pythError) {
+            try {
+                return await getPricesPyth(marketIndices);
+            } catch (coingeckoError) {
+                throw new Error(`Failed to fetch prices from main (Pyth) and backup (CoinGecko) sources. Pyth error: ${pythError}, CoinGecko error: ${coingeckoError}`);
+            }
         }
     }
 }
