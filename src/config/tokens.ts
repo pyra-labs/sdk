@@ -104,7 +104,7 @@ export const TOKENS: Record<MarketIndex, Token> = {
         mint: new PublicKey("zBTCug3er3tLyffELcvDNrKkCymbPWysGcWihESYfLg"),
         pythPriceFeedId: "0x3d824c7f7c26ed1c85421ecec8c754e6b52d66a4e45de20a9c9ea91de8b396f9",
         decimalPrecision: new BN(8),
-        coingeckoPriceId: "zeus-network-zbtc",
+        coingeckoPriceId: "zeus-netwok-zbtc",
     },
     4: {
         name: "wETH",
