@@ -1,5 +1,5 @@
 export type Pyra = {
-  "version": "0.13.0",
+  "version": "0.14.0",
   "name": "pyra",
   "instructions": [
     {
@@ -669,8 +669,8 @@ export type Pyra = {
           "type": "u64"
         },
         {
-          "name": "spendFee",
-          "type": "u8"
+          "name": "spendFeeUsdcBaseUnits",
+          "type": "u64"
         }
       ]
     },
@@ -1596,7 +1596,7 @@ export type Pyra = {
 };
 
 export const IDL: Pyra = {
-  "version": "0.13.0",
+  "version": "0.14.0",
   "name": "pyra",
   "instructions": [
     {
@@ -2266,8 +2266,8 @@ export const IDL: Pyra = {
           "type": "u64"
         },
         {
-          "name": "spendFee",
-          "type": "u8"
+          "name": "spendFeeUsdcBaseUnits",
+          "type": "u64"
         }
       ]
     },
