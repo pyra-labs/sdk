@@ -1,6 +1,6 @@
 import type { DriftClient, UserAccount } from "@drift-labs/sdk";
 import type { AddressLookupTableAccount, TransactionInstruction, } from "@solana/web3.js";
-import { DEPOSIT_ADDRESS_DATA_SIZE, DRIFT_PROGRAM_ID, MARKET_INDEX_SOL, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_PROGRAM_ID, SPEND_FEE_CUT_BPS, SPEND_FEE_DESTINATION, TOKEN_MESSAGE_MINTER_PROGRAM_ID, ZERO, } from "./config/constants.js";
+import { DEPOSIT_ADDRESS_DATA_SIZE, DRIFT_PROGRAM_ID, MARKET_INDEX_SOL, MARKET_INDEX_USDC, MESSAGE_TRANSMITTER_PROGRAM_ID, QUARTZ_PROGRAM_ID, SPEND_FEE_DESTINATION, TOKEN_MESSAGE_MINTER_PROGRAM_ID, ZERO, } from "./config/constants.js";
 import type { Pyra } from "./types/idl/pyra.js";
 import type { Program } from "@coral-xyz/anchor";
 import type { PublicKey, } from "@solana/web3.js";
@@ -807,7 +807,7 @@ export class QuartzUser {
 
     /**
      * Creates instructions to spend using the Quartz card.
-     * @param amountBaseUnits - The amount of tokens to spend.
+     * @param amountSpendBaseUnits - The amount of tokens to spend.
      * @param spendCaller - The public key of the Quartz spend caller.
      * @param spendFee - True means a percentage of the spend will be sent to the spend fee address.
      * @returns {Promise<{
@@ -823,9 +823,9 @@ export class QuartzUser {
     * - the user's spend limit is exceeded.
     */
     public async makeSpendIxs(
-        amountBaseUnits: number,
+        amountSpendBaseUnits: number,
+        amountFeeBaseUnits: number,
         spendCaller: Keypair,
-        spendFee: "none" | "discount" | "full"
     ): Promise<{
         ixs: TransactionInstruction[],
         lookupTables: AddressLookupTableAccount[],
@@ -838,17 +838,10 @@ export class QuartzUser {
         const depositAddress = getDepositAddressPublicKey(this.pubkey);
         const depositAddressUsdc = getAssociatedTokenAddressSync(mint, depositAddress, true, tokenProgram);
 
-        let spendFeeBps = 0;
-        if (spendFee === "discount") {
-            spendFeeBps = Math.floor(SPEND_FEE_CUT_BPS.toNumber() * 0.9);
-        } else if (spendFee === "full") {
-            spendFeeBps = SPEND_FEE_CUT_BPS.toNumber();
-        }
-
         const ix_startSpend = await this.program.methods
             .startSpend(
-                new BN(amountBaseUnits),
-                spendFeeBps
+                new BN(amountSpendBaseUnits),
+                new BN(amountFeeBaseUnits)
             )
             .accounts({
                 vault: this.vaultPubkey,
