@@ -436,7 +436,7 @@ export class QuartzUser {
     }
 
     /**
-     * Creates instructions to iniaite a withdraw order from the Quartz user account, which will be fulfilled after the time lock.
+     * Creates instructions to rescue unsupported tokens from a Quartz rescue token.
      * @param mint - The mint of the token to rescue.
      * @returns {Promise<{
     *     ixs: TransactionInstruction[],
@@ -449,6 +449,7 @@ export class QuartzUser {
     * @throw Error if the RPC connection fails, if the mint's ATA does not exist, or has 0 balance.
     */
     public async makeRescueDepositIxs(
+        destination: PublicKey,
         mint: PublicKey,
     ): Promise<{
         ixs: TransactionInstruction[],
@@ -469,7 +470,8 @@ export class QuartzUser {
             .accounts({
                 vault: this.vaultPubkey,
                 owner: this.pubkey,
-                ownerSpl: getAssociatedTokenAddressSync(mint, this.pubkey, true, tokenProgram),
+                destination: destination,
+                destinationSpl: getAssociatedTokenAddressSync(mint, destination, true, tokenProgram),
                 depositAddress: depositAddress,
                 depositAddressSpl: depositAddressAta,
                 mint: mint,
