@@ -97,7 +97,7 @@ export const TOKENS: Record<MarketIndex, Token> = {
         mint: new PublicKey("JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"),
         pythPriceFeedId: "0x0a0408d619e9380abad35060f9192039ed5042fa6f82301d0e48bb52be830996",
         decimalPrecision: new BN(6),
-        coingeckoPriceId: "jupiter",
+        coingeckoPriceId: "jupiter-exchange-solana",
     },
     45: {
         name: "zBTC",

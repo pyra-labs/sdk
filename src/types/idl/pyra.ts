@@ -1,5 +1,5 @@
 export type Pyra = {
-  "version": "0.14.2",
+  "version": "0.14.3",
   "name": "pyra",
   "instructions": [
     {
@@ -341,7 +341,7 @@ export type Pyra = {
         },
         {
           "name": "destination",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1601,7 +1601,7 @@ export type Pyra = {
 };
 
 export const IDL: Pyra = {
-  "version": "0.14.2",
+  "version": "0.14.3",
   "name": "pyra",
   "instructions": [
     {
@@ -1943,7 +1943,7 @@ export const IDL: Pyra = {
         },
         {
           "name": "destination",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
