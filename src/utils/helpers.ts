@@ -1,190 +1,246 @@
-import { ComputeBudgetProgram, PublicKey, type Connection, type TransactionInstruction, } from "@solana/web3.js";
+import {
+	ComputeBudgetProgram,
+	PublicKey,
+	type Connection,
+	type TransactionInstruction,
+} from "@solana/web3.js";
 import type { AccountMeta } from "../types/interfaces/AccountMeta.interface.js";
-import { getMarketIndicesRecord, MarketIndex, TOKENS } from "../config/tokens.js";
-import { createAssociatedTokenAccountInstruction, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+	getMarketIndicesRecord,
+	MarketIndex,
+	TOKENS,
+} from "../config/tokens.js";
+import {
+	createAssociatedTokenAccountInstruction,
+	TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import type { AddressLookupTableAccount } from "@solana/web3.js";
 import { VersionedTransaction } from "@solana/web3.js";
 import { TransactionMessage } from "@solana/web3.js";
-import { type BN, DEFAULT_COMPUTE_UNIT_LIMIT, DEFAULT_COMPUTE_UNIT_PRICE, ZERO, type WithdrawOrder } from "../index.browser.js";
+import {
+	type BN,
+	DEFAULT_COMPUTE_UNIT_LIMIT,
+	DEFAULT_COMPUTE_UNIT_PRICE,
+	ZERO,
+	type WithdrawOrder,
+} from "../index.browser.js";
 import type { PythResponse } from "../types/interfaces/PythResponse.interface.js";
 
 export async function delay(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export async function getComputeUnitLimit(
-    connection: Connection,
-    instructions: TransactionInstruction[],
-    address: PublicKey,
-    blockhash: string,
-    lookupTables: AddressLookupTableAccount[] = []
+	connection: Connection,
+	instructions: TransactionInstruction[],
+	address: PublicKey,
+	blockhash: string,
+	lookupTables: AddressLookupTableAccount[] = [],
 ) {
-    const messageV0 = new TransactionMessage({
-        payerKey: address,
-        recentBlockhash: blockhash,
-        instructions: [...instructions]
-    }).compileToV0Message(lookupTables);
-    const simulation = await connection.simulateTransaction(
-        new VersionedTransaction(messageV0)
-    );
+	const messageV0 = new TransactionMessage({
+		payerKey: address,
+		recentBlockhash: blockhash,
+		instructions: [...instructions],
+	}).compileToV0Message(lookupTables);
+	const simulation = await connection.simulateTransaction(
+		new VersionedTransaction(messageV0),
+	);
 
-    if (
-        simulation.value.err 
-        || simulation.value.unitsConsumed === undefined
-        || simulation.value.unitsConsumed === 0
-    ) {
-        console.log("Could not simulate for CUs, using default limit");
-        return DEFAULT_COMPUTE_UNIT_LIMIT;
-    }
+	if (
+		simulation.value.err ||
+		simulation.value.unitsConsumed === undefined ||
+		simulation.value.unitsConsumed === 0
+	) {
+		console.log("Could not simulate for CUs, using default limit");
+		return DEFAULT_COMPUTE_UNIT_LIMIT;
+	}
 
-    const simulated = Math.ceil(simulation.value.unitsConsumed * 1.5);
-    return Math.min(simulated, DEFAULT_COMPUTE_UNIT_LIMIT); 
-    // TODO: Figure out why simulation is so low sometimes, and change to a reasonable sanity check of 5k CUs
+	const simulated = Math.ceil(simulation.value.unitsConsumed * 1.5);
+	return Math.min(simulated, DEFAULT_COMPUTE_UNIT_LIMIT);
+	// TODO: Figure out why simulation is so low sometimes, and change to a reasonable sanity check of 5k CUs
 }
 
 export async function getComputeUnitLimitIx(
-    connection: Connection,
-    instructions: TransactionInstruction[],
-    address: PublicKey,
-    blockhash: string,
-    lookupTables: AddressLookupTableAccount[] = []
+	connection: Connection,
+	instructions: TransactionInstruction[],
+	address: PublicKey,
+	blockhash: string,
+	lookupTables: AddressLookupTableAccount[] = [],
 ) {
-    const computeUnitLimit = await getComputeUnitLimit(connection, instructions, address, blockhash, lookupTables);
-    return ComputeBudgetProgram.setComputeUnitLimit({
-        units: computeUnitLimit,
-    });
+	const computeUnitLimit = await getComputeUnitLimit(
+		connection,
+		instructions,
+		address,
+		blockhash,
+		lookupTables,
+	);
+	return ComputeBudgetProgram.setComputeUnitLimit({
+		units: computeUnitLimit,
+	});
 }
 
 export async function getComputeUnitPrice(
-    connection: Connection, 
-    instructions: TransactionInstruction[]
+	connection: Connection,
+	instructions: TransactionInstruction[],
 ) {
-    const accounts = instructions.flatMap(instruction => instruction.keys);
-    const writeableAccounts = accounts.filter(account => account.isWritable).map(account => account.pubkey);
-    const recentFees = await connection.getRecentPrioritizationFees({
-        lockedWritableAccounts: writeableAccounts
-    }).then(fees => fees.map(fee => fee.prioritizationFee));
+	const accounts = instructions.flatMap((instruction) => instruction.keys);
+	const writeableAccounts = accounts
+		.filter((account) => account.isWritable)
+		.map((account) => account.pubkey);
+	const recentFees = await connection
+		.getRecentPrioritizationFees({
+			lockedWritableAccounts: writeableAccounts,
+		})
+		.then((fees) => fees.map((fee) => fee.prioritizationFee));
 
-    if (recentFees.length === 0) return DEFAULT_COMPUTE_UNIT_PRICE;
+	if (recentFees.length === 0) return DEFAULT_COMPUTE_UNIT_PRICE;
 
-    const positiveFees = recentFees.filter(fee => fee > 0);
-    const sortedFees = [...positiveFees].sort((a, b) => a - b);
+	const positiveFees = recentFees.filter((fee) => fee > 0);
+	const sortedFees = [...positiveFees].sort((a, b) => a - b);
 
-    // Calculate Q1 and Q3
-    const q1Index = Math.floor(sortedFees.length * 0.25);
-    const q3Index = Math.floor(sortedFees.length * 0.75);
-    const q1 = sortedFees[q1Index];
-    const q3 = sortedFees[q3Index];
-    if (q1 === undefined || q3 === undefined) return Math.min(...recentFees);
+	// Calculate Q1 and Q3
+	const q1Index = Math.floor(sortedFees.length * 0.25);
+	const q3Index = Math.floor(sortedFees.length * 0.75);
+	const q1 = sortedFees[q1Index];
+	const q3 = sortedFees[q3Index];
+	if (q1 === undefined || q3 === undefined) return Math.min(...recentFees);
 
-    // Calculate IQR and bounds
-    const iqr = q3 - q1;
-    const lowerBound = q1 - 1.5 * iqr;
-    const upperBound = q3 + 1.5 * iqr;
+	// Calculate IQR and bounds
+	const iqr = q3 - q1;
+	const lowerBound = q1 - 1.5 * iqr;
+	const upperBound = q3 + 1.5 * iqr;
 
-    // Filter out outliers and calculate average
-    const filteredFees = sortedFees.filter(fee => fee >= lowerBound && fee <= upperBound);
-    const average = filteredFees.reduce((sum, fee) => sum + fee, 0) / filteredFees.length;
+	// Filter out outliers and calculate average
+	const filteredFees = sortedFees.filter(
+		(fee) => fee >= lowerBound && fee <= upperBound,
+	);
+	const average =
+		filteredFees.reduce((sum, fee) => sum + fee, 0) / filteredFees.length;
 
-    return Math.ceil(average);
-};
+	return Math.ceil(average);
+}
 
 export async function getComputeUnitPriceIx(
-    connection: Connection, 
-    instructions: TransactionInstruction[]
+	connection: Connection,
+	instructions: TransactionInstruction[],
 ) {
-    const computeUnitPrice = await getComputeUnitPrice(connection, instructions);
-    return ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: computeUnitPrice,
-    });
+	const computeUnitPrice = await getComputeUnitPrice(connection, instructions);
+	return ComputeBudgetProgram.setComputeUnitPrice({
+		microLamports: computeUnitPrice,
+	});
 }
 
 export async function buildTransaction(
-    connection: Connection,
-    instructions: TransactionInstruction[],
-    payer: PublicKey,
-    lookupTables: AddressLookupTableAccount[] = []
-): Promise<VersionedTransaction> {
-    const blockhash = (await connection.getLatestBlockhash()).blockhash;
-    const ix_computeLimit = await getComputeUnitLimitIx(connection, instructions, payer, blockhash, lookupTables);
-    const ix_computePrice = await getComputeUnitPriceIx(connection, instructions);
+	connection: Connection,
+	instructions: TransactionInstruction[],
+	payer: PublicKey,
+	lookupTables: AddressLookupTableAccount[] = [],
+): Promise<{
+	transaction: VersionedTransaction;
+	gasLamports: number;
+}> {
+	const blockhash = (await connection.getLatestBlockhash()).blockhash;
+	const computeUnitLimit = await getComputeUnitLimit(
+		connection,
+		instructions,
+		payer,
+		blockhash,
+		lookupTables,
+	);
+	const ix_computeLimit = ComputeBudgetProgram.setComputeUnitLimit({
+		units: computeUnitLimit,
+	});
 
-    const messageV0 = new TransactionMessage({
-        payerKey: payer,
-        recentBlockhash: blockhash,
-        instructions: [
-            ix_computeLimit,
-            ix_computePrice,
-            ...instructions
-        ]
-    }).compileToV0Message(lookupTables);
-    const transaction = new VersionedTransaction(messageV0);
-    return transaction;
+	const computeUnitPrice = await getComputeUnitPrice(connection, instructions);
+	const ix_computePrice = ComputeBudgetProgram.setComputeUnitPrice({
+		microLamports: computeUnitPrice,
+	});
+
+	const baseGasLamports = 5_000;
+	const gasMicroLamports = computeUnitLimit * computeUnitPrice;
+	const gasLamports = baseGasLamports + gasMicroLamports / 1_000_000;
+
+	const messageV0 = new TransactionMessage({
+		payerKey: payer,
+		recentBlockhash: blockhash,
+		instructions: [ix_computeLimit, ix_computePrice, ...instructions],
+	}).compileToV0Message(lookupTables);
+	const transaction = new VersionedTransaction(messageV0);
+	return {
+		transaction,
+		gasLamports,
+	};
 }
 
 export const toRemainingAccount = (
-    pubkey: PublicKey, 
-    isSigner: boolean, 
-    isWritable: boolean
+	pubkey: PublicKey,
+	isSigner: boolean,
+	isWritable: boolean,
 ): AccountMeta => {
-    return {
-        pubkey: pubkey,
-        isSigner: isSigner,
-        isWritable: isWritable,
-    }
-}
+	return {
+		pubkey: pubkey,
+		isSigner: isSigner,
+		isWritable: isWritable,
+	};
+};
 
 export const getTokenProgram = async (
-    connection: Connection, 
-    mint: PublicKey
+	connection: Connection,
+	mint: PublicKey,
 ) => {
-    const mintAccount = await retryWithBackoff(
-        () => connection.getAccountInfo(mint),
-        3
-    );
-    return mintAccount?.owner || TOKEN_PROGRAM_ID;
-}
+	const mintAccount = await retryWithBackoff(
+		() => connection.getAccountInfo(mint),
+		3,
+	);
+	return mintAccount?.owner || TOKEN_PROGRAM_ID;
+};
 
 export async function makeCreateAtaIxIfNeeded(
-    connection: Connection,
-    ata: PublicKey,
-    authority: PublicKey,
-    mint: PublicKey,
-    tokenProgramId: PublicKey,
-    payer: PublicKey
+	connection: Connection,
+	ata: PublicKey,
+	authority: PublicKey,
+	mint: PublicKey,
+	tokenProgramId: PublicKey,
+	payer: PublicKey,
 ) {
-    const oix_createAta: TransactionInstruction[] = [];
-    const ataInfo = await retryWithBackoff(
-        () => connection.getAccountInfo(ata),
-        3
-    );
-    if (ataInfo === null) {
-        oix_createAta.push(
-            createAssociatedTokenAccountInstruction(
-                payer,
-                ata,
-                authority,
-                mint,
-                tokenProgramId
-            )
-        );
-    }
-    return oix_createAta;
+	const oix_createAta: TransactionInstruction[] = [];
+	const ataInfo = await retryWithBackoff(
+		() => connection.getAccountInfo(ata),
+		3,
+	);
+	if (ataInfo === null) {
+		oix_createAta.push(
+			createAssociatedTokenAccountInstruction(
+				payer,
+				ata,
+				authority,
+				mint,
+				tokenProgramId,
+			),
+		);
+	}
+	return oix_createAta;
 }
 
-export function baseUnitToDecimal(baseUnits: number, marketIndex: MarketIndex): number {
-    const token = TOKENS[marketIndex];
-    return baseUnits / (10 ** token.decimalPrecision.toNumber());
+export function baseUnitToDecimal(
+	baseUnits: number,
+	marketIndex: MarketIndex,
+): number {
+	const token = TOKENS[marketIndex];
+	return baseUnits / 10 ** token.decimalPrecision.toNumber();
 }
 
-export function decimalToBaseUnit(decimal: number, marketIndex: MarketIndex): number {
-    const token = TOKENS[marketIndex];
-    return Math.trunc(decimal * (10 ** token.decimalPrecision.toNumber()));
+export function decimalToBaseUnit(
+	decimal: number,
+	marketIndex: MarketIndex,
+): number {
+	const token = TOKENS[marketIndex];
+	return Math.trunc(decimal * 10 ** token.decimalPrecision.toNumber());
 }
 
 export function isMarketIndex(index: number): boolean {
-    const marketIndex = index as MarketIndex;
-    return Object.values(MarketIndex).includes(marketIndex);
+	const marketIndex = index as MarketIndex;
+	return Object.values(MarketIndex).includes(marketIndex);
 }
 
 /**
@@ -196,189 +252,203 @@ export function isMarketIndex(index: number): boolean {
  * @returns The result of the function.
  */
 export async function retryWithBackoff<T>(
-    fn: () => Promise<T>,
-    retries = 5,
-    initialDelay = 1_000,
-    retryCallback?: (error: unknown, delayMs: number) => void,
+	fn: () => Promise<T>,
+	retries = 5,
+	initialDelay = 1_000,
+	retryCallback?: (error: unknown, delayMs: number) => void,
 ) {
-    let lastError: unknown = new Error("Unknown error");
-    for (let i = 0; i <= retries; i++) {
-        try {
-            return await fn();
-        } catch (error) {
-            const delay = initialDelay * (2 ** i);
-            lastError = error;
+	let lastError: unknown = new Error("Unknown error");
+	for (let i = 0; i <= retries; i++) {
+		try {
+			return await fn();
+		} catch (error) {
+			const delay = initialDelay * 2 ** i;
+			lastError = error;
 
-            if (retryCallback) {
-                retryCallback(error, delay);
-            }
+			if (retryCallback) {
+				retryCallback(error, delay);
+			}
 
-            await new Promise(resolve => setTimeout(resolve, delay));
-        }
-    }
-    throw lastError;
+			await new Promise((resolve) => setTimeout(resolve, delay));
+		}
+	}
+	throw lastError;
 }
 
 export function evmAddressToSolana(evmAddress: string) {
-    const bytes32 = `0x000000000000000000000000${evmAddress.replace("0x", "")}`;
+	const bytes32 = `0x000000000000000000000000${evmAddress.replace("0x", "")}`;
 
-    const bytes = new Uint8Array((bytes32.length - 2) / 2);
-    let offset = 2;
-    for (let i = 0; i < bytes.length; i++) {
-        bytes[i] = Number.parseInt(bytes32.substring(offset, offset + 2), 16);
-        offset += 2;
-    }
+	const bytes = new Uint8Array((bytes32.length - 2) / 2);
+	let offset = 2;
+	for (let i = 0; i < bytes.length; i++) {
+		bytes[i] = Number.parseInt(bytes32.substring(offset, offset + 2), 16);
+		offset += 2;
+	}
 
-    return new PublicKey(bytes);
+	return new PublicKey(bytes);
 }
 
 export function calculateWithdrawOrderBalances(
-    withdrawOrders: WithdrawOrder[]
+	withdrawOrders: WithdrawOrder[],
 ): Record<MarketIndex, BN> {
-    const openOrdersBalance = getMarketIndicesRecord(ZERO);
+	const openOrdersBalance = getMarketIndicesRecord(ZERO);
 
-    for (const order of withdrawOrders) {
-        const marketIndex = order.driftMarketIndex.toNumber() as MarketIndex;
-        if (!isMarketIndex(marketIndex)) {
-            throw new Error(`Invalid market index: ${marketIndex}`);
-        }
+	for (const order of withdrawOrders) {
+		const marketIndex = order.driftMarketIndex.toNumber() as MarketIndex;
+		if (!isMarketIndex(marketIndex)) {
+			throw new Error(`Invalid market index: ${marketIndex}`);
+		}
 
-        openOrdersBalance[marketIndex] = openOrdersBalance[marketIndex]
-            .add(order.amountBaseUnits);
-    }
+		openOrdersBalance[marketIndex] = openOrdersBalance[marketIndex].add(
+			order.amountBaseUnits,
+		);
+	}
 
-    return openOrdersBalance;
+	return openOrdersBalance;
 }
 
 export async function getPrices(
-    pythFirst = true,
-    marketIndices: MarketIndex[] = [...MarketIndex]
+	pythFirst = true,
+	marketIndices: MarketIndex[] = [...MarketIndex],
 ): Promise<Record<MarketIndex, number>> {
-    if (pythFirst) {
-        try {
-            return await getPricesPyth(marketIndices);
-        } catch (pythError) {
-            try {
-                return await getPricesCoinGecko(marketIndices);
-            } catch (coingeckoError) {
-                throw new Error(`Failed to fetch prices from main (Pyth) and backup (CoinGecko) sources. Pyth error: ${pythError}, CoinGecko error: ${coingeckoError}`);
-            }
-        }
-    } else {
-        try {
-            return await getPricesCoinGecko(marketIndices);
-        } catch (pythError) {
-            try {
-                return await getPricesPyth(marketIndices);
-            } catch (coingeckoError) {
-                throw new Error(`Failed to fetch prices from main (Pyth) and backup (CoinGecko) sources. Pyth error: ${pythError}, CoinGecko error: ${coingeckoError}`);
-            }
-        }
-    }
+	if (pythFirst) {
+		try {
+			return await getPricesPyth(marketIndices);
+		} catch (pythError) {
+			try {
+				return await getPricesCoinGecko(marketIndices);
+			} catch (coingeckoError) {
+				throw new Error(
+					`Failed to fetch prices from main (Pyth) and backup (CoinGecko) sources. Pyth error: ${pythError}, CoinGecko error: ${coingeckoError}`,
+				);
+			}
+		}
+	} else {
+		try {
+			return await getPricesCoinGecko(marketIndices);
+		} catch (pythError) {
+			try {
+				return await getPricesPyth(marketIndices);
+			} catch (coingeckoError) {
+				throw new Error(
+					`Failed to fetch prices from main (Pyth) and backup (CoinGecko) sources. Pyth error: ${pythError}, CoinGecko error: ${coingeckoError}`,
+				);
+			}
+		}
+	}
 }
 
 async function getPricesPyth(
-    marketIndices: MarketIndex[] = [...MarketIndex]
+	marketIndices: MarketIndex[] = [...MarketIndex],
 ): Promise<Record<MarketIndex, number>> {
-    const pythPriceFeedIdParams = marketIndices
-        .filter(index => index !== 29) // Filter out META, it's not on Pyth
-        .map(index => `ids%5B%5D=${TOKENS[index].pythPriceFeedId}`);
-    const endpoint = `https://hermes.pyth.network/v2/updates/price/latest?${pythPriceFeedIdParams.join("&")}`;
-    const body = await fetchAndParse<PythResponse>(endpoint);
-    const pricesData = body.parsed;
+	const pythPriceFeedIdParams = marketIndices
+		.filter((index) => index !== 29) // Filter out META, it's not on Pyth
+		.map((index) => `ids%5B%5D=${TOKENS[index].pythPriceFeedId}`);
+	const endpoint = `https://hermes.pyth.network/v2/updates/price/latest?${pythPriceFeedIdParams.join("&")}`;
+	const body = await fetchAndParse<PythResponse>(endpoint);
+	const pricesData = body.parsed;
 
-    const prices = {} as Record<MarketIndex, number>;
-    for (const index of MarketIndex) {
-        prices[index] = 0;
-    }
-    
-    for (const priceData of pricesData) {
-        const marketIndex = MarketIndex.find(index => TOKENS[index].pythPriceFeedId.slice(2) === priceData.id);
-        if (marketIndex === undefined) continue;
+	const prices = {} as Record<MarketIndex, number>;
+	for (const index of MarketIndex) {
+		prices[index] = 0;
+	}
 
-        const price = Number(priceData.price.price) * (10 ** priceData.price.expo);
-        prices[marketIndex] = price;
-    }
+	for (const priceData of pricesData) {
+		const marketIndex = MarketIndex.find(
+			(index) => TOKENS[index].pythPriceFeedId.slice(2) === priceData.id,
+		);
+		if (marketIndex === undefined) continue;
 
-    return prices;
+		const price = Number(priceData.price.price) * 10 ** priceData.price.expo;
+		prices[marketIndex] = price;
+	}
+
+	return prices;
 }
 
 async function getPricesCoinGecko(
-    marketIndices: MarketIndex[] = [...MarketIndex]
+	marketIndices: MarketIndex[] = [...MarketIndex],
 ): Promise<Record<MarketIndex, number>> {
-    const coinGeckoIdParams = marketIndices.map(index => TOKENS[index].coingeckoPriceId).join(",");
-    const endpoint = `https://api.coingecko.com/api/v3/simple/price?ids=${coinGeckoIdParams}&vs_currencies=usd`;
-    const body = await fetchAndParse<Record<string, { usd: number }>>(endpoint);
-    
-    const prices = {} as Record<MarketIndex, number>;
-    for (const index of MarketIndex) {
-        prices[index] = 0;
-    }
+	const coinGeckoIdParams = marketIndices
+		.map((index) => TOKENS[index].coingeckoPriceId)
+		.join(",");
+	const endpoint = `https://api.coingecko.com/api/v3/simple/price?ids=${coinGeckoIdParams}&vs_currencies=usd`;
+	const body = await fetchAndParse<Record<string, { usd: number }>>(endpoint);
 
-    for (const id of Object.keys(body)) {
-        const marketIndex = MarketIndex.find(index => TOKENS[index].coingeckoPriceId === id);
-        if (marketIndex === undefined) continue;
+	const prices = {} as Record<MarketIndex, number>;
+	for (const index of MarketIndex) {
+		prices[index] = 0;
+	}
 
-        const value = body[id];
-        if (value === undefined) continue;
+	for (const id of Object.keys(body)) {
+		const marketIndex = MarketIndex.find(
+			(index) => TOKENS[index].coingeckoPriceId === id,
+		);
+		if (marketIndex === undefined) continue;
 
-        prices[marketIndex] = value.usd;
-    }
+		const value = body[id];
+		if (value === undefined) continue;
 
-    return prices;
+		prices[marketIndex] = value.usd;
+	}
+
+	return prices;
 }
 
-export async function getTokenAccountBalance(connection: Connection, tokenAccount: PublicKey) {
-    const account = await retryWithBackoff(
-        async () => connection.getAccountInfo(tokenAccount)
-    )
-    if (account === null) return 0;
-    
-    const balance = await retryWithBackoff(
-        async () => connection.getTokenAccountBalance(tokenAccount)
-    )
-    return Number(balance.value.amount);
+export async function getTokenAccountBalance(
+	connection: Connection,
+	tokenAccount: PublicKey,
+) {
+	const account = await retryWithBackoff(async () =>
+		connection.getAccountInfo(tokenAccount),
+	);
+	if (account === null) return 0;
+
+	const balance = await retryWithBackoff(async () =>
+		connection.getTokenAccountBalance(tokenAccount),
+	);
+	return Number(balance.value.amount);
 }
 
 export async function fetchAndParse<T>(
-    url: string,
-    req?: RequestInit | undefined,
-    retries = 0
+	url: string,
+	req?: RequestInit | undefined,
+	retries = 0,
 ): Promise<T> {
-    const response = await retryWithBackoff(
-        async () => fetch(url, req),
-        retries
-    );
+	const response = await retryWithBackoff(async () => fetch(url, req), retries);
 
-    if (!response.ok) {
-        let body: any;
-        try {
-            body = await response.json();
-        } catch {
-            body = null;
-        }
-        const error = {
-            status: response.status,
-            body
-        }
-        throw new Error(JSON.stringify(error) ?? `Could not fetch ${url}`);
-    }
+	if (!response.ok) {
+		let body: any;
+		try {
+			body = await response.json();
+		} catch {
+			body = null;
+		}
+		const error = {
+			status: response.status,
+			body,
+		};
+		throw new Error(JSON.stringify(error) ?? `Could not fetch ${url}`);
+	}
 
-    try {
-        const body = await response.json();
-        return body as T;
-    } catch {
-        return response as T;
-    }
+	try {
+		const body = await response.json();
+		return body as T;
+	} catch {
+		return response as T;
+	}
 }
 
-export function buildEndpointURL(baseEndpoint: string, params?: Record<string, string>) {
-    if (!params) return baseEndpoint;
+export function buildEndpointURL(
+	baseEndpoint: string,
+	params?: Record<string, string>,
+) {
+	if (!params) return baseEndpoint;
 
-    const stringParams: Record<string, string> = {};
-    for (const [key, value] of Object.entries(params)) {
-        stringParams[key] = String(value);
-    }
-    const searchParams = new URLSearchParams(stringParams);
-    return `${baseEndpoint}${params ? `?${searchParams.toString()}` : ''}`;
+	const stringParams: Record<string, string> = {};
+	for (const [key, value] of Object.entries(params)) {
+		stringParams[key] = String(value);
+	}
+	const searchParams = new URLSearchParams(stringParams);
+	return `${baseEndpoint}${params ? `?${searchParams.toString()}` : ""}`;
 }
