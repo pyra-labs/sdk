@@ -800,7 +800,7 @@ export class QuartzUser {
 		return {
 			ixs: [ix_initiateWithdraw, ix_fulfilWithdraw],
 			lookupTables: this.getLookupTables(),
-			signers: [admin],
+			signers: [admin, orderAccount],
 		};
 	}
 
