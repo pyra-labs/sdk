@@ -726,6 +726,7 @@ export class QuartzUser {
 		amountBaseUnits: number,
 		marketIndex: MarketIndex,
 		admin: Signer,
+		reduceOnly: boolean,
 	): Promise<{
 		ixs: TransactionInstruction[];
 		lookupTables: AddressLookupTableAccount[];
@@ -735,7 +736,7 @@ export class QuartzUser {
 		const orderAccount = Keypair.generate();
 
 		const ix_initiateWithdraw = await this.program.methods
-			.initiateWithdraw(new BN(amountBaseUnits), marketIndex, false)
+			.initiateWithdraw(new BN(amountBaseUnits), marketIndex, reduceOnly)
 			.accounts({
 				vault: this.vaultPubkey,
 				owner: this.pubkey,
