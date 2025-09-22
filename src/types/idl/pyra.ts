@@ -1,5 +1,5 @@
 export type Pyra = {
-  "version": "0.14.3",
+  "version": "0.14.6",
   "name": "pyra",
   "instructions": [
     {
@@ -533,6 +533,11 @@ export type Pyra = {
         {
           "name": "depositAddressSpl",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -1596,12 +1601,17 @@ export type Pyra = {
       "code": 6042,
       "name": "TransferZero",
       "msg": "Cannot transfer zero tokens"
+    },
+    {
+      "code": 6043,
+      "name": "InvalidTimeframe",
+      "msg": "Invalid timeframe"
     }
   ]
 };
 
 export const IDL: Pyra = {
-  "version": "0.14.3",
+  "version": "0.14.6",
   "name": "pyra",
   "instructions": [
     {
@@ -2135,6 +2145,11 @@ export const IDL: Pyra = {
         {
           "name": "depositAddressSpl",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": false,
           "isSigner": false
         }
       ],
@@ -3198,6 +3213,11 @@ export const IDL: Pyra = {
       "code": 6042,
       "name": "TransferZero",
       "msg": "Cannot transfer zero tokens"
+    },
+    {
+      "code": 6043,
+      "name": "InvalidTimeframe",
+      "msg": "Invalid timeframe"
     }
   ]
 };
