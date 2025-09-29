@@ -239,6 +239,8 @@ export function decimalToBaseUnit(
 }
 
 export function isMarketIndex(index: number): boolean {
+	if (Number.isNaN(index)) return false;
+
 	const marketIndex = index as MarketIndex;
 	return Object.values(MarketIndex).includes(marketIndex);
 }

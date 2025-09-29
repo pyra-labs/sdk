@@ -651,6 +651,7 @@ export class QuartzUser {
 	public async makeFulfilWithdrawIxs(
 		orderAccount: PublicKey,
 		caller: PublicKey,
+		amountBaseUnits?: BN,
 	): Promise<{
 		ixs: TransactionInstruction[];
 		lookupTables: AddressLookupTableAccount[];
@@ -688,7 +689,7 @@ export class QuartzUser {
 				: destinationSpl;
 
 		const ix_fulfilWithdraw = await this.program.methods
-			.fulfilWithdraw()
+			.fulfilWithdraw(amountBaseUnits ?? order.amountBaseUnits)
 			.accounts({
 				withdrawOrder: orderAccount,
 				timeLockRentPayer: timeLockRentPayer,
@@ -771,7 +772,7 @@ export class QuartzUser {
 				: destinationSpl;
 
 		const ix_fulfilWithdraw = await this.program.methods
-			.fulfilWithdraw()
+			.fulfilWithdraw(new BN(amountBaseUnits))
 			.accounts({
 				withdrawOrder: orderAccount.publicKey,
 				timeLockRentPayer: timeLockRentPayer,

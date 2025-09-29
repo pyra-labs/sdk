@@ -1,5 +1,5 @@
 export type Pyra = {
-  "version": "0.14.6",
+  "version": "0.14.8",
   "name": "pyra",
   "instructions": [
     {
@@ -541,7 +541,12 @@ export type Pyra = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "amountBaseUnits",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "cancelWithdraw",
@@ -1606,12 +1611,22 @@ export type Pyra = {
       "code": 6043,
       "name": "InvalidTimeframe",
       "msg": "Invalid timeframe"
+    },
+    {
+      "code": 6044,
+      "name": "WithdrawAmountTooHigh",
+      "msg": "Withdraw amount is above requested"
+    },
+    {
+      "code": 6045,
+      "name": "WithdrawAmountTooLow",
+      "msg": "Withdraw amount is too far below requested"
     }
   ]
 };
 
 export const IDL: Pyra = {
-  "version": "0.14.6",
+  "version": "0.14.8",
   "name": "pyra",
   "instructions": [
     {
@@ -2153,7 +2168,12 @@ export const IDL: Pyra = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "amountBaseUnits",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "cancelWithdraw",
@@ -3218,6 +3238,16 @@ export const IDL: Pyra = {
       "code": 6043,
       "name": "InvalidTimeframe",
       "msg": "Invalid timeframe"
+    },
+    {
+      "code": 6044,
+      "name": "WithdrawAmountTooHigh",
+      "msg": "Withdraw amount is above requested"
+    },
+    {
+      "code": 6045,
+      "name": "WithdrawAmountTooLow",
+      "msg": "Withdraw amount is too far below requested"
     }
   ]
 };
