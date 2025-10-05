@@ -343,9 +343,9 @@ export async function getPrices(
 async function getPricesPyth(
 	marketIndices: MarketIndex[] = [...MarketIndex],
 ): Promise<Record<MarketIndex, number>> {
-	const pythPriceFeedIdParams = marketIndices
-		.filter((index) => index !== 29) // Filter out META, it's not on Pyth
-		.map((index) => `ids%5B%5D=${TOKENS[index].pythPriceFeedId}`);
+	const pythPriceFeedIdParams = marketIndices.map(
+		(index) => `ids%5B%5D=${TOKENS[index].pythPriceFeedId}`,
+	);
 	const endpoint = `https://hermes.pyth.network/v2/updates/price/latest?${pythPriceFeedIdParams.join("&")}`;
 	const body = await fetchAndParse<PythResponse>(endpoint);
 	const pricesData = body.parsed;
