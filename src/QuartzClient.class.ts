@@ -40,7 +40,7 @@ import { SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { DummyWallet } from "./types/classes/DummyWallet.class.js";
 import type { TransactionInstruction } from "@solana/web3.js";
 import { retryWithBackoff } from "./utils/helpers.js";
-import type { Keypair } from "@solana/web3.js";
+import { Keypair } from "@solana/web3.js";
 import { DriftClientService } from "./services/DriftClientService.js";
 import type { VersionedTransactionResponse } from "@solana/web3.js";
 import type {
@@ -54,6 +54,7 @@ import type {
 import type { MarketIndex } from "./index.browser.js";
 import AdvancedConnection from "@quartz-labs/connection";
 import type { Connection } from "@solana/web3.js";
+import { derivePath } from "ed25519-hd-key";
 
 export class QuartzClient {
 	private connection: AdvancedConnection;
@@ -263,6 +264,16 @@ export class QuartzClient {
 		if (maxAccounts === 0) return false;
 
 		return state.numberOfAuthorities.toNumber() >= maxAccounts;
+	}
+
+	public getMarketKeypair(
+		marketIndex: number,
+		baseKeypair: Uint8Array,
+	): Keypair {
+		const seed = baseKeypair.slice(0, 32);
+		const path = `m/44'/501'/${marketIndex}'/0'`;
+		const derived = derivePath(path, Buffer.from(seed).toString("hex")).key;
+		return Keypair.fromSeed(derived);
 	}
 
 	public async getDepositRate(marketIndex: MarketIndex): Promise<BN> {

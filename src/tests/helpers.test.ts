@@ -1,6 +1,8 @@
-import { PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import { getDriftSpotMarketVaultPublicKey, getDriftStatePublicKey, getDriftUserPublicKey, getDriftUserStatsPublicKey, getVaultPublicKey } from "../utils/accounts.js";
 import { TOKENS } from "../config/tokens.js";
+import { bs58 } from "../index.browser.js";
+import { MarketIndex, QuartzClient } from "@quartz-labs/sdk";
 
 describe("PDAs", () => {
     const testAddress = new PublicKey("DcJpAhpbhwgXF5UBJP1KN6ub4GS61TmAb32LtoB57pAf");
