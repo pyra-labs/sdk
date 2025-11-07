@@ -370,6 +370,11 @@ export class QuartzClient {
 		) => void,
 		ignoreErrors = true,
 	) {
+		const instructionNameSnake = instructionName
+			.replace(/([A-Z])/g, "_$1") // Add underscore before capital letters
+			.toLowerCase() // Convert to lowercase
+			.replace(/^_/, ""); // Remove leading underscore
+
 		this.connection.onLogs(
 			QUARTZ_PROGRAM_ID,
 			async (logs: Logs) => {
@@ -387,16 +392,17 @@ export class QuartzClient {
 				if (tx.meta?.err && ignoreErrors) return;
 
 				const encodedIxs = tx.transaction.message.compiledInstructions;
+
 				const coder = new BorshInstructionCoder(idl as Pyra);
 				for (const ix of encodedIxs) {
 					try {
-						const quartzIx = coder.decode(Buffer.from(ix.data), "base58");
-						if (
-							quartzIx?.name.toLowerCase() === instructionName.toLowerCase()
-						) {
-							const accountKeys = tx.transaction.message.staticAccountKeys;
-							onInstruction(tx, ix, accountKeys);
+						const quartzIx = coder.decode(Buffer.from(ix.data));
+						if (quartzIx?.name.toLowerCase() !== instructionNameSnake) {
+							continue;
 						}
+
+						const accountKeys = tx.transaction.message.staticAccountKeys;
+						onInstruction(tx, ix, accountKeys);
 					} catch {}
 				}
 			},

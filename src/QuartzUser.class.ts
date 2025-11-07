@@ -431,11 +431,33 @@ export class QuartzUser {
 	}> {
 		const tokenProgram = await getTokenProgram(this.connection, mint);
 
+		let ownerSpl: PublicKey | null = null;
+		if (mint !== TOKENS[MARKET_INDEX_SOL].mint) {
+			ownerSpl = getAssociatedTokenAddressSync(
+				mint,
+				this.pubkey,
+				true,
+				tokenProgram,
+			);
+		}
+
+		let depositAddressSpl: PublicKey | null = null;
+		if (mint !== TOKENS[MARKET_INDEX_SOL].mint) {
+			depositAddressSpl = getAssociatedTokenAddressSync(
+				mint,
+				this.depositAddress,
+				true,
+				tokenProgram,
+			);
+		}
+
 		const ix = await this.program.methods
 			.clearLegacyDepositAddress()
-			.accounts({
+			.accountsPartial({
 				owner: this.pubkey,
-				mint: mint,
+				ownerSpl: ownerSpl,
+				depositAddressSpl: depositAddressSpl,
+				mint: mint !== TOKENS[MARKET_INDEX_SOL].mint ? mint : null,
 				tokenProgram: tokenProgram,
 			})
 			.instruction();
@@ -756,15 +778,26 @@ export class QuartzUser {
 		const mint = TOKENS[marketIndex].mint;
 		const tokenProgram = await getTokenProgram(this.connection, mint);
 
+		let destinationSpl: PublicKey | null = null;
+		if (marketIndex !== MARKET_INDEX_SOL) {
+			destinationSpl = getAssociatedTokenAddressSync(
+				mint,
+				order.destination,
+				true,
+				tokenProgram,
+			);
+		}
+
 		const ix_fulfilWithdrawDrift = await this.program.methods
 			.fulfilWithdrawDrift(amountBaseUnits ?? order.amountBaseUnits)
-			.accounts({
+			.accountsPartial({
 				withdrawOrder: orderAccount,
 				vault: this.vaultPubkey,
 				orderPayer: order.timeLock.payer,
 				admin: admin ?? QUARTZ_PROGRAM_ID,
 				payer: payer,
 				destination: order.destination,
+				destinationSpl: destinationSpl,
 				mint: mint,
 				driftUser: this.driftUser.pubkey,
 				driftUserStats: this.driftUser.statsPubkey,
