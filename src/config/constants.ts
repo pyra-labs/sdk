@@ -1,10 +1,12 @@
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "bn.js";
 
-// export const QUARTZ_PROGRAM_ID = new PublicKey("6JjHXLheGSNvvexgzMthEcgjkcirDrGduc3HAKB2P1v2"); // prod
 export const QUARTZ_PROGRAM_ID = new PublicKey(
-	"GKp2mXvcsLBuU3ajGmYzujBBKtBt2osE7ingSq7kERYo",
-); // staging
+	"6JjHXLheGSNvvexgzMthEcgjkcirDrGduc3HAKB2P1v2",
+); // prod
+// export const QUARTZ_PROGRAM_ID = new PublicKey(
+// 	"GKp2mXvcsLBuU3ajGmYzujBBKtBt2osE7ingSq7kERYo",
+// ); // staging
 export const QUARTZ_ADDRESS_TABLE = new PublicKey(
 	"5GQiSzo2t6ftg2LR56kHpdP8RYyzo5dryRz87ydaBycS",
 );

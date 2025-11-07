@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/pyra.json`.
  */
 export type Pyra = {
-  "address": "GKp2mXvcsLBuU3ajGmYzujBBKtBt2osE7ingSq7kERYo",
+  "address": "6JjHXLheGSNvvexgzMthEcgjkcirDrGduc3HAKB2P1v2",
   "metadata": {
     "name": "pyra",
     "version": "1.0.0",
