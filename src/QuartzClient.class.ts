@@ -2,16 +2,15 @@ import { BN, type DriftClient, type SpotMarketAccount } from "@drift-labs/sdk";
 import {
 	calculateBorrowRate,
 	calculateDepositRate,
-	DRIFT_PROGRAM_ID,
 	fetchUserAccountsUsingKeys as fetchDriftAccountsUsingKeys,
 } from "@drift-labs/sdk";
 import {
 	MAX_ACCOUNTS_PER_FETCH_CALL,
-	MESSAGE_TRANSMITTER_PROGRAM_ID,
 	QUARTZ_ADDRESS_TABLE,
 	QUARTZ_PROGRAM_ID,
 } from "./config/constants.js";
-import { IDL, type Pyra } from "./types/idl/pyra.js";
+import type { Pyra } from "./types/idl/pyra.js";
+import idl from "./types/idl/pyra.json" with { type: "json" };
 import {
 	AnchorProvider,
 	BorshInstructionCoder,
@@ -23,20 +22,14 @@ import type {
 	AddressLookupTableAccount,
 	MessageCompiledInstruction,
 	Logs,
-	Signer,
 } from "@solana/web3.js";
 import { QuartzUser } from "./QuartzUser.class.js";
 import {
-	getBridgeRentPayerPublicKey,
-	getDepositAddressPublicKey,
 	getDriftStatePublicKey,
 	getDriftUserPublicKey,
 	getDriftUserStatsPublicKey,
-	getInitRentPayerPublicKey,
-	getMessageTransmitter,
 	getVaultPublicKey,
 } from "./utils/accounts.js";
-import { SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { DummyWallet } from "./types/classes/DummyWallet.class.js";
 import type { TransactionInstruction } from "@solana/web3.js";
 import { retryWithBackoff } from "./utils/helpers.js";
@@ -80,11 +73,7 @@ export class QuartzClient {
 			commitment: "confirmed",
 		});
 		setProvider(provider);
-		return new Program(
-			IDL,
-			QUARTZ_PROGRAM_ID,
-			provider,
-		) as unknown as Program<Pyra>;
+		return new Program(idl as Pyra, provider) as Program<Pyra>;
 	}
 
 	/**
@@ -398,7 +387,7 @@ export class QuartzClient {
 				if (tx.meta?.err && ignoreErrors) return;
 
 				const encodedIxs = tx.transaction.message.compiledInstructions;
-				const coder = new BorshInstructionCoder(IDL);
+				const coder = new BorshInstructionCoder(idl as Pyra);
 				for (const ix of encodedIxs) {
 					try {
 						const quartzIx = coder.decode(Buffer.from(ix.data), "base58");
@@ -413,61 +402,6 @@ export class QuartzClient {
 			},
 			"confirmed",
 		);
-	}
-
-	public static async parseSpendIx(
-		connection: AdvancedConnection,
-		signature: string,
-		owner: PublicKey,
-	): Promise<PublicKey> {
-		const INSRTUCTION_NAME = "CompleteSpend";
-		const ACCOUNT_INDEX_OWNER = 1;
-		const ACCOUNT_INDEX_MESSAGE_SENT_EVENT_DATA = 12;
-
-		const tx = await retryWithBackoff(async () => {
-			const tx = await connection.getTransaction(signature, {
-				maxSupportedTransactionVersion: 0,
-				commitment: "finalized",
-			});
-			if (!tx) throw new Error("Transaction not found");
-			return tx;
-		});
-
-		const encodedIxs = tx.transaction.message.compiledInstructions;
-		const coder = new BorshInstructionCoder(IDL);
-
-		for (const ix of encodedIxs) {
-			try {
-				const quartzIx = coder.decode(Buffer.from(ix.data), "base58");
-				if (quartzIx?.name.toLowerCase() === INSRTUCTION_NAME.toLowerCase()) {
-					const accountKeys = tx.transaction.message.staticAccountKeys;
-
-					const ownerIndex = ix.accountKeyIndexes?.[ACCOUNT_INDEX_OWNER];
-					if (
-						ownerIndex === undefined ||
-						accountKeys[ownerIndex] === undefined
-					) {
-						throw new Error("Owner not found");
-					}
-
-					const actualOwner = accountKeys[ownerIndex];
-					if (!actualOwner.equals(owner))
-						throw new Error("Owner does not match");
-
-					const messageSentEventDataIndex =
-						ix.accountKeyIndexes?.[ACCOUNT_INDEX_MESSAGE_SENT_EVENT_DATA];
-					if (
-						messageSentEventDataIndex === undefined ||
-						accountKeys[messageSentEventDataIndex] === undefined
-					) {
-						throw new Error("Message sent event data not found");
-					}
-					return accountKeys[messageSentEventDataIndex];
-				}
-			} catch {}
-		}
-
-		throw new Error("Spend instruction not found");
 	}
 
 	// --- Instructions ---
@@ -490,71 +424,46 @@ export class QuartzClient {
 	 */
 	public async makeInitQuartzUserIxs(
 		owner: PublicKey,
+		payer: PublicKey,
 		spendLimitPerTransaction: BN,
 		spendLimitPerTimeframe: BN,
-		timeframeInSeconds: BN,
 		nextTimeframeResetTimestamp: BN,
+		timeframeInSeconds: BN,
 	): Promise<{
 		ixs: TransactionInstruction[];
 		lookupTables: AddressLookupTableAccount[];
 		signers: Keypair[];
 	}> {
 		const vault = getVaultPublicKey(owner);
+		const subAccountId = 0;
 
 		const ix_initUser = await this.program.methods
 			.initUser(
 				spendLimitPerTransaction,
 				spendLimitPerTimeframe,
-				timeframeInSeconds,
 				nextTimeframeResetTimestamp,
+				timeframeInSeconds,
 			)
 			.accounts({
-				vault: vault,
 				owner: owner,
-				initRentPayer: getInitRentPayerPublicKey(),
-				driftUser: getDriftUserPublicKey(vault),
+				payer: payer,
+			})
+			.instruction();
+
+		const ix_initDrift = await this.program.methods
+			.initDrift(subAccountId)
+			.accounts({
+				vault: vault,
+				payer: payer,
 				driftUserStats: getDriftUserStatsPublicKey(vault),
 				driftState: getDriftStatePublicKey(),
-				driftProgram: DRIFT_PROGRAM_ID,
-				rent: SYSVAR_RENT_PUBKEY,
-				systemProgram: SystemProgram.programId,
-				depositAddress: getDepositAddressPublicKey(owner),
 			})
 			.instruction();
 
 		return {
-			ixs: [ix_initUser],
+			ixs: [ix_initUser, ix_initDrift],
 			lookupTables: [this.quartzLookupTable],
 			signers: [],
 		};
 	}
-
-	public admin = {
-		makeReclaimBridgeRentIxs: async (
-			messageSentEventData: PublicKey,
-			attestation: Buffer<ArrayBuffer>,
-			rentReclaimer: Signer,
-		): Promise<{
-			ixs: TransactionInstruction[];
-			lookupTables: AddressLookupTableAccount[];
-			signers: Signer[];
-		}> => {
-			const ix_reclaimBridgeRent = await this.program.methods
-				.reclaimBridgeRent(attestation)
-				.accounts({
-					rentReclaimer: rentReclaimer.publicKey,
-					bridgeRentPayer: getBridgeRentPayerPublicKey(),
-					messageTransmitter: getMessageTransmitter(),
-					messageSentEventData: messageSentEventData,
-					cctpMessageTransmitter: MESSAGE_TRANSMITTER_PROGRAM_ID,
-				})
-				.instruction();
-
-			return {
-				ixs: [ix_reclaimBridgeRent],
-				lookupTables: [this.quartzLookupTable],
-				signers: [rentReclaimer],
-			};
-		},
-	};
 }

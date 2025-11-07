@@ -5,13 +5,11 @@ import type {
 } from "@solana/web3.js";
 import {
 	DEPOSIT_ADDRESS_DATA_SIZE,
-	DRIFT_PROGRAM_ID,
 	MARKET_INDEX_SOL,
 	MARKET_INDEX_USDC,
-	MESSAGE_TRANSMITTER_PROGRAM_ID,
 	QUARTZ_PROGRAM_ID,
 	SPEND_FEE_DESTINATION,
-	TOKEN_MESSAGE_MINTER_PROGRAM_ID,
+	SPEND_SETTLEMENT_ACCOUNT,
 	ZERO,
 } from "./config/constants.js";
 import type { Pyra } from "./types/idl/pyra.js";
@@ -23,22 +21,7 @@ import {
 	getPythOracle,
 	getDriftSignerPublicKey,
 	getVaultPublicKey,
-	getCollateralRepayLedgerPublicKey,
-	getBridgeRentPayerPublicKey,
-	getLocalToken,
-	getTokenMinter,
-	getRemoteTokenMessenger,
-	getTokenMessenger,
-	getSenderAuthority,
-	getMessageTransmitter,
-	getEventAuthority,
-	getInitRentPayerPublicKey,
-	getSpendMulePublicKey,
-	getTimeLockRentPayerPublicKey,
-	getWithdrawMulePublicKey,
 	getDepositAddressPublicKey,
-	getDepositMulePublicKey,
-	getCollateralRepayMulePublicKey,
 	getDepositAddressAtaPublicKey,
 } from "./utils/accounts.js";
 import {
@@ -51,8 +34,6 @@ import {
 	TOKEN_2022_PROGRAM_ID,
 	TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY } from "@solana/web3.js";
-import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import BN from "bn.js";
 import {
 	getMarketIndicesRecord,
@@ -254,15 +235,6 @@ export class QuartzUser {
 	}
 
 	public async getDepositAddressBalance(marketIndex: MarketIndex): Promise<BN> {
-		if (marketIndex === MARKET_INDEX_SOL) {
-			const rent = await this.connection.getMinimumBalanceForRentExemption(
-				DEPOSIT_ADDRESS_DATA_SIZE,
-			);
-			const balance = await this.connection.getBalance(this.depositAddress);
-			const availableBalance = balance - rent;
-			return new BN(Math.max(availableBalance, 0));
-		}
-
 		const depositAddressAta = await getDepositAddressAtaPublicKey(
 			this.connection,
 			this.pubkey,
@@ -272,6 +244,16 @@ export class QuartzUser {
 			this.connection,
 			depositAddressAta,
 		);
+
+		if (marketIndex === MARKET_INDEX_SOL) {
+			const rent = await this.connection.getMinimumBalanceForRentExemption(
+				DEPOSIT_ADDRESS_DATA_SIZE,
+			);
+			const balance = await this.connection.getBalance(this.depositAddress);
+			const availableBalance = balance - rent;
+			return new BN(Math.max(availableBalance, 0) + depositAddressAtaBalance);
+		}
+
 		return new BN(depositAddressAtaBalance);
 	}
 
@@ -430,94 +412,32 @@ export class QuartzUser {
 	}
 
 	/**
-	 * Creates instructions to upgrade a Quartz user account.
-	 * @param spendLimitPerTransaction - The card spend limit per transaction.
-	 * @param spendLimitPerTimeframe - The card spend limit per timeframe.
-	 * @param timeframeInSlots - The timeframe in slots (eg: 216,000 for ~1 day).
+	 * Creates instructions to send tokens from the legacy deposit address to the owner.
+	 * @param mint - The mint of the token to withdraw.
 	 * @returns {Promise<{
 	 *     ixs: TransactionInstruction[],
 	 *     lookupTables: AddressLookupTableAccount[],
 	 *     signers: Keypair[]
 	 * }>} Object containing:
-	 * - ixs: Array of instructions to upgrade the Quartz user account.
+	 * - ixs: Array of instructions to clear the legacy deposit address.
 	 * - lookupTables: Array of lookup tables for building VersionedTransaction.
 	 * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
-	 * @throw Error if the RPC connection fails. The transaction will fail if the account does not require an upgrade.
+	 * @throw Error if the RPC connection fails, if the mint's ATA does not exist, or has 0 balance.
 	 */
-	public async makeUpgradeAccountIxs(
-		spendLimitPerTransaction: BN,
-		spendLimitPerTimeframe: BN,
-		timeframeInSeconds: BN,
-		nextTimeframeResetTimestamp: BN,
-	): Promise<{
+	public async makeClearLegacyDepositAddressIxs(mint: PublicKey): Promise<{
 		ixs: TransactionInstruction[];
 		lookupTables: AddressLookupTableAccount[];
 		signers: Keypair[];
 	}> {
-		const ix_upgradeAccount = await this.program.methods
-			.upgradeVault(
-				spendLimitPerTransaction,
-				spendLimitPerTimeframe,
-				timeframeInSeconds,
-				nextTimeframeResetTimestamp,
-			)
-			.accounts({
-				vault: this.vaultPubkey,
-				owner: this.pubkey,
-				initRentPayer: getInitRentPayerPublicKey(),
-				systemProgram: SystemProgram.programId,
-			})
-			.instruction();
-
-		return {
-			ixs: [ix_upgradeAccount],
-			lookupTables: this.getLookupTables(),
-			signers: [],
-		};
-	}
-
-	public async makeFulfilDepositIxs(
-		marketIndex: MarketIndex,
-		caller: PublicKey,
-	): Promise<{
-		ixs: TransactionInstruction[];
-		lookupTables: AddressLookupTableAccount[];
-		signers: Keypair[];
-	}> {
-		const mint = TOKENS[marketIndex].mint;
 		const tokenProgram = await getTokenProgram(this.connection, mint);
-		const depositAddress = getDepositAddressPublicKey(this.pubkey);
-
-		let depositAddressAta: PublicKey | null = null;
-		if (marketIndex !== MARKET_INDEX_SOL) {
-			depositAddressAta = getAssociatedTokenAddressSync(
-				mint,
-				depositAddress,
-				true,
-				tokenProgram,
-			);
-		}
 
 		const ix = await this.program.methods
-			.fulfilDeposit(marketIndex)
+			.clearLegacyDepositAddress()
 			.accounts({
-				vault: this.vaultPubkey,
-				depositAddress: depositAddress,
-				depositAddressSpl: depositAddressAta,
 				owner: this.pubkey,
-				mule: getDepositMulePublicKey(this.pubkey, mint),
-				caller: caller,
 				mint: mint,
-				driftUser: this.driftUser.pubkey,
-				driftUserStats: this.driftUser.statsPubkey,
-				driftState: getDriftStatePublicKey(),
-				spotMarketVault: getDriftSpotMarketVaultPublicKey(marketIndex),
 				tokenProgram: tokenProgram,
-				associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-				driftProgram: DRIFT_PROGRAM_ID,
-				systemProgram: SystemProgram.programId,
 			})
-			.remainingAccounts(this.driftUser.getRemainingAccounts(marketIndex))
 			.instruction();
 
 		return {
@@ -528,8 +448,184 @@ export class QuartzUser {
 	}
 
 	/**
-	 * Creates instructions to rescue unsupported tokens from a Quartz rescue token.
-	 * @param mint - The mint of the token to rescue.
+	 * Creates instructions to iniate and order to adjust the spend limits of a Quartz user account.
+	 * @param spendLimitPerTransaction - The new spend limit per transaction.
+	 * @param spendLimitPerTimeframe - The new spend limit per timeframe.
+	 * @param timeframeInSeconds - The new timeframe in seconds.
+	 * @param nextTimeframeResetTimestamp - The new next timeframe reset timestamp.
+	 * @returns {Promise<{
+	 *     ixs: TransactionInstruction[],
+	 *     lookupTables: AddressLookupTableAccount[],
+	 *     signers: Keypair[]
+	 * }>} Object containing:
+	 * - ixs: Array of instructions to adjust the spend limits.
+	 * - lookupTables: Array of lookup tables for building VersionedTransaction.
+	 * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
+	 * @throw Error if the RPC connection fails. Or if the spend limits are invalid.
+	 */
+	public async makeInitiateUpdateSpendLimitsIxs(
+		payer: PublicKey,
+		spendLimitPerTransaction: BN,
+		spendLimitPerTimeframe: BN,
+		nextTimeframeResetTimestamp: BN,
+		timeframeInSeconds: BN,
+	): Promise<{
+		ixs: TransactionInstruction[];
+		lookupTables: AddressLookupTableAccount[];
+		signers: Keypair[];
+	}> {
+		const orderAccount = Keypair.generate();
+
+		const ix = await this.program.methods
+			.initiateUpdateSpendLimits(
+				spendLimitPerTransaction,
+				spendLimitPerTimeframe,
+				nextTimeframeResetTimestamp,
+				timeframeInSeconds,
+			)
+			.accounts({
+				owner: this.pubkey,
+				spendLimitsOrder: orderAccount.publicKey,
+				payer: payer,
+			})
+			.instruction();
+
+		return {
+			ixs: [ix],
+			lookupTables: this.getLookupTables(),
+			signers: [orderAccount],
+		};
+	}
+
+	/**
+	 * Creates instructions to update the card spend limits of a Quartz user account. Time lock can be skipped if admin is a signer.
+	 * @param orderAccount - The public key of the spend limits order, which must be created with the initiateSpendLimits instruction.
+	 * @returns {Promise<{
+	 *     ixs: TransactionInstruction[],
+	 *     lookupTables: AddressLookupTableAccount[],
+	 *     signers: Keypair[]
+	 * }>} Object containing:
+	 * - ixs: Array of instructions to fulfil the spend limits order.
+	 * - lookupTables: Array of lookup tables for building VersionedTransaction.
+	 * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
+	 * @throw Error if the RPC connection fails.
+	 */
+	public async makeFulfilUpdateSpendLimitsIxs(
+		orderAccount: PublicKey,
+		admin?: PublicKey,
+	): Promise<{
+		ixs: TransactionInstruction[];
+		lookupTables: AddressLookupTableAccount[];
+		signers: Keypair[];
+	}> {
+		const order =
+			await this.program.account.spendLimitsOrder.fetch(orderAccount);
+
+		const ix_fulfilUpdateSpendLimits = await this.program.methods
+			.fulfilUpdateSpendLimits()
+			.accounts({
+				spendLimitsOrder: orderAccount,
+				vault: this.vaultPubkey,
+				orderPayer: order.timeLock.payer,
+				admin: admin ?? QUARTZ_PROGRAM_ID,
+			})
+			.instruction();
+
+		return {
+			ixs: [ix_fulfilUpdateSpendLimits],
+			lookupTables: this.getLookupTables(),
+			signers: [],
+		};
+	}
+
+	public async makeUpdateSpendLimitsWithAdminIxs(
+		payer: PublicKey,
+		admin: PublicKey,
+		spendLimitPerTransaction: BN,
+		spendLimitPerTimeframe: BN,
+		nextTimeframeResetTimestamp: BN,
+		timeframeInSeconds: BN,
+	): Promise<{
+		ixs: TransactionInstruction[];
+		lookupTables: AddressLookupTableAccount[];
+		signers: Keypair[];
+	}> {
+		const orderAccount = Keypair.generate();
+
+		const ix_initiateUpdate = await this.program.methods
+			.initiateUpdateSpendLimits(
+				spendLimitPerTransaction,
+				spendLimitPerTimeframe,
+				nextTimeframeResetTimestamp,
+				timeframeInSeconds,
+			)
+			.accounts({
+				owner: this.pubkey,
+				spendLimitsOrder: orderAccount.publicKey,
+				payer: payer,
+			})
+			.instruction();
+
+		const ix_fulfilUpdate = await this.program.methods
+			.fulfilUpdateSpendLimits()
+			.accounts({
+				spendLimitsOrder: orderAccount.publicKey,
+				vault: this.vaultPubkey,
+				orderPayer: payer,
+				admin: admin,
+			})
+			.instruction();
+
+		return {
+			ixs: [ix_initiateUpdate, ix_fulfilUpdate],
+			lookupTables: this.getLookupTables(),
+			signers: [orderAccount],
+		};
+	}
+
+	/**
+	 * Creates instructions to update the card spend limits order of a Quartz user account.
+	 * @param orderAccount - The public key of the spend limits order, which must be created with the initiateSpendLimits instruction.
+	 * @returns {Promise<{
+	 *     ixs: TransactionInstruction[],
+	 *     lookupTables: AddressLookupTableAccount[],
+	 *     signers: Keypair[]
+	 * }>} Object containing:
+	 * - ixs: Array of instructions to cancel the spend limits order.
+	 * - lookupTables: Array of lookup tables for building VersionedTransaction.
+	 * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
+	 * @throw Error if the RPC connection fails.
+	 */
+	public async makeCancelUpdateSpendLimitsIxs(
+		orderAccount: PublicKey,
+	): Promise<{
+		ixs: TransactionInstruction[];
+		lookupTables: AddressLookupTableAccount[];
+		signers: Keypair[];
+	}> {
+		const order =
+			await this.program.account.spendLimitsOrder.fetch(orderAccount);
+
+		const ix_cancelUpdateSpendLimits = await this.program.methods
+			.cancelUpdateSpendLimits()
+			.accounts({
+				spendLimitsOrder: orderAccount,
+				owner: this.pubkey,
+				orderPayer: order.timeLock.payer,
+			})
+			.instruction();
+
+		return {
+			ixs: [ix_cancelUpdateSpendLimits],
+			lookupTables: this.getLookupTables(),
+			signers: [],
+		};
+	}
+
+	/**
+	 * Creates instructions to deposit tokens from the legacy deposit address into Drift.
+	 * @param marketIndex - The market index of the token to deposit.
+	 * @param payer - The public key of the payer.
 	 * @returns {Promise<{
 	 *     ixs: TransactionInstruction[],
 	 *     lookupTables: AddressLookupTableAccount[],
@@ -540,42 +636,42 @@ export class QuartzUser {
 	 * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
 	 * @throw Error if the RPC connection fails, if the mint's ATA does not exist, or has 0 balance.
 	 */
-	public async makeRescueDepositIxs(
-		destination: PublicKey,
-		mint: PublicKey,
+	public async makeDepositIxs(
+		marketIndex: MarketIndex,
+		payer: PublicKey,
 	): Promise<{
 		ixs: TransactionInstruction[];
 		lookupTables: AddressLookupTableAccount[];
 		signers: Keypair[];
 	}> {
+		const mint = TOKENS[marketIndex].mint;
 		const tokenProgram = await getTokenProgram(this.connection, mint);
 		const depositAddress = getDepositAddressPublicKey(this.pubkey);
-		const depositAddressAta = getAssociatedTokenAddressSync(
-			mint,
-			depositAddress,
-			true,
-			tokenProgram,
-		);
+
+		let depositAddressSpl: PublicKey | null = null;
+		if (marketIndex !== MARKET_INDEX_SOL) {
+			depositAddressSpl = getAssociatedTokenAddressSync(
+				mint,
+				depositAddress,
+				true,
+				tokenProgram,
+			);
+		}
 
 		const ix = await this.program.methods
-			.rescueDeposit()
-			.accounts({
+			.depositDrift(marketIndex)
+			.accountsPartial({
 				vault: this.vaultPubkey,
-				owner: this.pubkey,
-				destination: destination,
-				destinationSpl: getAssociatedTokenAddressSync(
-					mint,
-					destination,
-					true,
-					tokenProgram,
-				),
-				depositAddress: depositAddress,
-				depositAddressSpl: depositAddressAta,
 				mint: mint,
+				payer: payer,
+				driftUser: this.driftUser.pubkey,
+				driftUserStats: this.driftUser.statsPubkey,
+				driftState: getDriftStatePublicKey(),
+				driftSpotMarketVault: getDriftSpotMarketVaultPublicKey(marketIndex),
 				tokenProgram: tokenProgram,
-				associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-				systemProgram: SystemProgram.programId,
+				depositAddressSpl: depositAddressSpl,
 			})
+			.remainingAccounts(this.driftUser.getRemainingAccounts([marketIndex]))
 			.instruction();
 
 		return {
@@ -604,7 +700,7 @@ export class QuartzUser {
 		amountBaseUnits: number,
 		marketIndex: MarketIndex,
 		reduceOnly: boolean,
-		paidByUser = false,
+		payer: PublicKey,
 		destinationAddress = this.pubkey,
 	): Promise<{
 		ixs: TransactionInstruction[];
@@ -612,31 +708,26 @@ export class QuartzUser {
 		signers: Keypair[];
 	}> {
 		const orderAccount = Keypair.generate();
-		const timeLockRentPayer = paidByUser
-			? this.pubkey
-			: getTimeLockRentPayerPublicKey();
 
-		const ix = await this.program.methods
-			.initiateWithdraw(new BN(amountBaseUnits), marketIndex, reduceOnly)
+		const ix_initiateWithdrawDrift = await this.program.methods
+			.initiateWithdrawDrift(new BN(amountBaseUnits), marketIndex, reduceOnly)
 			.accounts({
-				vault: this.vaultPubkey,
 				owner: this.pubkey,
 				withdrawOrder: orderAccount.publicKey,
-				timeLockRentPayer: timeLockRentPayer,
-				systemProgram: SystemProgram.programId,
+				payer: payer,
 				destination: destinationAddress,
 			})
 			.instruction();
 
 		return {
-			ixs: [ix],
+			ixs: [ix_initiateWithdrawDrift],
 			lookupTables: this.getLookupTables(),
 			signers: [orderAccount],
 		};
 	}
 
 	/**
-	 * Creates instructions to withdraw a token from the Quartz user account.
+	 * Creates instructions to fulfil a withdraw order from the Quartz user account. Can be skipped if admin is a signer.
 	 * @param orderAccount - The public key of the withdraw order, which must be created with the initiateWithdraw instruction.
 	 * @returns {Promise<{
 	 *     ixs: TransactionInstruction[],
@@ -650,7 +741,8 @@ export class QuartzUser {
 	 */
 	public async makeFulfilWithdrawIxs(
 		orderAccount: PublicKey,
-		caller: PublicKey,
+		payer: PublicKey,
+		admin?: PublicKey,
 		amountBaseUnits?: BN,
 	): Promise<{
 		ixs: TransactionInstruction[];
@@ -660,149 +752,85 @@ export class QuartzUser {
 		const order = await this.program.account.withdrawOrder.fetch(orderAccount);
 
 		const marketIndex = order.driftMarketIndex as MarketIndex;
-		const timeLockRentPayer = order.timeLock.isOwnerPayer
-			? this.pubkey
-			: getTimeLockRentPayerPublicKey();
 
 		const mint = TOKENS[marketIndex].mint;
 		const tokenProgram = await getTokenProgram(this.connection, mint);
 
-		const destination = order.destination;
-		const destinationSpl = getAssociatedTokenAddressSync(
-			mint,
-			destination,
-			true,
-			tokenProgram,
-		);
-
-		const depositAddress = getDepositAddressPublicKey(this.pubkey);
-		const depositAddressAta = getAssociatedTokenAddressSync(
-			mint,
-			depositAddress,
-			true,
-			tokenProgram,
-		);
-
-		const destinationSplValue =
-			marketIndex === MARKET_INDEX_SOL // TODO: Remove once validation fixed in program
-				? QUARTZ_PROGRAM_ID
-				: destinationSpl;
-
-		const ix_fulfilWithdraw = await this.program.methods
-			.fulfilWithdraw(amountBaseUnits ?? order.amountBaseUnits)
+		const ix_fulfilWithdrawDrift = await this.program.methods
+			.fulfilWithdrawDrift(amountBaseUnits ?? order.amountBaseUnits)
 			.accounts({
 				withdrawOrder: orderAccount,
-				timeLockRentPayer: timeLockRentPayer,
-				caller: caller,
 				vault: this.vaultPubkey,
-				mule: getWithdrawMulePublicKey(this.pubkey, mint),
-				owner: this.pubkey,
+				orderPayer: order.timeLock.payer,
+				admin: admin ?? QUARTZ_PROGRAM_ID,
+				payer: payer,
+				destination: order.destination,
 				mint: mint,
 				driftUser: this.driftUser.pubkey,
 				driftUserStats: this.driftUser.statsPubkey,
 				driftState: getDriftStatePublicKey(),
-				spotMarketVault: getDriftSpotMarketVaultPublicKey(marketIndex),
+				driftSpotMarketVault: getDriftSpotMarketVaultPublicKey(marketIndex),
 				driftSigner: this.driftSigner,
 				tokenProgram: tokenProgram,
-				associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-				driftProgram: DRIFT_PROGRAM_ID,
-				systemProgram: SystemProgram.programId,
-				destination: destination,
-				destinationSpl: destinationSplValue,
-				depositAddress: depositAddress,
-				depositAddressSpl: depositAddressAta,
-				admin: this.program.programId,
 			})
-			.remainingAccounts(this.driftUser.getRemainingAccounts(marketIndex))
+			.remainingAccounts(this.driftUser.getRemainingAccounts([marketIndex]))
 			.instruction();
 
 		return {
-			ixs: [ix_fulfilWithdraw],
+			ixs: [ix_fulfilWithdrawDrift],
 			lookupTables: this.getLookupTables(),
 			signers: [],
 		};
 	}
 
 	public async makeFeePaymentIxs(
+		admin: PublicKey,
 		amountBaseUnits: number,
 		marketIndex: MarketIndex,
-		admin: Signer,
 		reduceOnly: boolean,
 	): Promise<{
 		ixs: TransactionInstruction[];
 		lookupTables: AddressLookupTableAccount[];
 		signers: Signer[];
 	}> {
-		const timeLockRentPayer = getTimeLockRentPayerPublicKey();
 		const orderAccount = Keypair.generate();
+		const mint = TOKENS[marketIndex].mint;
+		const tokenProgram = await getTokenProgram(this.connection, mint);
 
-		const ix_initiateWithdraw = await this.program.methods
-			.initiateWithdraw(new BN(amountBaseUnits), marketIndex, reduceOnly)
+		const ix_initiateWithdrawDrift = await this.program.methods
+			.initiateWithdrawDrift(new BN(amountBaseUnits), marketIndex, reduceOnly)
 			.accounts({
-				vault: this.vaultPubkey,
 				owner: this.pubkey,
 				withdrawOrder: orderAccount.publicKey,
-				timeLockRentPayer: timeLockRentPayer,
-				systemProgram: SystemProgram.programId,
-				destination: admin.publicKey,
+				payer: admin,
+				destination: admin,
 			})
 			.instruction();
 
-		// Get destination
-		const mint = TOKENS[marketIndex].mint;
-		const tokenProgram = await getTokenProgram(this.connection, mint);
-		const destinationSpl = getAssociatedTokenAddressSync(
-			mint,
-			admin.publicKey,
-			true,
-			tokenProgram,
-		);
-
-		// Get deposit address (in case any funds are there)
-		const depositAddress = getDepositAddressPublicKey(this.pubkey);
-		const depositAddressAta = getAssociatedTokenAddressSync(
-			mint,
-			depositAddress,
-			true,
-			tokenProgram,
-		);
-		const destinationSplValue =
-			marketIndex === MARKET_INDEX_SOL // TODO: Remove once validation fixed in program
-				? QUARTZ_PROGRAM_ID
-				: destinationSpl;
-
-		const ix_fulfilWithdraw = await this.program.methods
-			.fulfilWithdraw(new BN(amountBaseUnits))
+		const ix_fulfilWithdrawDrift = await this.program.methods
+			.fulfilWithdrawDrift(new BN(amountBaseUnits))
 			.accounts({
 				withdrawOrder: orderAccount.publicKey,
-				timeLockRentPayer: timeLockRentPayer,
-				caller: admin.publicKey,
 				vault: this.vaultPubkey,
-				mule: getWithdrawMulePublicKey(this.pubkey, mint),
-				owner: this.pubkey,
+				orderPayer: admin,
+				admin: admin,
+				payer: admin,
+				destination: admin,
 				mint: mint,
 				driftUser: this.driftUser.pubkey,
 				driftUserStats: this.driftUser.statsPubkey,
 				driftState: getDriftStatePublicKey(),
-				spotMarketVault: getDriftSpotMarketVaultPublicKey(marketIndex),
+				driftSpotMarketVault: getDriftSpotMarketVaultPublicKey(marketIndex),
 				driftSigner: this.driftSigner,
 				tokenProgram: tokenProgram,
-				associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-				driftProgram: DRIFT_PROGRAM_ID,
-				systemProgram: SystemProgram.programId,
-				destination: admin.publicKey,
-				destinationSpl: destinationSplValue,
-				depositAddress: depositAddress,
-				depositAddressSpl: depositAddressAta,
-				admin: admin.publicKey,
 			})
-			.remainingAccounts(this.driftUser.getRemainingAccounts(marketIndex))
+			.remainingAccounts(this.driftUser.getRemainingAccounts([marketIndex]))
 			.instruction();
 
 		return {
-			ixs: [ix_initiateWithdraw, ix_fulfilWithdraw],
+			ixs: [ix_initiateWithdrawDrift, ix_fulfilWithdrawDrift],
 			lookupTables: this.getLookupTables(),
-			signers: [admin, orderAccount],
+			signers: [orderAccount],
 		};
 	}
 
@@ -825,17 +853,13 @@ export class QuartzUser {
 		signers: Keypair[];
 	}> {
 		const order = await this.program.account.withdrawOrder.fetch(orderAccount);
-		const timeLockRentPayer = order.timeLock.isOwnerPayer
-			? this.pubkey
-			: getTimeLockRentPayerPublicKey();
 
 		const ix_fulfilWithdraw = await this.program.methods
-			.cancelWithdraw()
+			.cancelWithdrawDrift()
 			.accounts({
 				withdrawOrder: orderAccount,
 				owner: this.pubkey,
-				timeLockRentPayer: timeLockRentPayer,
-				systemProgram: SystemProgram.programId,
+				orderPayer: order.timeLock.payer,
 			})
 			.instruction();
 
@@ -847,157 +871,11 @@ export class QuartzUser {
 	}
 
 	/**
-	 * Creates instructions to iniate and order to adjust the spend limits of a Quartz user account.
-	 * @param spendLimitPerTransaction - The new spend limit per transaction.
-	 * @param spendLimitPerTimeframe - The new spend limit per timeframe.
-	 * @param timeframeInSeconds - The new timeframe in seconds.
-	 * @param nextTimeframeResetTimestamp - The new next timeframe reset timestamp.
-	 * @returns {Promise<{
-	 *     ixs: TransactionInstruction[],
-	 *     lookupTables: AddressLookupTableAccount[],
-	 *     signers: Keypair[]
-	 * }>} Object containing:
-	 * - ixs: Array of instructions to adjust the spend limits.
-	 * - lookupTables: Array of lookup tables for building VersionedTransaction.
-	 * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
-	 * @throw Error if the RPC connection fails. Or if the spend limits are invalid.
-	 */
-	public async makeInitiateSpendLimitsIxs(
-		spendLimitPerTransaction: BN,
-		spendLimitPerTimeframe: BN,
-		timeframeInSeconds: BN,
-		nextTimeframeResetTimestamp: BN,
-		paidByUser = false,
-	): Promise<{
-		ixs: TransactionInstruction[];
-		lookupTables: AddressLookupTableAccount[];
-		signers: Keypair[];
-	}> {
-		const orderAccount = Keypair.generate();
-		const timeLockRentPayer = paidByUser
-			? this.pubkey
-			: getTimeLockRentPayerPublicKey();
-
-		const ix = await this.program.methods
-			.initiateSpendLimits(
-				spendLimitPerTransaction,
-				spendLimitPerTimeframe,
-				timeframeInSeconds,
-				nextTimeframeResetTimestamp,
-			)
-			.accounts({
-				vault: this.vaultPubkey,
-				owner: this.pubkey,
-				spendLimitsOrder: orderAccount.publicKey,
-				timeLockRentPayer: timeLockRentPayer,
-				systemProgram: SystemProgram.programId,
-			})
-			.instruction();
-
-		return {
-			ixs: [ix],
-			lookupTables: this.getLookupTables(),
-			signers: [orderAccount],
-		};
-	}
-
-	/**
-	 * Creates instructions to update the card spend limits of a Quartz user account.
-	 * @param orderAccount - The public key of the spend limits order, which must be created with the initiateSpendLimits instruction.
-	 * @returns {Promise<{
-	 *     ixs: TransactionInstruction[],
-	 *     lookupTables: AddressLookupTableAccount[],
-	 *     signers: Keypair[]
-	 * }>} Object containing:
-	 * - ixs: Array of instructions to fulfil the spend limits order.
-	 * - lookupTables: Array of lookup tables for building VersionedTransaction.
-	 * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
-	 * @throw Error if the RPC connection fails.
-	 */
-	public async makeFulfilSpendLimitsIxs(
-		orderAccount: PublicKey,
-		caller: PublicKey,
-	): Promise<{
-		ixs: TransactionInstruction[];
-		lookupTables: AddressLookupTableAccount[];
-		signers: Keypair[];
-	}> {
-		const order =
-			await this.program.account.spendLimitsOrder.fetch(orderAccount);
-		const timeLockRentPayer = order.timeLock.isOwnerPayer
-			? this.pubkey
-			: getTimeLockRentPayerPublicKey();
-
-		const ix_fulfilSpendLimits = await this.program.methods
-			.fulfilSpendLimits()
-			.accounts({
-				spendLimitsOrder: orderAccount,
-				timeLockRentPayer: timeLockRentPayer,
-				caller: caller,
-				vault: this.vaultPubkey,
-				owner: this.pubkey,
-				systemProgram: SystemProgram.programId,
-			})
-			.instruction();
-
-		return {
-			ixs: [ix_fulfilSpendLimits],
-			lookupTables: this.getLookupTables(),
-			signers: [],
-		};
-	}
-
-	/**
-	 * Creates instructions to instantly increase the spend limits of a Quartz user account, skipping the time lock.
-	 * @param spendLimitPerTransaction - The new spend limit per transaction.
-	 * @param spendLimitPerTimeframe - The new spend limit per timeframe.
-	 * @param timeframeInSeconds - The new timeframe in seconds.
-	 * @param nextTimeframeResetTimestamp - The new next timeframe reset timestamp.
-	 * @returns {Promise<{
-	 *     ixs: TransactionInstruction[],
-	 *     lookupTables: AddressLookupTableAccount[],
-	 *     signers: Keypair[]
-	 * }>} Object containing:
-	 * - ixs: Array of instructions to adjust the spend limits.
-	 * - lookupTables: Array of lookup tables for building VersionedTransaction.
-	 * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
-	 * @throw Error if the RPC connection fails, if the spend limits are invalid, or if the adjustment to spend limits results in a lower spend limit. Lowering spend limits must be done through adjustSpendLimits.
-	 */
-	public async makeIncreaseSpendLimitsIxs(
-		spendLimitPerTransaction: BN,
-		spendLimitPerTimeframe: BN,
-		timeframeInSeconds: BN,
-		nextTimeframeResetTimestamp: BN,
-	): Promise<{
-		ixs: TransactionInstruction[];
-		lookupTables: AddressLookupTableAccount[];
-		signers: Keypair[];
-	}> {
-		const ix = await this.program.methods
-			.increaseSpendLimits(
-				spendLimitPerTransaction,
-				spendLimitPerTimeframe,
-				timeframeInSeconds,
-				nextTimeframeResetTimestamp,
-			)
-			.accounts({
-				vault: this.vaultPubkey,
-				owner: this.pubkey,
-			})
-			.instruction();
-
-		return {
-			ixs: [ix],
-			lookupTables: this.getLookupTables(),
-			signers: [],
-		};
-	}
-
-	/**
 	 * Creates instructions to spend using the Quartz card.
 	 * @param amountSpendBaseUnits - The amount of tokens to spend.
-	 * @param spendCaller - The public key of the Quartz spend caller.
-	 * @param spendFee - True means a percentage of the spend will be sent to the spend fee address.
+	 * @param amountFeeBaseUnits - The amount of tokens to send to the spend fee address.
+	 * @param marketIndex - The market index of the token to spend.
+	 * @param admin - The public key of the admin.
 	 * @returns {Promise<{
 	 *     ixs: TransactionInstruction[],
 	 *     lookupTables: AddressLookupTableAccount[],
@@ -1013,241 +891,134 @@ export class QuartzUser {
 	public async makeSpendIxs(
 		amountSpendBaseUnits: number,
 		amountFeeBaseUnits: number,
-		spendCaller: Keypair,
+		marketIndex: MarketIndex,
+		admin: PublicKey,
 	): Promise<{
 		ixs: TransactionInstruction[];
 		lookupTables: AddressLookupTableAccount[];
 		signers: Keypair[];
 	}> {
-		const messageSentEventData = Keypair.generate();
-
-		const mint = TOKENS[MARKET_INDEX_USDC].mint;
+		const mint = TOKENS[marketIndex].mint;
 		const tokenProgram = await getTokenProgram(this.connection, mint);
-		const depositAddress = getDepositAddressPublicKey(this.pubkey);
-		const depositAddressUsdc = getAssociatedTokenAddressSync(
-			mint,
-			depositAddress,
-			true,
-			tokenProgram,
-		);
 
-		const ix_startSpend = await this.program.methods
-			.startSpend(new BN(amountSpendBaseUnits), new BN(amountFeeBaseUnits))
+		const ix_spendDrift = await this.program.methods
+			.spendDrift(
+				marketIndex,
+				new BN(amountSpendBaseUnits),
+				new BN(amountFeeBaseUnits),
+			)
 			.accounts({
 				vault: this.vaultPubkey,
-				owner: this.pubkey,
-				spendCaller: spendCaller.publicKey,
+				admin: admin,
 				spendFeeDestination: SPEND_FEE_DESTINATION,
-				mule: getSpendMulePublicKey(this.pubkey),
-				usdcMint: TOKENS[MARKET_INDEX_USDC].mint,
+				mint: mint,
 				driftUser: this.driftUser.pubkey,
 				driftUserStats: this.driftUser.statsPubkey,
 				driftState: getDriftStatePublicKey(),
-				spotMarketVault: getDriftSpotMarketVaultPublicKey(MARKET_INDEX_USDC),
+				driftSpotMarketVault: getDriftSpotMarketVaultPublicKey(marketIndex),
 				driftSigner: this.driftSigner,
-				tokenProgram: TOKEN_PROGRAM_ID,
-				associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-				driftProgram: DRIFT_PROGRAM_ID,
-				instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-				systemProgram: SystemProgram.programId,
-				depositAddress: depositAddress,
-				depositAddressUsdc: depositAddressUsdc,
+				tokenProgram: tokenProgram,
 			})
-			.remainingAccounts(this.driftUser.getRemainingAccounts(MARKET_INDEX_USDC))
+			.remainingAccounts(this.driftUser.getRemainingAccounts([marketIndex]))
 			.instruction();
 
-		const ix_completeSpend = await this.program.methods
-			.completeSpend()
+		const ix_settleSpend = await this.program.methods
+			.settleSpend(new BN(amountSpendBaseUnits))
 			.accounts({
-				vault: this.vaultPubkey,
-				owner: this.pubkey,
-				spendCaller: spendCaller.publicKey,
-				mule: getSpendMulePublicKey(this.pubkey),
-				usdcMint: TOKENS[MARKET_INDEX_USDC].mint,
-				bridgeRentPayer: getBridgeRentPayerPublicKey(),
-				senderAuthorityPda: getSenderAuthority(),
-				messageTransmitter: getMessageTransmitter(),
-				tokenMessenger: getTokenMessenger(),
-				remoteTokenMessenger: getRemoteTokenMessenger(),
-				tokenMinter: getTokenMinter(),
-				localToken: getLocalToken(),
-				messageSentEventData: messageSentEventData.publicKey,
-				eventAuthority: getEventAuthority(),
-				messageTransmitterProgram: MESSAGE_TRANSMITTER_PROGRAM_ID,
-				tokenMessengerMinterProgram: TOKEN_MESSAGE_MINTER_PROGRAM_ID,
-				tokenProgram: TOKEN_PROGRAM_ID,
-				associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-				instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-				systemProgram: SystemProgram.programId,
+				admin: admin,
+				spendSettlementAccount: SPEND_SETTLEMENT_ACCOUNT,
+				mint: mint,
+				tokenProgram: tokenProgram,
 			})
 			.instruction();
 
 		return {
-			ixs: [ix_startSpend, ix_completeSpend],
+			ixs: [ix_spendDrift, ix_settleSpend],
 			lookupTables: this.getLookupTables(),
-			signers: [spendCaller, messageSentEventData],
+			signers: [],
 		};
 	}
 
 	/**
-	 * Creates instructions to repay a loan using collateral.
-	 * @param caller - The public key of the caller, this can be the owner or someone else if account health is 0%.
-	 * @param depositMarketIndex - The market index of the loan token to deposit.
-	 * @param withdrawMarketIndex - The market index of the collateral token to withdraw.
-	 * @param swapInstruction - The swap instruction to use. Deposit and withdrawn amounts are calculated by the balance change after this instruction.
-	 * @param requireOwnerSignature - True means the owner must sign the transaction. This is for manually marking the account info when two signers are required.
+	 * Creates instructions to swap two assets, both for swapping collateral and for selling collateral to repay a loan.
+	 * @param caller - The public key of the caller. This is the account that acually makes the swap in swapInstructions
+	 * @param payer - The public key of the payer.
+	 * @param marketIndexFrom - The market index of the asset to swap from.
+	 * @param marketIndexTo - The market index of the asset to swap to.
+	 * @param swapInstructions - The swap instructions to use, can be anything (eg: Jupiter, Titan, OKX DEX)
 	 * @returns {Promise<{
 	 *     ixs: TransactionInstruction[],
 	 *     lookupTables: AddressLookupTableAccount[],
 	 *     signers: Keypair[]
 	 * }>} Object containing:
-	 * - ixs: Array of instructions to repay the loan using collateral.
+	 * - ixs: Array of instructions to swap assets.
 	 * - lookupTables: Array of lookup tables for building VersionedTransaction.
 	 * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
-	 * @throw Error if the RPC connection fails. The transaction will fail if:
-	 * - the caller does not have enough tokens.
-	 * - the account health is above 0% and the caller is not the owner.
-	 * - the account health is 0% and the caller is not the owner, but the health has not increased above 0% after the repay.
 	 */
-	public async makeCollateralRepayIxs(
+	public async makeSwapIxs(
 		caller: PublicKey,
-		depositMarketIndex: MarketIndex,
-		withdrawMarketIndex: MarketIndex,
-		swapInstruction: TransactionInstruction,
-		requireOwnerSignature = false,
+		payer: PublicKey,
+		marketIndexFrom: MarketIndex,
+		marketIndexTo: MarketIndex,
+		swapInstructions: TransactionInstruction[],
+		isOwnerSigner: boolean,
 	): Promise<{
 		ixs: TransactionInstruction[];
 		lookupTables: AddressLookupTableAccount[];
 		signers: Keypair[];
 	}> {
-		const depositMint = TOKENS[depositMarketIndex].mint;
-		const withdrawMint = TOKENS[withdrawMarketIndex].mint;
+		const mintFrom = TOKENS[marketIndexFrom].mint;
+		const mintTo = TOKENS[marketIndexTo].mint;
+		const tokenProgramFrom = await getTokenProgram(this.connection, mintFrom);
+		const tokenProgramTo = await getTokenProgram(this.connection, mintTo);
 
-		const [depositTokenProgram, withdrawTokenProgram] = await Promise.all([
-			getTokenProgram(this.connection, depositMint),
-			getTokenProgram(this.connection, withdrawMint),
-		]);
-
-		const callerDepositSpl = getAssociatedTokenAddressSync(
-			depositMint,
-			caller,
-			false,
-			depositTokenProgram,
-		);
-		const callerWithdrawSpl = getAssociatedTokenAddressSync(
-			withdrawMint,
-			caller,
-			false,
-			withdrawTokenProgram,
-		);
-
-		const driftState = getDriftStatePublicKey();
-		const collateralRepayLedger = getCollateralRepayLedgerPublicKey(
-			this.pubkey,
-		);
-
-		const startCollateralRepayPromise = this.program.methods
-			.startCollateralRepay()
+		const ix_startSwapDrift = await this.program.methods
+			.startSwapDrift()
 			.accounts({
-				caller: caller,
-				callerDepositSpl: callerDepositSpl,
-				callerWithdrawSpl: callerWithdrawSpl,
 				owner: this.pubkey,
-				vault: this.vaultPubkey,
-				mintDeposit: depositMint,
-				mintWithdraw: withdrawMint,
-				tokenProgramDeposit: depositTokenProgram,
-				tokenProgramWithdraw: withdrawTokenProgram,
-				systemProgram: SystemProgram.programId,
-				instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-				ledger: collateralRepayLedger,
+				caller: caller,
+				mintFrom: mintFrom,
+				mintTo: mintTo,
+				tokenProgramFrom: tokenProgramFrom,
+				tokenProgramTo: tokenProgramTo,
+				payer,
 			})
 			.instruction();
 
-		const depositCollateralRepayPromise = this.program.methods
-			.depositCollateralRepay(depositMarketIndex)
+		const ix_executeSwapDrift = await this.program.methods
+			.executeSwapDrift(marketIndexTo, marketIndexFrom)
 			.accounts({
-				caller: caller,
-				callerSpl: callerDepositSpl,
 				owner: this.pubkey,
-				vault: this.vaultPubkey,
-				mule: getCollateralRepayMulePublicKey(this.pubkey, depositMint),
-				mint: depositMint,
+				caller: caller,
+				mintFrom: mintFrom,
+				mintTo: mintTo,
+				tokenProgramFrom: tokenProgramFrom,
+				tokenProgramTo: tokenProgramTo,
+				payer: payer,
 				driftUser: this.driftUser.pubkey,
 				driftUserStats: this.driftUser.statsPubkey,
-				driftState: driftState,
-				spotMarketVault: getDriftSpotMarketVaultPublicKey(depositMarketIndex),
-				tokenProgram: depositTokenProgram,
-				driftProgram: DRIFT_PROGRAM_ID,
-				systemProgram: SystemProgram.programId,
-				instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-				ledger: collateralRepayLedger,
-			})
-			.remainingAccounts(
-				this.driftUser.getRemainingAccounts(depositMarketIndex),
-			)
-			.instruction();
-
-		const withdrawCollateralRepayPromise = this.program.methods
-			.withdrawCollateralRepay(withdrawMarketIndex)
-			.accounts({
-				caller: caller,
-				callerSpl: callerWithdrawSpl,
-				owner: this.pubkey,
-				vault: this.vaultPubkey,
-				mule: getCollateralRepayMulePublicKey(this.pubkey, withdrawMint),
-				mint: withdrawMint,
-				driftUser: this.driftUser.pubkey,
-				driftUserStats: this.driftUser.statsPubkey,
-				driftState: driftState,
-				spotMarketVault: getDriftSpotMarketVaultPublicKey(withdrawMarketIndex),
+				driftState: getDriftStatePublicKey(),
+				driftSpotMarketVaultFrom:
+					getDriftSpotMarketVaultPublicKey(marketIndexFrom),
+				driftSpotMarketVaultTo: getDriftSpotMarketVaultPublicKey(marketIndexTo),
 				driftSigner: this.driftSigner,
-				tokenProgram: withdrawTokenProgram,
-				driftProgram: DRIFT_PROGRAM_ID,
-				systemProgram: SystemProgram.programId,
-				depositPriceUpdate: getPythOracle(depositMarketIndex),
-				withdrawPriceUpdate: getPythOracle(withdrawMarketIndex),
-				instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
-				ledger: collateralRepayLedger,
+				priceUpdateFrom: getPythOracle(marketIndexFrom),
+				priceUpdateTo: getPythOracle(marketIndexTo),
 			})
 			.remainingAccounts(
-				this.driftUser.getRemainingAccounts(withdrawMarketIndex),
+				this.driftUser.getRemainingAccounts([marketIndexFrom, marketIndexTo]),
 			)
 			.instruction();
 
-		const [
-			ix_startCollateralRepay,
-			ix_depositCollateralRepay,
-			ix_withdrawCollateralRepay,
-		] = await Promise.all([
-			startCollateralRepayPromise,
-			depositCollateralRepayPromise,
-			withdrawCollateralRepayPromise,
-		]);
-
-		// Mark the owner as a signer if the caller is not the owner
-		if (requireOwnerSignature) {
-			for (const ix of [
-				ix_startCollateralRepay,
-				ix_depositCollateralRepay,
-				ix_withdrawCollateralRepay,
-			]) {
-				const ownerAccountMeta = ix.keys.find((key) =>
-					key.pubkey.equals(this.pubkey),
-				);
-				if (ownerAccountMeta) {
-					ownerAccountMeta.isSigner = true;
-				}
-			}
+		const ownerAccountMeta = ix_executeSwapDrift.keys.find((key) =>
+			key.pubkey.equals(this.pubkey),
+		);
+		if (ownerAccountMeta) {
+			ownerAccountMeta.isSigner = isOwnerSigner; // Manually set signer requirement so TS client doesn't complain
 		}
 
 		return {
-			ixs: [
-				ix_startCollateralRepay,
-				swapInstruction,
-				ix_depositCollateralRepay,
-				ix_withdrawCollateralRepay,
-			],
+			ixs: [ix_startSwapDrift, ...swapInstructions, ix_executeSwapDrift],
 			lookupTables: this.getLookupTables(),
 			signers: [],
 		};
