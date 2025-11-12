@@ -1,10 +1,4 @@
-/**
- * Program IDL in camelCase format in order to be used in JS/TS.
- *
- * Note that this is only a type helper and is not the actual IDL. The original
- * IDL can be found at `target/idl/pyra.json`.
- */
-export type Pyra = {
+{
   "address": "6JjHXLheGSNvvexgzMthEcgjkcirDrGduc3HAKB2P1v2",
   "metadata": {
     "name": "pyra",
@@ -14,7 +8,7 @@ export type Pyra = {
   },
   "instructions": [
     {
-      "name": "cancelUpdateSpendLimits",
+      "name": "cancel_update_spend_limits",
       "discriminator": [
         72,
         248,
@@ -27,7 +21,7 @@ export type Pyra = {
       ],
       "accounts": [
         {
-          "name": "spendLimitsOrder",
+          "name": "spend_limits_order",
           "writable": true
         },
         {
@@ -35,14 +29,14 @@ export type Pyra = {
           "signer": true
         },
         {
-          "name": "orderPayer",
+          "name": "order_payer",
           "writable": true
         }
       ],
       "args": []
     },
     {
-      "name": "cancelWithdrawDrift",
+      "name": "cancel_withdraw_drift",
       "discriminator": [
         75,
         154,
@@ -55,7 +49,7 @@ export type Pyra = {
       ],
       "accounts": [
         {
-          "name": "withdrawOrder",
+          "name": "withdraw_order",
           "writable": true
         },
         {
@@ -63,14 +57,14 @@ export type Pyra = {
           "signer": true
         },
         {
-          "name": "orderPayer",
+          "name": "order_payer",
           "writable": true
         }
       ],
       "args": []
     },
     {
-      "name": "clearLegacyDepositAddress",
+      "name": "clear_legacy_deposit_address",
       "discriminator": [
         248,
         10,
@@ -109,7 +103,7 @@ export type Pyra = {
           "writable": true
         },
         {
-          "name": "ownerSpl",
+          "name": "owner_spl",
           "writable": true,
           "optional": true,
           "pda": {
@@ -120,7 +114,7 @@ export type Pyra = {
               },
               {
                 "kind": "account",
-                "path": "tokenProgram"
+                "path": "token_program"
               },
               {
                 "kind": "account",
@@ -167,7 +161,7 @@ export type Pyra = {
           }
         },
         {
-          "name": "depositAddress",
+          "name": "deposit_address",
           "writable": true,
           "pda": {
             "seeds": [
@@ -199,18 +193,18 @@ export type Pyra = {
           }
         },
         {
-          "name": "depositAddressSpl",
+          "name": "deposit_address_spl",
           "writable": true,
           "optional": true,
           "pda": {
             "seeds": [
               {
                 "kind": "account",
-                "path": "depositAddress"
+                "path": "deposit_address"
               },
               {
                 "kind": "account",
-                "path": "tokenProgram"
+                "path": "token_program"
               },
               {
                 "kind": "account",
@@ -261,21 +255,21 @@ export type Pyra = {
           "optional": true
         },
         {
-          "name": "tokenProgram"
+          "name": "token_program"
         },
         {
-          "name": "associatedTokenProgram",
+          "name": "associated_token_program",
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "closeDrift",
+      "name": "close_drift",
       "discriminator": [
         74,
         197,
@@ -292,15 +286,15 @@ export type Pyra = {
           "writable": true
         },
         {
-          "name": "driftUser",
+          "name": "drift_user",
           "writable": true
         },
         {
-          "name": "driftUserStats",
+          "name": "drift_user_stats",
           "writable": true
         },
         {
-          "name": "driftState",
+          "name": "drift_state",
           "writable": true
         },
         {
@@ -309,18 +303,18 @@ export type Pyra = {
           "signer": true
         },
         {
-          "name": "driftProgram",
+          "name": "drift_program",
           "address": "dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "closeUser",
+      "name": "close_user",
       "discriminator": [
         86,
         219,
@@ -342,7 +336,7 @@ export type Pyra = {
           "signer": true
         },
         {
-          "name": "driftUser",
+          "name": "drift_user",
           "docs": [
             "Only checks the first sub account is closed, so if it's closed and re-opened, vault could be closed with open positions"
           ],
@@ -371,19 +365,19 @@ export type Pyra = {
             ],
             "program": {
               "kind": "account",
-              "path": "driftProgram"
+              "path": "drift_program"
             }
           }
         },
         {
-          "name": "driftProgram",
+          "name": "drift_program",
           "address": "dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH"
         }
       ],
       "args": []
     },
     {
-      "name": "depositDrift",
+      "name": "deposit_drift",
       "discriminator": [
         18,
         70,
@@ -400,7 +394,7 @@ export type Pyra = {
           "writable": true
         },
         {
-          "name": "vaultSpl",
+          "name": "vault_spl",
           "writable": true,
           "pda": {
             "seeds": [
@@ -410,7 +404,7 @@ export type Pyra = {
               },
               {
                 "kind": "account",
-                "path": "tokenProgram"
+                "path": "token_program"
               },
               {
                 "kind": "account",
@@ -457,7 +451,7 @@ export type Pyra = {
           }
         },
         {
-          "name": "depositAddress",
+          "name": "deposit_address",
           "writable": true,
           "pda": {
             "seeds": [
@@ -489,7 +483,7 @@ export type Pyra = {
           }
         },
         {
-          "name": "depositAddressSpl",
+          "name": "deposit_address_spl",
           "docs": [
             "Option because SOL in the deposit_address will be regular lamports, not wSOL"
           ],
@@ -499,11 +493,11 @@ export type Pyra = {
             "seeds": [
               {
                 "kind": "account",
-                "path": "depositAddress"
+                "path": "deposit_address"
               },
               {
                 "kind": "account",
-                "path": "tokenProgram"
+                "path": "token_program"
               },
               {
                 "kind": "account",
@@ -558,46 +552,46 @@ export type Pyra = {
           "signer": true
         },
         {
-          "name": "driftUser",
+          "name": "drift_user",
           "writable": true
         },
         {
-          "name": "driftUserStats",
+          "name": "drift_user_stats",
           "writable": true
         },
         {
-          "name": "driftState",
+          "name": "drift_state",
           "writable": true
         },
         {
-          "name": "driftSpotMarketVault",
+          "name": "drift_spot_market_vault",
           "writable": true
         },
         {
-          "name": "tokenProgram"
+          "name": "token_program"
         },
         {
-          "name": "associatedTokenProgram",
+          "name": "associated_token_program",
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
-          "name": "driftProgram",
+          "name": "drift_program",
           "address": "dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "driftMarketIndex",
+          "name": "drift_market_index",
           "type": "u16"
         }
       ]
     },
     {
-      "name": "executeSwapDrift",
+      "name": "execute_swap_drift",
       "discriminator": [
         1
       ],
@@ -633,7 +627,7 @@ export type Pyra = {
           }
         },
         {
-          "name": "vaultSplFrom",
+          "name": "vault_spl_from",
           "writable": true,
           "pda": {
             "seeds": [
@@ -643,11 +637,11 @@ export type Pyra = {
               },
               {
                 "kind": "account",
-                "path": "tokenProgramFrom"
+                "path": "token_program_from"
               },
               {
                 "kind": "account",
-                "path": "mintFrom"
+                "path": "mint_from"
               }
             ],
             "program": {
@@ -690,7 +684,7 @@ export type Pyra = {
           }
         },
         {
-          "name": "vaultSplTo",
+          "name": "vault_spl_to",
           "writable": true,
           "pda": {
             "seeds": [
@@ -700,11 +694,11 @@ export type Pyra = {
               },
               {
                 "kind": "account",
-                "path": "tokenProgramTo"
+                "path": "token_program_to"
               },
               {
                 "kind": "account",
-                "path": "mintTo"
+                "path": "mint_to"
               }
             ],
             "program": {
@@ -751,7 +745,7 @@ export type Pyra = {
           "signer": true
         },
         {
-          "name": "callerSplFrom",
+          "name": "caller_spl_from",
           "writable": true,
           "pda": {
             "seeds": [
@@ -761,11 +755,11 @@ export type Pyra = {
               },
               {
                 "kind": "account",
-                "path": "tokenProgramFrom"
+                "path": "token_program_from"
               },
               {
                 "kind": "account",
-                "path": "mintFrom"
+                "path": "mint_from"
               }
             ],
             "program": {
@@ -808,7 +802,7 @@ export type Pyra = {
           }
         },
         {
-          "name": "callerSplTo",
+          "name": "caller_spl_to",
           "writable": true,
           "pda": {
             "seeds": [
@@ -818,11 +812,11 @@ export type Pyra = {
               },
               {
                 "kind": "account",
-                "path": "tokenProgramTo"
+                "path": "token_program_to"
               },
               {
                 "kind": "account",
-                "path": "mintTo"
+                "path": "mint_to"
               }
             ],
             "program": {
@@ -865,22 +859,22 @@ export type Pyra = {
           }
         },
         {
-          "name": "mintFrom",
+          "name": "mint_from",
           "docs": [
             "start_swap_drift validates the mint matches the token program"
           ]
         },
         {
-          "name": "mintTo",
+          "name": "mint_to",
           "docs": [
             "start_swap_drift validates the mint matches the token program"
           ]
         },
         {
-          "name": "tokenProgramFrom"
+          "name": "token_program_from"
         },
         {
-          "name": "tokenProgramTo"
+          "name": "token_program_to"
         },
         {
           "name": "payer",
@@ -916,59 +910,59 @@ export type Pyra = {
           }
         },
         {
-          "name": "driftUser",
+          "name": "drift_user",
           "writable": true
         },
         {
-          "name": "driftUserStats",
+          "name": "drift_user_stats",
           "writable": true
         },
         {
-          "name": "driftState"
+          "name": "drift_state"
         },
         {
-          "name": "driftSpotMarketVaultFrom",
+          "name": "drift_spot_market_vault_from",
           "writable": true
         },
         {
-          "name": "driftSpotMarketVaultTo",
+          "name": "drift_spot_market_vault_to",
           "writable": true
         },
         {
-          "name": "driftSigner"
+          "name": "drift_signer"
         },
         {
-          "name": "priceUpdateFrom"
+          "name": "price_update_from"
         },
         {
-          "name": "priceUpdateTo"
+          "name": "price_update_to"
         },
         {
-          "name": "driftProgram",
+          "name": "drift_program",
           "address": "dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
         {
-          "name": "instructionsSysvarAccount",
+          "name": "instructions_sysvar_account",
           "address": "Sysvar1nstructions1111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "driftMarketIndexFrom",
+          "name": "drift_market_index_from",
           "type": "u16"
         },
         {
-          "name": "driftMarketIndexTo",
+          "name": "drift_market_index_to",
           "type": "u16"
         }
       ]
     },
     {
-      "name": "fulfilUpdateSpendLimits",
+      "name": "fulfil_update_spend_limits",
       "discriminator": [
         224,
         103,
@@ -981,7 +975,7 @@ export type Pyra = {
       ],
       "accounts": [
         {
-          "name": "spendLimitsOrder",
+          "name": "spend_limits_order",
           "writable": true
         },
         {
@@ -989,7 +983,7 @@ export type Pyra = {
           "writable": true
         },
         {
-          "name": "orderPayer",
+          "name": "order_payer",
           "writable": true
         },
         {
@@ -999,7 +993,7 @@ export type Pyra = {
       "args": []
     },
     {
-      "name": "fulfilWithdrawDrift",
+      "name": "fulfil_withdraw_drift",
       "discriminator": [
         29,
         74,
@@ -1012,7 +1006,7 @@ export type Pyra = {
       ],
       "accounts": [
         {
-          "name": "withdrawOrder",
+          "name": "withdraw_order",
           "writable": true
         },
         {
@@ -1020,7 +1014,7 @@ export type Pyra = {
           "writable": true
         },
         {
-          "name": "orderPayer",
+          "name": "order_payer",
           "writable": true
         },
         {
@@ -1036,7 +1030,7 @@ export type Pyra = {
           "writable": true
         },
         {
-          "name": "destinationSpl",
+          "name": "destination_spl",
           "docs": [
             "destination_spl is not required if sending lamports instead of SPL tokens"
           ],
@@ -1050,7 +1044,7 @@ export type Pyra = {
               },
               {
                 "kind": "account",
-                "path": "tokenProgram"
+                "path": "token_program"
               },
               {
                 "kind": "account",
@@ -1097,7 +1091,7 @@ export type Pyra = {
           }
         },
         {
-          "name": "vaultSpl",
+          "name": "vault_spl",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1107,7 +1101,7 @@ export type Pyra = {
               },
               {
                 "kind": "account",
-                "path": "tokenProgram"
+                "path": "token_program"
               },
               {
                 "kind": "account",
@@ -1157,49 +1151,49 @@ export type Pyra = {
           "name": "mint"
         },
         {
-          "name": "driftUser",
+          "name": "drift_user",
           "writable": true
         },
         {
-          "name": "driftUserStats",
+          "name": "drift_user_stats",
           "writable": true
         },
         {
-          "name": "driftState",
+          "name": "drift_state",
           "writable": true
         },
         {
-          "name": "driftSpotMarketVault",
+          "name": "drift_spot_market_vault",
           "writable": true
         },
         {
-          "name": "driftSigner"
+          "name": "drift_signer"
         },
         {
-          "name": "tokenProgram"
+          "name": "token_program"
         },
         {
-          "name": "associatedTokenProgram",
+          "name": "associated_token_program",
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
-          "name": "driftProgram",
+          "name": "drift_program",
           "address": "dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "amountBaseUnits",
+          "name": "amount_base_units",
           "type": "u64"
         }
       ]
     },
     {
-      "name": "initDrift",
+      "name": "init_drift",
       "discriminator": [
         66,
         163,
@@ -1220,7 +1214,7 @@ export type Pyra = {
           "signer": true
         },
         {
-          "name": "driftUser",
+          "name": "drift_user",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1239,21 +1233,21 @@ export type Pyra = {
               },
               {
                 "kind": "arg",
-                "path": "subAccountId"
+                "path": "sub_account_id"
               }
             ],
             "program": {
               "kind": "account",
-              "path": "driftProgram"
+              "path": "drift_program"
             }
           }
         },
         {
-          "name": "driftUserStats",
+          "name": "drift_user_stats",
           "writable": true
         },
         {
-          "name": "driftState",
+          "name": "drift_state",
           "writable": true
         },
         {
@@ -1261,23 +1255,23 @@ export type Pyra = {
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "driftProgram",
+          "name": "drift_program",
           "address": "dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "subAccountId",
+          "name": "sub_account_id",
           "type": "u16"
         }
       ]
     },
     {
-      "name": "initUser",
+      "name": "init_user",
       "discriminator": [
         14,
         51,
@@ -1321,31 +1315,31 @@ export type Pyra = {
           "signer": true
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "spendLimitPerTransaction",
+          "name": "spend_limit_per_transaction",
           "type": "u64"
         },
         {
-          "name": "spendLimitPerTimeframe",
+          "name": "spend_limit_per_timeframe",
           "type": "u64"
         },
         {
-          "name": "nextTimeframeResetTimestamp",
+          "name": "next_timeframe_reset_timestamp",
           "type": "u64"
         },
         {
-          "name": "timeframeInSeconds",
+          "name": "timeframe_in_seconds",
           "type": "u64"
         }
       ]
     },
     {
-      "name": "initiateUpdateSpendLimits",
+      "name": "initiate_update_spend_limits",
       "discriminator": [
         67,
         43,
@@ -1384,7 +1378,7 @@ export type Pyra = {
           "signer": true
         },
         {
-          "name": "spendLimitsOrder",
+          "name": "spend_limits_order",
           "writable": true,
           "signer": true
         },
@@ -1394,31 +1388,31 @@ export type Pyra = {
           "signer": true
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "spendLimitPerTransaction",
+          "name": "spend_limit_per_transaction",
           "type": "u64"
         },
         {
-          "name": "spendLimitPerTimeframe",
+          "name": "spend_limit_per_timeframe",
           "type": "u64"
         },
         {
-          "name": "nextTimeframeResetTimestamp",
+          "name": "next_timeframe_reset_timestamp",
           "type": "u64"
         },
         {
-          "name": "timeframeInSeconds",
+          "name": "timeframe_in_seconds",
           "type": "u64"
         }
       ]
     },
     {
-      "name": "initiateWithdrawDrift",
+      "name": "initiate_withdraw_drift",
       "discriminator": [
         65,
         162,
@@ -1457,7 +1451,7 @@ export type Pyra = {
           "signer": true
         },
         {
-          "name": "withdrawOrder",
+          "name": "withdraw_order",
           "writable": true,
           "signer": true
         },
@@ -1467,7 +1461,7 @@ export type Pyra = {
           "signer": true
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
         {
@@ -1476,21 +1470,21 @@ export type Pyra = {
       ],
       "args": [
         {
-          "name": "amountBaseUnits",
+          "name": "amount_base_units",
           "type": "u64"
         },
         {
-          "name": "driftMarketIndex",
+          "name": "drift_market_index",
           "type": "u16"
         },
         {
-          "name": "reduceOnly",
+          "name": "reduce_only",
           "type": "bool"
         }
       ]
     },
     {
-      "name": "refundSpend",
+      "name": "refund_spend",
       "discriminator": [
         200,
         34,
@@ -1534,7 +1528,7 @@ export type Pyra = {
           "writable": true
         },
         {
-          "name": "depositAddress",
+          "name": "deposit_address",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1566,7 +1560,7 @@ export type Pyra = {
           }
         },
         {
-          "name": "depositAddressSpl",
+          "name": "deposit_address_spl",
           "docs": [
             "Option because SOL in the deposit_address will be regular lamports, not wSOL"
           ],
@@ -1575,11 +1569,11 @@ export type Pyra = {
             "seeds": [
               {
                 "kind": "account",
-                "path": "depositAddress"
+                "path": "deposit_address"
               },
               {
                 "kind": "account",
-                "path": "tokenProgram"
+                "path": "token_program"
               },
               {
                 "kind": "account",
@@ -1626,7 +1620,7 @@ export type Pyra = {
           }
         },
         {
-          "name": "spendHold",
+          "name": "spend_hold",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1649,17 +1643,17 @@ export type Pyra = {
           }
         },
         {
-          "name": "spendHoldSpl",
+          "name": "spend_hold_spl",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "account",
-                "path": "spendHold"
+                "path": "spend_hold"
               },
               {
                 "kind": "account",
-                "path": "tokenProgram"
+                "path": "token_program"
               },
               {
                 "kind": "account",
@@ -1709,26 +1703,26 @@ export type Pyra = {
           "name": "mint"
         },
         {
-          "name": "tokenProgram"
+          "name": "token_program"
         },
         {
-          "name": "associatedTokenProgram",
+          "name": "associated_token_program",
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "amountBaseUnits",
+          "name": "amount_base_units",
           "type": "u64"
         }
       ]
     },
     {
-      "name": "settleSpend",
+      "name": "settle_spend",
       "discriminator": [
         53,
         31,
@@ -1746,21 +1740,21 @@ export type Pyra = {
           "signer": true
         },
         {
-          "name": "spendSettlementAccount",
+          "name": "spend_settlement_account",
           "writable": true
         },
         {
-          "name": "spendSettlementAccountSpl",
+          "name": "spend_settlement_account_spl",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "account",
-                "path": "spendSettlementAccount"
+                "path": "spend_settlement_account"
               },
               {
                 "kind": "account",
-                "path": "tokenProgram"
+                "path": "token_program"
               },
               {
                 "kind": "account",
@@ -1807,7 +1801,7 @@ export type Pyra = {
           }
         },
         {
-          "name": "spendHold",
+          "name": "spend_hold",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1830,17 +1824,17 @@ export type Pyra = {
           }
         },
         {
-          "name": "spendHoldSpl",
+          "name": "spend_hold_spl",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "account",
-                "path": "spendHold"
+                "path": "spend_hold"
               },
               {
                 "kind": "account",
-                "path": "tokenProgram"
+                "path": "token_program"
               },
               {
                 "kind": "account",
@@ -1890,22 +1884,22 @@ export type Pyra = {
           "name": "mint"
         },
         {
-          "name": "tokenProgram"
+          "name": "token_program"
         },
         {
-          "name": "associatedTokenProgram",
+          "name": "associated_token_program",
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         }
       ],
       "args": [
         {
-          "name": "amountBaseUnits",
+          "name": "amount_base_units",
           "type": "u64"
         }
       ]
     },
     {
-      "name": "spendDrift",
+      "name": "spend_drift",
       "discriminator": [
         52,
         18,
@@ -1922,7 +1916,7 @@ export type Pyra = {
           "writable": true
         },
         {
-          "name": "vaultSpl",
+          "name": "vault_spl",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1932,7 +1926,7 @@ export type Pyra = {
               },
               {
                 "kind": "account",
-                "path": "tokenProgram"
+                "path": "token_program"
               },
               {
                 "kind": "account",
@@ -1984,7 +1978,7 @@ export type Pyra = {
           "signer": true
         },
         {
-          "name": "spendHold",
+          "name": "spend_hold",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2007,17 +2001,17 @@ export type Pyra = {
           }
         },
         {
-          "name": "spendHoldSpl",
+          "name": "spend_hold_spl",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "account",
-                "path": "spendHold"
+                "path": "spend_hold"
               },
               {
                 "kind": "account",
-                "path": "tokenProgram"
+                "path": "token_program"
               },
               {
                 "kind": "account",
@@ -2064,20 +2058,20 @@ export type Pyra = {
           }
         },
         {
-          "name": "spendFeeDestination"
+          "name": "spend_fee_destination"
         },
         {
-          "name": "spendFeeDestinationSpl",
+          "name": "spend_fee_destination_spl",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "account",
-                "path": "spendFeeDestination"
+                "path": "spend_fee_destination"
               },
               {
                 "kind": "account",
-                "path": "tokenProgram"
+                "path": "token_program"
               },
               {
                 "kind": "account",
@@ -2127,57 +2121,57 @@ export type Pyra = {
           "name": "mint"
         },
         {
-          "name": "driftUser",
+          "name": "drift_user",
           "writable": true
         },
         {
-          "name": "driftUserStats",
+          "name": "drift_user_stats",
           "writable": true
         },
         {
-          "name": "driftState",
+          "name": "drift_state",
           "writable": true
         },
         {
-          "name": "driftSpotMarketVault",
+          "name": "drift_spot_market_vault",
           "writable": true
         },
         {
-          "name": "driftSigner"
+          "name": "drift_signer"
         },
         {
-          "name": "tokenProgram"
+          "name": "token_program"
         },
         {
-          "name": "associatedTokenProgram",
+          "name": "associated_token_program",
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
-          "name": "driftProgram",
+          "name": "drift_program",
           "address": "dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "driftMarketIndex",
+          "name": "drift_market_index",
           "type": "u16"
         },
         {
-          "name": "spendAmountBaseUnits",
+          "name": "spend_amount_base_units",
           "type": "u64"
         },
         {
-          "name": "feeAmountBaseUnits",
+          "name": "fee_amount_base_units",
           "type": "u64"
         }
       ]
     },
     {
-      "name": "startSwapDrift",
+      "name": "start_swap_drift",
       "discriminator": [
         0
       ],
@@ -2207,7 +2201,7 @@ export type Pyra = {
           }
         },
         {
-          "name": "vaultSplFrom",
+          "name": "vault_spl_from",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2217,11 +2211,11 @@ export type Pyra = {
               },
               {
                 "kind": "account",
-                "path": "tokenProgramFrom"
+                "path": "token_program_from"
               },
               {
                 "kind": "account",
-                "path": "mintFrom"
+                "path": "mint_from"
               }
             ],
             "program": {
@@ -2264,7 +2258,7 @@ export type Pyra = {
           }
         },
         {
-          "name": "vaultSplTo",
+          "name": "vault_spl_to",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2274,11 +2268,11 @@ export type Pyra = {
               },
               {
                 "kind": "account",
-                "path": "tokenProgramTo"
+                "path": "token_program_to"
               },
               {
                 "kind": "account",
-                "path": "mintTo"
+                "path": "mint_to"
               }
             ],
             "program": {
@@ -2325,7 +2319,7 @@ export type Pyra = {
           "signer": true
         },
         {
-          "name": "callerSplFrom",
+          "name": "caller_spl_from",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2335,11 +2329,11 @@ export type Pyra = {
               },
               {
                 "kind": "account",
-                "path": "tokenProgramFrom"
+                "path": "token_program_from"
               },
               {
                 "kind": "account",
-                "path": "mintFrom"
+                "path": "mint_from"
               }
             ],
             "program": {
@@ -2382,7 +2376,7 @@ export type Pyra = {
           }
         },
         {
-          "name": "callerSplTo",
+          "name": "caller_spl_to",
           "writable": true,
           "pda": {
             "seeds": [
@@ -2392,11 +2386,11 @@ export type Pyra = {
               },
               {
                 "kind": "account",
-                "path": "tokenProgramTo"
+                "path": "token_program_to"
               },
               {
                 "kind": "account",
-                "path": "mintTo"
+                "path": "mint_to"
               }
             ],
             "program": {
@@ -2439,19 +2433,19 @@ export type Pyra = {
           }
         },
         {
-          "name": "mintFrom"
+          "name": "mint_from"
         },
         {
-          "name": "mintTo"
+          "name": "mint_to"
         },
         {
-          "name": "tokenProgramFrom"
+          "name": "token_program_from"
         },
         {
-          "name": "tokenProgramTo"
+          "name": "token_program_to"
         },
         {
-          "name": "associatedTokenProgram",
+          "name": "associated_token_program",
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
@@ -2488,11 +2482,11 @@ export type Pyra = {
           }
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
         {
-          "name": "instructionsSysvarAccount",
+          "name": "instructions_sysvar_account",
           "address": "Sysvar1nstructions1111111111111111111111111"
         }
       ],
@@ -2501,7 +2495,7 @@ export type Pyra = {
   ],
   "accounts": [
     {
-      "name": "priceUpdateV2",
+      "name": "PriceUpdateV2",
       "discriminator": [
         34,
         241,
@@ -2514,7 +2508,7 @@ export type Pyra = {
       ]
     },
     {
-      "name": "spendLimitsOrder",
+      "name": "SpendLimitsOrder",
       "discriminator": [
         15,
         200,
@@ -2527,7 +2521,7 @@ export type Pyra = {
       ]
     },
     {
-      "name": "state",
+      "name": "State",
       "discriminator": [
         216,
         146,
@@ -2540,7 +2534,7 @@ export type Pyra = {
       ]
     },
     {
-      "name": "swapLedger",
+      "name": "SwapLedger",
       "discriminator": [
         104,
         145,
@@ -2553,7 +2547,7 @@ export type Pyra = {
       ]
     },
     {
-      "name": "vault",
+      "name": "Vault",
       "discriminator": [
         211,
         8,
@@ -2566,7 +2560,7 @@ export type Pyra = {
       ]
     },
     {
-      "name": "withdrawOrder",
+      "name": "WithdrawOrder",
       "discriminator": [
         17,
         175,
@@ -2582,298 +2576,298 @@ export type Pyra = {
   "errors": [
     {
       "code": 6000,
-      "name": "invalidAdminKeypair",
+      "name": "InvalidAdminKeypair",
       "msg": "Invalid admin keypair"
     },
     {
       "code": 6001,
-      "name": "invalidSpendSettlementAccount",
+      "name": "InvalidSpendSettlementAccount",
       "msg": "Invalid spend settlement account"
     },
     {
       "code": 6002,
-      "name": "invalidTimestamp",
+      "name": "InvalidTimestamp",
       "msg": "Invalid timestamp"
     },
     {
       "code": 6003,
-      "name": "mathOverflow",
+      "name": "MathOverflow",
       "msg": "Math overflow"
     },
     {
       "code": 6004,
-      "name": "illegalSpendLimitsDecrease",
+      "name": "IllegalSpendLimitsDecrease",
       "msg": "Spend limit cannot be decreased in the increase spend limits instruction"
     },
     {
       "code": 6005,
-      "name": "timeLockNotReleased",
+      "name": "TimeLockNotReleased",
       "msg": "Release slot has not passed for time lock"
     },
     {
       "code": 6006,
-      "name": "timeLockOrderRentPayerMismatch",
+      "name": "TimeLockOrderRentPayerMismatch",
       "msg": "Time lock order rent payers must match"
     },
     {
       "code": 6007,
-      "name": "timeLockOwnerMismatch",
+      "name": "TimeLockOwnerMismatch",
       "msg": "Time lock owner mismatch"
     },
     {
       "code": 6008,
-      "name": "destinationMismatch",
+      "name": "DestinationMismatch",
       "msg": "Destination does not match order destination"
     },
     {
       "code": 6009,
-      "name": "invalidDriftMarketIndex",
+      "name": "InvalidDriftMarketIndex",
       "msg": "Unsupported Drift market index"
     },
     {
       "code": 6010,
-      "name": "mismatchedDriftMarketIndexMint",
+      "name": "MismatchedDriftMarketIndexMint",
       "msg": "Mint does not match Drift market index"
     },
     {
       "code": 6011,
-      "name": "invalidSpendLimitTimeframe",
+      "name": "InvalidSpendLimitTimeframe",
       "msg": "Spend limit timeframe cannot be 0"
     },
     {
       "code": 6012,
-      "name": "invalidAmountBaseUnits",
+      "name": "InvalidAmountBaseUnits",
       "msg": "Amount base units must be greater than 0"
     },
     {
       "code": 6013,
-      "name": "missingDestinationSpl",
+      "name": "MissingDestinationSpl",
       "msg": "destination_spl is required if spl_mint is not wSOL"
     },
     {
       "code": 6014,
-      "name": "tokenNotSpendable",
+      "name": "TokenNotSpendable",
       "msg": "Token is not spendable"
     },
     {
       "code": 6015,
-      "name": "insufficientTimeframeSpendLimit",
+      "name": "InsufficientTimeframeSpendLimit",
       "msg": "Insufficient spend limit remaining in timeframe"
     },
     {
       "code": 6016,
-      "name": "insufficientTransactionSpendLimit",
+      "name": "InsufficientTransactionSpendLimit",
       "msg": "Insufficient spend limit per transaction"
     },
     {
       "code": 6017,
-      "name": "requiredInstructionNotFound",
+      "name": "RequiredInstructionNotFound",
       "msg": "Required Pyra instruction not found in transaction introspection"
     },
     {
       "code": 6018,
-      "name": "illegalCpi",
+      "name": "IllegalCPI",
       "msg": "Cannot call introspection instructions through a CPI"
     },
     {
       "code": 6019,
-      "name": "swapOwnerMismatch",
+      "name": "SwapOwnerMismatch",
       "msg": "Owner mismatch between start and execute swap instructions"
     },
     {
       "code": 6020,
-      "name": "swapCallerMismatch",
+      "name": "SwapCallerMismatch",
       "msg": "Caller mismatch between start and execute swap instructions"
     },
     {
       "code": 6021,
-      "name": "swapMintFromMismatch",
+      "name": "SwapMintFromMismatch",
       "msg": "Mint from mismatch between start and execute swap instructions"
     },
     {
       "code": 6022,
-      "name": "swapMintToMismatch",
+      "name": "SwapMintToMismatch",
       "msg": "Mint to mismatch between start and execute swap instructions"
     },
     {
       "code": 6023,
-      "name": "swapPayerMismatch",
+      "name": "SwapPayerMismatch",
       "msg": "Payer mismatch between start and execute swap instructions"
     },
     {
       "code": 6024,
-      "name": "negativeOraclePrice",
+      "name": "NegativeOraclePrice",
       "msg": "Oracle prices must be positive"
     },
     {
       "code": 6025,
-      "name": "invalidSlippageBps",
+      "name": "InvalidSlippageBPS",
       "msg": "Max slippage is set too high"
     },
     {
       "code": 6026,
-      "name": "maxSlippageExceeded",
+      "name": "MaxSlippageExceeded",
       "msg": "Max slippage exceeded"
     },
     {
       "code": 6027,
-      "name": "invalidPriceExponent",
+      "name": "InvalidPriceExponent",
       "msg": "Difference between price exponents must not exceed 12"
     },
     {
       "code": 6028,
-      "name": "missingAtaForTokenTransfer",
+      "name": "MissingATAForTokenTransfer",
       "msg": "Missing ATA for token transfer"
     },
     {
       "code": 6029,
-      "name": "missingMintForTokenTransfer",
+      "name": "MissingMintForTokenTransfer",
       "msg": "Missing mint for token transfer"
     },
     {
       "code": 6030,
-      "name": "unsupportedToken",
+      "name": "UnsupportedToken",
       "msg": "Unsupported token"
     },
     {
       "code": 6031,
-      "name": "cannotLiquidateFreeCollateral",
+      "name": "CannotLiquidateFreeCollateral",
       "msg": "Cannot liquidate user with free collateral > 0"
     },
     {
       "code": 6032,
-      "name": "insufficientLiquidation",
+      "name": "InsufficientLiquidation",
       "msg": "Free collateral must be above 0 after liquidation"
     },
     {
       "code": 6033,
-      "name": "excessiveLiquidation",
+      "name": "ExcessiveLiquidation",
       "msg": "Free collateral too high after liquidation"
     },
     {
       "code": 6034,
-      "name": "unableToLoadAccountLoader",
+      "name": "UnableToLoadAccountLoader",
       "msg": "Unable to load account loader"
     },
     {
       "code": 6035,
-      "name": "withdrawFillTooHigh",
+      "name": "WithdrawFillTooHigh",
       "msg": "Partial withdraw fill is above requested amount"
     },
     {
       "code": 6036,
-      "name": "withdrawFillTooLow",
+      "name": "WithdrawFillTooLow",
       "msg": "Partial withdraw fill is too far below requested amount"
     },
     {
       "code": 6037,
-      "name": "invalidSpendFeeDestination",
+      "name": "InvalidSpendFeeDestination",
       "msg": "Invalid spend fee destination address"
     },
     {
       "code": 6038,
-      "name": "spendFeeTooHigh",
+      "name": "SpendFeeTooHigh",
       "msg": "Spend fee is above maximum"
     },
     {
       "code": 6039,
-      "name": "missingDepositAddressSpl",
+      "name": "MissingDepositAddressSpl",
       "msg": "deposit_address_spl is required if not depositing lamports"
     },
     {
       "code": 6040,
-      "name": "driftUserNotClosed",
+      "name": "DriftUserNotClosed",
       "msg": "Drift user account must be closed before closing vault"
     },
     {
       "code": 6041,
-      "name": "invalidDriftAccountOwner",
+      "name": "InvalidDriftAccountOwner",
       "msg": "Invalid Drift account owner"
     },
     {
       "code": 6042,
-      "name": "invalidDriftUserAuthority",
+      "name": "InvalidDriftUserAuthority",
       "msg": "Invalid authority for Drift user account"
     },
     {
       "code": 6043,
-      "name": "couldNotLoadDriftSpotMarketData",
+      "name": "CouldNotLoadDriftSpotMarketData",
       "msg": "Could not load Drift spot market data"
     },
     {
       "code": 6044,
-      "name": "invalidDriftSpotMarketAccount",
+      "name": "InvalidDriftSpotMarketAccount",
       "msg": "Invalid Drift spot market account"
     },
     {
       "code": 6045,
-      "name": "duplicateDriftMarketIndex",
+      "name": "DuplicateDriftMarketIndex",
       "msg": "Duplicate Drift market index while decoding spot market map"
     },
     {
       "code": 6046,
-      "name": "immutableDriftSpotMarketAccount",
+      "name": "ImmutableDriftSpotMarketAccount",
       "msg": "A Drift spot market account that must be mutable is marked as immutable"
     },
     {
       "code": 6047,
-      "name": "invalidDriftOracle",
+      "name": "InvalidDriftOracle",
       "msg": "Invalid Drift oracle"
     },
     {
       "code": 6048,
-      "name": "couldNotLoadDriftOracleData",
+      "name": "CouldNotLoadDriftOracleData",
       "msg": "Could not load Drift oracle data"
     },
     {
       "code": 6049,
-      "name": "spotMarketNotFound",
+      "name": "SpotMarketNotFound",
       "msg": "Could not find Drift spot market"
     },
     {
       "code": 6050,
-      "name": "driftOracleNotFound",
+      "name": "DriftOracleNotFound",
       "msg": "Could not find Drift oracle"
     },
     {
       "code": 6051,
-      "name": "invalidSpotPositionDetected",
+      "name": "InvalidSpotPositionDetected",
       "msg": "Invalid spot position detected"
     },
     {
       "code": 6052,
-      "name": "invalidDriftUserAccountData",
+      "name": "InvalidDriftUserAccountData",
       "msg": "Invalid Drift user account data"
     },
     {
       "code": 6053,
-      "name": "invalidDriftPoolId",
+      "name": "InvalidDriftPoolId",
       "msg": "Invalid Drift pool id"
     },
     {
       "code": 6054,
-      "name": "invalidDriftMarginRatio",
+      "name": "InvalidDriftMarginRatio",
       "msg": "Invalid Drift margin ratio"
     },
     {
       "code": 6055,
-      "name": "invalidDriftMarginRequirementType",
+      "name": "InvalidDriftMarginRequirementType",
       "msg": "Only Initial margin requirement type is supported for Drift"
     }
   ],
   "types": [
     {
-      "name": "feeStructure",
+      "name": "FeeStructure",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "feeTiers",
+            "name": "fee_tiers",
             "type": {
               "array": [
                 {
                   "defined": {
-                    "name": "feeTier"
+                    "name": "FeeTier"
                   }
                 },
                 10
@@ -2881,74 +2875,74 @@ export type Pyra = {
             }
           },
           {
-            "name": "fillerRewardStructure",
+            "name": "filler_reward_structure",
             "type": {
               "defined": {
-                "name": "orderFillerRewardStructure"
+                "name": "OrderFillerRewardStructure"
               }
             }
           },
           {
-            "name": "referrerRewardEpochUpperBound",
+            "name": "referrer_reward_epoch_upper_bound",
             "type": "u64"
           },
           {
-            "name": "flatFillerFee",
+            "name": "flat_filler_fee",
             "type": "u64"
           }
         ]
       }
     },
     {
-      "name": "feeTier",
+      "name": "FeeTier",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "feeNumerator",
+            "name": "fee_numerator",
             "type": "u32"
           },
           {
-            "name": "feeDenominator",
+            "name": "fee_denominator",
             "type": "u32"
           },
           {
-            "name": "makerRebateNumerator",
+            "name": "maker_rebate_numerator",
             "type": "u32"
           },
           {
-            "name": "makerRebateDenominator",
+            "name": "maker_rebate_denominator",
             "type": "u32"
           },
           {
-            "name": "referrerRewardNumerator",
+            "name": "referrer_reward_numerator",
             "type": "u32"
           },
           {
-            "name": "referrerRewardDenominator",
+            "name": "referrer_reward_denominator",
             "type": "u32"
           },
           {
-            "name": "refereeFeeNumerator",
+            "name": "referee_fee_numerator",
             "type": "u32"
           },
           {
-            "name": "refereeFeeDenominator",
+            "name": "referee_fee_denominator",
             "type": "u32"
           }
         ]
       }
     },
     {
-      "name": "oracleGuardRails",
+      "name": "OracleGuardRails",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "priceDivergence",
+            "name": "price_divergence",
             "type": {
               "defined": {
-                "name": "priceDivergenceGuardRails"
+                "name": "PriceDivergenceGuardRails"
               }
             }
           },
@@ -2956,7 +2950,7 @@ export type Pyra = {
             "name": "validity",
             "type": {
               "defined": {
-                "name": "validityGuardRails"
+                "name": "ValidityGuardRails"
               }
             }
           }
@@ -2964,43 +2958,43 @@ export type Pyra = {
       }
     },
     {
-      "name": "orderFillerRewardStructure",
+      "name": "OrderFillerRewardStructure",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "rewardNumerator",
+            "name": "reward_numerator",
             "type": "u32"
           },
           {
-            "name": "rewardDenominator",
+            "name": "reward_denominator",
             "type": "u32"
           },
           {
-            "name": "timeBasedRewardLowerBound",
+            "name": "time_based_reward_lower_bound",
             "type": "u128"
           }
         ]
       }
     },
     {
-      "name": "priceDivergenceGuardRails",
+      "name": "PriceDivergenceGuardRails",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "markOraclePercentDivergence",
+            "name": "mark_oracle_percent_divergence",
             "type": "u64"
           },
           {
-            "name": "oracleTwap5minPercentDivergence",
+            "name": "oracle_twap5min_percent_divergence",
             "type": "u64"
           }
         ]
       }
     },
     {
-      "name": "priceFeedMessage",
+      "name": "PriceFeedMessage",
       "repr": {
         "kind": "c"
       },
@@ -3008,7 +3002,7 @@ export type Pyra = {
         "kind": "struct",
         "fields": [
           {
-            "name": "feedId",
+            "name": "feed_id",
             "docs": [
               "`FeedId` but avoid the type alias because of compatibility issues with Anchor's `idl-build` feature."
             ],
@@ -3032,14 +3026,14 @@ export type Pyra = {
             "type": "i32"
           },
           {
-            "name": "publishTime",
+            "name": "publish_time",
             "docs": [
               "The timestamp of this price update in seconds"
             ],
             "type": "i64"
           },
           {
-            "name": "prevPublishTime",
+            "name": "prev_publish_time",
             "docs": [
               "The timestamp of the previous price update. This field is intended to allow users to",
               "identify the single unique price update for any moment in time:",
@@ -3057,18 +3051,18 @@ export type Pyra = {
             "type": "i64"
           },
           {
-            "name": "emaPrice",
+            "name": "ema_price",
             "type": "i64"
           },
           {
-            "name": "emaConf",
+            "name": "ema_conf",
             "type": "u64"
           }
         ]
       }
     },
     {
-      "name": "priceUpdateV2",
+      "name": "PriceUpdateV2",
       "docs": [
         "A price update account. This account is used by the Pyth Receiver program to store a verified price update from a Pyth price feed.",
         "It contains:",
@@ -3081,34 +3075,34 @@ export type Pyra = {
         "kind": "struct",
         "fields": [
           {
-            "name": "writeAuthority",
+            "name": "write_authority",
             "type": "pubkey"
           },
           {
-            "name": "verificationLevel",
+            "name": "verification_level",
             "type": {
               "defined": {
-                "name": "verificationLevel"
+                "name": "VerificationLevel"
               }
             }
           },
           {
-            "name": "priceMessage",
+            "name": "price_message",
             "type": {
               "defined": {
-                "name": "priceFeedMessage"
+                "name": "PriceFeedMessage"
               }
             }
           },
           {
-            "name": "postedSlot",
+            "name": "posted_slot",
             "type": "u64"
           }
         ]
       }
     },
     {
-      "name": "spendLimitsOrder",
+      "name": "SpendLimitsOrder",
       "docs": [
         "Time locked order for updating the spend limits of a vault"
       ],
@@ -3116,39 +3110,39 @@ export type Pyra = {
         "kind": "struct",
         "fields": [
           {
-            "name": "timeLock",
+            "name": "time_lock",
             "docs": [
               "Shared time lock data"
             ],
             "type": {
               "defined": {
-                "name": "timeLock"
+                "name": "TimeLock"
               }
             }
           },
           {
-            "name": "spendLimitPerTransaction",
+            "name": "spend_limit_per_transaction",
             "docs": [
               "The maximum amount of USDC that can be spent in a single transaction"
             ],
             "type": "u64"
           },
           {
-            "name": "spendLimitPerTimeframe",
+            "name": "spend_limit_per_timeframe",
             "docs": [
               "The maximum amount of USDC that can be spent in a single timeframe"
             ],
             "type": "u64"
           },
           {
-            "name": "nextTimeframeResetTimestamp",
+            "name": "next_timeframe_reset_timestamp",
             "docs": [
               "The timestamp at which the next timeframe will reset"
             ],
             "type": "u64"
           },
           {
-            "name": "timeframeInSeconds",
+            "name": "timeframe_in_seconds",
             "docs": [
               "The duration of a timeframe in seconds"
             ],
@@ -3158,7 +3152,7 @@ export type Pyra = {
       }
     },
     {
-      "name": "state",
+      "name": "State",
       "type": {
         "kind": "struct",
         "fields": [
@@ -3167,11 +3161,11 @@ export type Pyra = {
             "type": "pubkey"
           },
           {
-            "name": "whitelistMint",
+            "name": "whitelist_mint",
             "type": "pubkey"
           },
           {
-            "name": "discountMint",
+            "name": "discount_mint",
             "type": "pubkey"
           },
           {
@@ -3179,103 +3173,103 @@ export type Pyra = {
             "type": "pubkey"
           },
           {
-            "name": "srmVault",
+            "name": "srm_vault",
             "type": "pubkey"
           },
           {
-            "name": "perpFeeStructure",
+            "name": "perp_fee_structure",
             "type": {
               "defined": {
-                "name": "feeStructure"
+                "name": "FeeStructure"
               }
             }
           },
           {
-            "name": "spotFeeStructure",
+            "name": "spot_fee_structure",
             "type": {
               "defined": {
-                "name": "feeStructure"
+                "name": "FeeStructure"
               }
             }
           },
           {
-            "name": "oracleGuardRails",
+            "name": "oracle_guard_rails",
             "type": {
               "defined": {
-                "name": "oracleGuardRails"
+                "name": "OracleGuardRails"
               }
             }
           },
           {
-            "name": "numberOfAuthorities",
+            "name": "number_of_authorities",
             "type": "u64"
           },
           {
-            "name": "numberOfSubAccounts",
+            "name": "number_of_sub_accounts",
             "type": "u64"
           },
           {
-            "name": "lpCooldownTime",
+            "name": "lp_cooldown_time",
             "type": "u64"
           },
           {
-            "name": "liquidationMarginBufferRatio",
+            "name": "liquidation_margin_buffer_ratio",
             "type": "u32"
           },
           {
-            "name": "settlementDuration",
+            "name": "settlement_duration",
             "type": "u16"
           },
           {
-            "name": "numberOfMarkets",
+            "name": "number_of_markets",
             "type": "u16"
           },
           {
-            "name": "numberOfSpotMarkets",
+            "name": "number_of_spot_markets",
             "type": "u16"
           },
           {
-            "name": "signerNonce",
+            "name": "signer_nonce",
             "type": "u8"
           },
           {
-            "name": "minPerpAuctionDuration",
+            "name": "min_perp_auction_duration",
             "type": "u8"
           },
           {
-            "name": "defaultMarketOrderTimeInForce",
+            "name": "default_market_order_time_in_force",
             "type": "u8"
           },
           {
-            "name": "defaultSpotAuctionDuration",
+            "name": "default_spot_auction_duration",
             "type": "u8"
           },
           {
-            "name": "exchangeStatus",
+            "name": "exchange_status",
             "type": "u8"
           },
           {
-            "name": "liquidationDuration",
+            "name": "liquidation_duration",
             "type": "u8"
           },
           {
-            "name": "initialPctToLiquidate",
+            "name": "initial_pct_to_liquidate",
             "type": "u16"
           },
           {
-            "name": "maxNumberOfSubAccounts",
+            "name": "max_number_of_sub_accounts",
             "type": "u16"
           },
           {
-            "name": "maxInitializeUserFee",
+            "name": "max_initialize_user_fee",
             "type": "u16"
           },
           {
-            "name": "featureBitFlags",
+            "name": "feature_bit_flags",
             "type": "u8"
           },
           {
-            "name": "lpPoolFeatureBitFlags",
+            "name": "lp_pool_feature_bit_flags",
             "type": "u8"
           },
           {
@@ -3291,7 +3285,7 @@ export type Pyra = {
       }
     },
     {
-      "name": "swapLedger",
+      "name": "SwapLedger",
       "docs": [
         "Ledger for tracking the balance changes of each token before and after a swap, to avoid any dust being left behind after deposit/withdraw"
       ],
@@ -3316,7 +3310,7 @@ export type Pyra = {
       }
     },
     {
-      "name": "timeLock",
+      "name": "TimeLock",
       "docs": [
         "Time lock used to prevent an order being executed before the release_slot"
       ],
@@ -3338,7 +3332,7 @@ export type Pyra = {
             "type": "pubkey"
           },
           {
-            "name": "releaseSlot",
+            "name": "release_slot",
             "docs": [
               "The slot at which the time lock will be released"
             ],
@@ -3348,31 +3342,31 @@ export type Pyra = {
       }
     },
     {
-      "name": "validityGuardRails",
+      "name": "ValidityGuardRails",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "slotsBeforeStaleForAmm",
+            "name": "slots_before_stale_for_amm",
             "type": "i64"
           },
           {
-            "name": "slotsBeforeStaleForMargin",
+            "name": "slots_before_stale_for_margin",
             "type": "i64"
           },
           {
-            "name": "confidenceIntervalMaxSize",
+            "name": "confidence_interval_max_size",
             "type": "u64"
           },
           {
-            "name": "tooVolatileRatio",
+            "name": "too_volatile_ratio",
             "type": "i64"
           }
         ]
       }
     },
     {
-      "name": "vault",
+      "name": "Vault",
       "docs": [
         "Main user account for the Pyra protocol. Is the authority for DeFi integration accounts, and handles spend limits for the card."
       ],
@@ -3391,35 +3385,35 @@ export type Pyra = {
             "type": "u8"
           },
           {
-            "name": "spendLimitPerTransaction",
+            "name": "spend_limit_per_transaction",
             "docs": [
               "The maximum amount of USDC that can be spent in a single transaction"
             ],
             "type": "u64"
           },
           {
-            "name": "spendLimitPerTimeframe",
+            "name": "spend_limit_per_timeframe",
             "docs": [
               "The maximum amount of USDC that can be spent in a single timeframe"
             ],
             "type": "u64"
           },
           {
-            "name": "remainingSpendLimitPerTimeframe",
+            "name": "remaining_spend_limit_per_timeframe",
             "docs": [
               "The remaining amount of USDC that can be spent in the current timeframe"
             ],
             "type": "u64"
           },
           {
-            "name": "nextTimeframeResetTimestamp",
+            "name": "next_timeframe_reset_timestamp",
             "docs": [
               "The next timestamp the remaining_spend_limit_per_timeframe will be reset at"
             ],
             "type": "u64"
           },
           {
-            "name": "timeframeInSeconds",
+            "name": "timeframe_in_seconds",
             "docs": [
               "How much to extend the next_timeframe_reset_timestamp by when it's reached"
             ],
@@ -3429,7 +3423,7 @@ export type Pyra = {
       }
     },
     {
-      "name": "verificationLevel",
+      "name": "VerificationLevel",
       "docs": [
         "Pyth price updates are bridged to all blockchains via Wormhole.",
         "Using the price updates on another chain requires verifying the signatures of the Wormhole guardians.",
@@ -3447,22 +3441,22 @@ export type Pyra = {
         "kind": "enum",
         "variants": [
           {
-            "name": "partial",
+            "name": "Partial",
             "fields": [
               {
-                "name": "numSignatures",
+                "name": "num_signatures",
                 "type": "u8"
               }
             ]
           },
           {
-            "name": "full"
+            "name": "Full"
           }
         ]
       }
     },
     {
-      "name": "withdrawOrder",
+      "name": "WithdrawOrder",
       "docs": [
         "Time locked order for withdrawing funds from a vault"
       ],
@@ -3470,32 +3464,32 @@ export type Pyra = {
         "kind": "struct",
         "fields": [
           {
-            "name": "timeLock",
+            "name": "time_lock",
             "docs": [
               "Shared time lock data"
             ],
             "type": {
               "defined": {
-                "name": "timeLock"
+                "name": "TimeLock"
               }
             }
           },
           {
-            "name": "amountBaseUnits",
+            "name": "amount_base_units",
             "docs": [
               "The amount of base units to withdraw"
             ],
             "type": "u64"
           },
           {
-            "name": "driftMarketIndex",
+            "name": "drift_market_index",
             "docs": [
               "The drift market index to withdraw from"
             ],
             "type": "u16"
           },
           {
-            "name": "reduceOnly",
+            "name": "reduce_only",
             "docs": [
               "Whether the withdraw is reduce only"
             ],
@@ -3512,4 +3506,4 @@ export type Pyra = {
       }
     }
   ]
-};
+}
