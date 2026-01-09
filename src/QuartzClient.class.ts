@@ -1,4 +1,9 @@
-import { BN, type DriftClient, type SpotMarketAccount } from "@drift-labs/sdk";
+import {
+	BN,
+	type DriftClient,
+	type GrpcConfigs,
+	type SpotMarketAccount,
+} from "@drift-labs/sdk";
 import {
 	calculateBorrowRate,
 	calculateDepositRate,
@@ -85,6 +90,7 @@ export class QuartzClient {
 	 * @returns QuartzClient instance.
 	 */
 	public static async fetchClient(config: {
+		grpcConfigs?: GrpcConfigs;
 		rpcUrls?: string[];
 		connection?: AdvancedConnection;
 		pollingFrequency?: number;
@@ -171,7 +177,12 @@ export class QuartzClient {
 	): Promise<(QuartzUser | null)[]> {
 		if (owners.length === 0) return [];
 		const vaultAddresses = owners.map((owner) => getVaultPublicKey(owner));
+		return this.getMultipleQuartzAccountsFromVaults(vaultAddresses);
+	}
 
+	public async getMultipleQuartzAccountsFromVaults(
+		vaultAddresses: PublicKey[],
+	): Promise<(QuartzUser | null)[]> {
 		const vaultChunks = Array.from(
 			{
 				length: Math.ceil(vaultAddresses.length / MAX_ACCOUNTS_PER_FETCH_CALL),
@@ -217,17 +228,15 @@ export class QuartzClient {
 
 		return driftUsers.map((driftUser, index) => {
 			if (driftUser === undefined) return null;
-			if (owners[index] === undefined)
-				throw Error("Missing pubkey in owners array");
 
 			const vaultAccount = vaultAccounts[index];
 			if (!vaultAccount)
 				throw Error(
-					`Vault account not found for pubkey: ${vaultAddresses[index]?.toBase58()}`,
+					`Vault account ${vaultAddresses[index]?.toBase58()} not found`,
 				);
 
 			return new QuartzUser(
-				owners[index],
+				vaultAccount.owner,
 				this.connection,
 				this,
 				this.program,

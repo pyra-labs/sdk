@@ -1,6 +1,8 @@
 import BN from "bn.js";
 export { BN };
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes/index.js";
+import { PRICE_PRECISION } from "@drift-labs/sdk";
+export { PRICE_PRECISION as DRIFT_ORACLE_PRICE_PRECISION };
 export { bs58 };
 export * from "./config/constants.js";
 export * from "./config/tokens.js";
