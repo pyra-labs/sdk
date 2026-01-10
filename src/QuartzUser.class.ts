@@ -1008,7 +1008,7 @@ export class QuartzUser {
 		const ix_startSwapDrift = await this.program.methods
 			.startSwapDrift()
 			.accounts({
-				owner: this.pubkey,
+				vault: this.vaultPubkey,
 				caller: caller,
 				mintFrom: mintFrom,
 				mintTo: mintTo,
