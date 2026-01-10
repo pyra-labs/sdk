@@ -1019,7 +1019,7 @@ export class QuartzUser {
 			.instruction();
 
 		const ix_executeSwapDrift = await this.program.methods
-			.executeSwapDrift(marketIndexTo, marketIndexFrom)
+			.executeSwapDrift(marketIndexFrom, marketIndexTo)
 			.accounts({
 				owner: this.pubkey,
 				caller: caller,
