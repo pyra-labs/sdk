@@ -923,6 +923,7 @@ export class QuartzUser {
 	 */
 	public async makeSpendIxs(
 		amountSpendBaseUnits: number,
+		amountSpendSettleBaseUnits: number,
 		amountFeeBaseUnits: number,
 		marketIndex: MarketIndex,
 		admin: PublicKey,
@@ -955,18 +956,53 @@ export class QuartzUser {
 			.remainingAccounts(this.driftUser.getRemainingAccounts([marketIndex]))
 			.instruction();
 
-		const ix_settleSpend = await this.program.methods
-			.settleSpend(new BN(amountSpendBaseUnits))
+		const instructions: TransactionInstruction[] = [ix_spendDrift];
+
+		if (amountSpendSettleBaseUnits > 0) {
+			instructions.push(
+				await this.program.methods
+					.settleSpend(new BN(amountSpendSettleBaseUnits))
+					.accounts({
+						admin: admin,
+						spendSettlementAccount: SPEND_SETTLEMENT_ACCOUNT,
+						mint: mint,
+						tokenProgram: tokenProgram,
+					})
+					.instruction(),
+			);
+		}
+
+		return {
+			ixs: instructions,
+			lookupTables: this.getLookupTables(),
+			signers: [],
+		};
+	}
+
+	public async makeRefundSpendIxs(
+		amountBaseUnits: number,
+		marketIndex: MarketIndex,
+		admin: PublicKey,
+	): Promise<{
+		ixs: TransactionInstruction[];
+		lookupTables: AddressLookupTableAccount[];
+		signers: Keypair[];
+	}> {
+		const mint = TOKENS[marketIndex].mint;
+		const tokenProgram = await getTokenProgram(this.connection, mint);
+
+		const ix_refundSpend = await this.program.methods
+			.refundSpend(new BN(amountBaseUnits))
 			.accounts({
-				admin: admin,
-				spendSettlementAccount: SPEND_SETTLEMENT_ACCOUNT,
-				mint: mint,
-				tokenProgram: tokenProgram,
+				admin,
+				owner: this.pubkey,
+				mint,
+				tokenProgram,
 			})
 			.instruction();
 
 		return {
-			ixs: [ix_spendDrift, ix_settleSpend],
+			ixs: [ix_refundSpend],
 			lookupTables: this.getLookupTables(),
 			signers: [],
 		};

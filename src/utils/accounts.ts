@@ -55,6 +55,14 @@ export const getDepositAddressAtaPublicKey = async (
 	);
 };
 
+export const getSpendHoldPublicKey = () => {
+	const [spendHoldPda] = PublicKey.findProgramAddressSync(
+		[Buffer.from("spend_hold")],
+		QUARTZ_PROGRAM_ID,
+	);
+	return spendHoldPda;
+};
+
 // Drift
 
 export const getDriftUserPublicKey = (vaultPda: PublicKey) => {
