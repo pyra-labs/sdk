@@ -3,7 +3,7 @@ import type { Token } from "../types/interfaces/Token.interface.js";
 import BN from "bn.js";
 
 export const MarketIndex = [
-	1, 0, 5, 22, 28, 3, 6, 19, 8, 32, 11, 45, 4,
+	1, 0, 5, 22, 28, 3, 6, 19, 8, 32, 11, 45, 4, 57,
 ] as const;
 export type MarketIndex = (typeof MarketIndex)[number];
 
@@ -123,5 +123,13 @@ export const TOKENS: Record<MarketIndex, Token> = {
 			"0x9d4294bbcd1174d6f2003ec365831e64cc31d9f6f15a2b85399db8d5000960f6",
 		decimalPrecision: new BN(8),
 		coingeckoPriceId: "weth",
+	},
+	57: {
+		name: "syrupUSDC",
+		mint: new PublicKey("AvZZF1YaZDziPY2RCK4oJrRVrbN3mTD9NL24hPeaZeUj"),
+		pythPriceFeedId:
+			"0xe616297dab48626eaacf6d030717b25823b13ae6520b83f4735bf8deec8e2c9a",
+		decimalPrecision: new BN(6),
+		coingeckoPriceId: "syrup-usdc",
 	},
 };
