@@ -1,9 +1,14 @@
 import { PublicKey } from "@solana/web3.js";
 import type { Token } from "../types/interfaces/Token.interface.js";
 import BN from "bn.js";
+import {
+	MARKET_INDEX_JITOSOL,
+	MARKET_INDEX_SOL,
+	MARKET_INDEX_USDC,
+} from "./constants.js";
 
 export const MarketIndex = [
-	1, 0, 5, 22, 28, 3, 6, 19, 8, 32, 11, 45, 4, 57,
+	1, 0, 5, 22, 28, 3, 6, 19, 8, 32, 11, 45, 4,
 ] as const;
 export type MarketIndex = (typeof MarketIndex)[number];
 
@@ -20,7 +25,7 @@ export function getMarketIndicesRecord<T>(
 }
 
 export const TOKENS: Record<MarketIndex, Token> = {
-	1: {
+	[MARKET_INDEX_SOL]: {
 		name: "SOL",
 		mint: new PublicKey("So11111111111111111111111111111111111111112"),
 		pythPriceFeedId:
@@ -28,7 +33,7 @@ export const TOKENS: Record<MarketIndex, Token> = {
 		decimalPrecision: new BN(9),
 		coingeckoPriceId: "solana",
 	},
-	0: {
+	[MARKET_INDEX_USDC]: {
 		name: "USDC",
 		mint: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
 		pythPriceFeedId:
@@ -68,7 +73,7 @@ export const TOKENS: Record<MarketIndex, Token> = {
 		decimalPrecision: new BN(8),
 		coingeckoPriceId: "wrapped-btc-wormhole",
 	},
-	6: {
+	[MARKET_INDEX_JITOSOL]: {
 		name: "JitoSOL",
 		mint: new PublicKey("J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn"),
 		pythPriceFeedId:
@@ -124,12 +129,12 @@ export const TOKENS: Record<MarketIndex, Token> = {
 		decimalPrecision: new BN(8),
 		coingeckoPriceId: "weth",
 	},
-	57: {
-		name: "syrupUSDC",
-		mint: new PublicKey("AvZZF1YaZDziPY2RCK4oJrRVrbN3mTD9NL24hPeaZeUj"),
-		pythPriceFeedId:
-			"0xe616297dab48626eaacf6d030717b25823b13ae6520b83f4735bf8deec8e2c9a",
-		decimalPrecision: new BN(6),
-		coingeckoPriceId: "syrup-usdc",
-	},
+	// 57: {
+	// 	name: "syrupUSDC",
+	// 	mint: new PublicKey("AvZZF1YaZDziPY2RCK4oJrRVrbN3mTD9NL24hPeaZeUj"),
+	// 	pythPriceFeedId:
+	// 		"0xe616297dab48626eaacf6d030717b25823b13ae6520b83f4735bf8deec8e2c9a",
+	// 	decimalPrecision: new BN(6),
+	// 	coingeckoPriceId: "syrup-usdc",
+	// },
 };
