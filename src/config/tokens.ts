@@ -8,7 +8,7 @@ import {
 } from "./constants.js";
 
 export const MarketIndex = [
-	1, 0, 5, 22, 28, 3, 6, 19, 8, 32, 11, 45, 4,
+	1, 0, 5, 22, 28, 3, 6, 19, 8, 32, 11, 45, 4, 57,
 ] as const;
 export type MarketIndex = (typeof MarketIndex)[number];
 
@@ -129,12 +129,12 @@ export const TOKENS: Record<MarketIndex, Token> = {
 		decimalPrecision: new BN(8),
 		coingeckoPriceId: "weth",
 	},
-	// 57: {
-	// 	name: "syrupUSDC",
-	// 	mint: new PublicKey("AvZZF1YaZDziPY2RCK4oJrRVrbN3mTD9NL24hPeaZeUj"),
-	// 	pythPriceFeedId:
-	// 		"0xe616297dab48626eaacf6d030717b25823b13ae6520b83f4735bf8deec8e2c9a",
-	// 	decimalPrecision: new BN(6),
-	// 	coingeckoPriceId: "syrup-usdc",
-	// },
+	57: {
+		name: "syrupUSDC",
+		mint: new PublicKey("AvZZF1YaZDziPY2RCK4oJrRVrbN3mTD9NL24hPeaZeUj"),
+		pythPriceFeedId:
+			"0x2ad31d1c4a85fbf2156ce57fab4104124c5ef76a6386375ecfc8da1ed5ce1486",
+		decimalPrecision: new BN(6),
+		coingeckoPriceId: "syrup-usdc",
+	},
 };
