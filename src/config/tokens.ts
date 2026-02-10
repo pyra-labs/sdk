@@ -135,6 +135,6 @@ export const TOKENS: Record<MarketIndex, Token> = {
 		pythPriceFeedId:
 			"0x2ad31d1c4a85fbf2156ce57fab4104124c5ef76a6386375ecfc8da1ed5ce1486",
 		decimalPrecision: new BN(6),
-		coingeckoPriceId: "syrup-usdc",
+		coingeckoPriceId: "syrupusdc",
 	},
 };
