@@ -351,6 +351,207 @@ export type Pyra = {
     {
       "name": "depositDrift",
       "discriminator": [
+        4
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vaultSpl",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "ownerSpl",
+          "docs": [
+            "Option because SOL in the owner's wallet will be regular lamports, not wSOL"
+          ],
+          "writable": true,
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "driftUser",
+          "writable": true
+        },
+        {
+          "name": "driftUserStats",
+          "writable": true
+        },
+        {
+          "name": "driftState",
+          "writable": true
+        },
+        {
+          "name": "driftSpotMarketVault",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "driftProgram",
+          "address": "dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "driftMarketIndex",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "depositDriftFromPda",
+      "discriminator": [
         18,
         70,
         190,
@@ -1922,7 +2123,7 @@ export type Pyra = {
         {
           "name": "depositAddressSpl",
           "docs": [
-            "Option because SOL in the deposit_address will be regular lamports, not wSOL"
+            "Option because SOL in the legacy deposit_address will be regular lamports, not wSOL"
           ],
           "writable": true,
           "pda": {
@@ -3604,6 +3805,11 @@ export type Pyra = {
       "code": 6064,
       "name": "swapDriftUserMismatch",
       "msg": "Drift user mismatch between start and end swap instructions"
+    },
+    {
+      "code": 6065,
+      "name": "missingOwnerSpl",
+      "msg": "owner_spl is required if not depositing lamports"
     }
   ],
   "types": [

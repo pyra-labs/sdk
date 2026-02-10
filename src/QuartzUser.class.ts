@@ -301,6 +301,69 @@ export class QuartzUser {
 		return depositBalances;
 	}
 
+	public async getWalletBalance(marketIndex: MarketIndex): Promise<BN> {
+		if (marketIndex === MARKET_INDEX_SOL) {
+			const rent =
+				await this.connection.getMinimumBalanceForRentExemption(0);
+			const balance = await this.connection.getBalance(this.pubkey);
+			const availableBalance = balance - rent;
+			return new BN(Math.max(availableBalance, 0));
+		}
+
+		const mint = TOKENS[marketIndex].mint;
+		const tokenProgram = await getTokenProgram(this.connection, mint);
+		const ata = getAssociatedTokenAddressSync(
+			mint,
+			this.pubkey,
+			true,
+			tokenProgram,
+		);
+		const ataBalance = await getTokenAccountBalance(this.connection, ata);
+		return new BN(ataBalance);
+	}
+
+	public async getAllWalletBalances(): Promise<Record<MarketIndex, BN>> {
+		const walletBalances: Record<MarketIndex, BN> =
+			getMarketIndicesRecord(ZERO);
+
+		walletBalances[MARKET_INDEX_SOL] =
+			await this.getWalletBalance(MARKET_INDEX_SOL);
+		const splIndices = MarketIndex.filter(
+			(index) => index !== MARKET_INDEX_SOL,
+		);
+
+		const [standardTokenAccounts, token2022Accounts] = await Promise.all([
+			this.connection.getParsedTokenAccountsByOwner(this.pubkey, {
+				programId: TOKEN_PROGRAM_ID,
+			}),
+			this.connection.getParsedTokenAccountsByOwner(this.pubkey, {
+				programId: TOKEN_2022_PROGRAM_ID,
+			}),
+		]);
+
+		const mintToMarketIndex: Record<string, MarketIndex> = {};
+		for (const index of splIndices) {
+			mintToMarketIndex[TOKENS[index].mint.toBase58()] = index;
+		}
+
+		const allTokenAccounts = [
+			...standardTokenAccounts.value,
+			...token2022Accounts.value,
+		];
+		for (const account of allTokenAccounts) {
+			const parsedInfo = account.account.data.parsed.info;
+			const mintAddress = parsedInfo.mint;
+			const amount = parsedInfo.tokenAmount.amount;
+
+			const marketIndex = mintToMarketIndex[mintAddress];
+			if (marketIndex !== undefined) {
+				walletBalances[marketIndex] = new BN(amount);
+			}
+		}
+
+		return walletBalances;
+	}
+
 	public async getTokenBalance(
 		marketIndex: MarketIndex,
 		openWithdrawOrders?: WithdrawOrder[],
@@ -645,7 +708,8 @@ export class QuartzUser {
 	}
 
 	/**
-	 * Creates instructions to deposit tokens from the legacy deposit address into Drift.
+	 * Creates instructions to deposit tokens from the owner's wallet into Drift.
+	 * The owner must sign the transaction (wallet is both the token source and signer).
 	 * @param marketIndex - The market index of the token to deposit.
 	 * @param payer - The public key of the payer.
 	 * @returns {Promise<{
@@ -653,12 +717,71 @@ export class QuartzUser {
 	 *     lookupTables: AddressLookupTableAccount[],
 	 *     signers: Keypair[]
 	 * }>} Object containing:
-	 * - ixs: Array of instructions to initiate a withdraw order.
+	 * - ixs: Array of instructions to deposit tokens from the owner wallet into Drift.
+	 * - lookupTables: Array of lookup tables for building VersionedTransaction.
+	 * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
+	 * @throw Error if the RPC connection fails.
+	 */
+	public async makeDepositIxs(
+		marketIndex: MarketIndex,
+		payer: PublicKey,
+	): Promise<{
+		ixs: TransactionInstruction[];
+		lookupTables: AddressLookupTableAccount[];
+		signers: Keypair[];
+	}> {
+		const mint = TOKENS[marketIndex].mint;
+		const tokenProgram = await getTokenProgram(this.connection, mint);
+
+		let ownerSpl: PublicKey | null = null;
+		if (marketIndex !== MARKET_INDEX_SOL) {
+			ownerSpl = getAssociatedTokenAddressSync(
+				mint,
+				this.pubkey,
+				true,
+				tokenProgram,
+			);
+		}
+
+		const ix = await this.program.methods
+			.depositDrift(marketIndex)
+			.accountsPartial({
+				vault: this.vaultPubkey,
+				owner: this.pubkey,
+				ownerSpl: ownerSpl,
+				mint: mint,
+				payer: payer,
+				driftUser: this.driftUser.pubkey,
+				driftUserStats: this.driftUser.statsPubkey,
+				driftState: getDriftStatePublicKey(),
+				driftSpotMarketVault: getDriftSpotMarketVaultPublicKey(marketIndex),
+				tokenProgram: tokenProgram,
+			})
+			.remainingAccounts(this.driftUser.getRemainingAccounts([marketIndex]))
+			.instruction();
+
+		return {
+			ixs: [ix],
+			lookupTables: this.getLookupTables(),
+			signers: [],
+		};
+	}
+
+	/**
+	 * Creates instructions to deposit tokens from the legacy PDA deposit address into Drift.
+	 * @param marketIndex - The market index of the token to deposit.
+	 * @param payer - The public key of the payer.
+	 * @returns {Promise<{
+	 *     ixs: TransactionInstruction[],
+	 *     lookupTables: AddressLookupTableAccount[],
+	 *     signers: Keypair[]
+	 * }>} Object containing:
+	 * - ixs: Array of instructions to deposit tokens from the PDA deposit address into Drift.
 	 * - lookupTables: Array of lookup tables for building VersionedTransaction.
 	 * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
 	 * @throw Error if the RPC connection fails, if the mint's ATA does not exist, or has 0 balance.
 	 */
-	public async makeDepositIxs(
+	public async makeDepositFromPdaIxs(
 		marketIndex: MarketIndex,
 		payer: PublicKey,
 	): Promise<{
@@ -681,7 +804,7 @@ export class QuartzUser {
 		}
 
 		const ix = await this.program.methods
-			.depositDrift(marketIndex)
+			.depositDriftFromPda(marketIndex)
 			.accountsPartial({
 				vault: this.vaultPubkey,
 				mint: mint,
