@@ -7,8 +7,11 @@ export const QUARTZ_PROGRAM_ID = new PublicKey(
 // export const QUARTZ_PROGRAM_ID = new PublicKey(
 // 	"GKp2mXvcsLBuU3ajGmYzujBBKtBt2osE7ingSq7kERYo",
 // ); // staging
+// export const QUARTZ_ADDRESS_TABLE = new PublicKey(
+//     "5GQiSzo2t6ftg2LR56kHpdP8RYyzo5dryRz87ydaBycS",
+// );
 export const QUARTZ_ADDRESS_TABLE = new PublicKey(
-	"5GQiSzo2t6ftg2LR56kHpdP8RYyzo5dryRz87ydaBycS",
+    "9fc1ssHa7YrHoJSieumQe4d6xqzMw5FZTAuRLwQ2zSGH",
 );
 export const QUARTZ_DRIFT_ACCOUNT = new PublicKey(
 	"5XY5pQbBjwv8ByBxKPNE7Xyb9dVcdFgd51xcxKDJjGWE",

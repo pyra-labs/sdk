@@ -1092,4 +1092,135 @@ export class QuartzUser {
 			signers: [],
 		};
 	}
+
+	/**
+	 * Build instructions for a V2 collateral swap on Drift.
+	 * V2 uses USDC as substitute collateral so the flash loan is always in USDC.
+	 *
+	 * @param {PublicKey} caller - The caller/liquidator public key executing the swap.
+	 * @param {PublicKey} payer - The payer for transaction fees and rent.
+	 * @param {MarketIndex} marketIndexFrom - Market index of the asset being sold.
+	 * @param {MarketIndex} marketIndexTo - Market index of the asset being bought.
+	 * @param {number} substituteAmountBaseUnits - Amount of USDC substitute collateral in base units.
+	 * @param {number} amountFromBaseUnits - Amount of the "from" asset to withdraw in base units.
+	 * @param {TransactionInstruction[]} swapInstructions - Jupiter swap instructions to execute between start and end.
+	 * @param {boolean} isOwnerSigner - Whether the owner is signing this transaction (true for user swaps, false for liquidations).
+	 * @returns {Promise<{
+	 *     ixs: TransactionInstruction[],
+	 *     lookupTables: AddressLookupTableAccount[],
+	 *     signers: Keypair[]
+	 * }>} Object containing:
+	 * - ixs: Array of instructions [startSwapDriftV2, ...swapInstructions, endSwapDriftV2].
+	 * - lookupTables: Array of lookup tables for building VersionedTransaction.
+	 * - signers: Array of signer keypairs that must sign the transaction the instructions are added to.
+	 */
+	public async makeSwapV2Ixs(
+		caller: PublicKey,
+		payer: PublicKey,
+		marketIndexFrom: MarketIndex,
+		marketIndexTo: MarketIndex,
+		substituteAmountBaseUnits: number,
+		amountFromBaseUnits: number,
+		swapInstructions: TransactionInstruction[],
+		isOwnerSigner: boolean,
+	): Promise<{
+		ixs: TransactionInstruction[];
+		lookupTables: AddressLookupTableAccount[];
+		signers: Keypair[];
+	}> {
+		const mintSubstitute = TOKENS[MARKET_INDEX_USDC].mint;
+		const mintFrom = TOKENS[marketIndexFrom].mint;
+		const mintTo = TOKENS[marketIndexTo].mint;
+		const tokenProgramSubstitute = await getTokenProgram(this.connection, mintSubstitute);
+		const tokenProgramFrom = await getTokenProgram(this.connection, mintFrom);
+		const tokenProgramTo = await getTokenProgram(this.connection, mintTo);
+
+		const ix_startSwapDriftV2 = await this.program.methods
+			.startSwapDriftV2(
+				MARKET_INDEX_USDC,
+				new BN(substituteAmountBaseUnits),
+				marketIndexFrom,
+				new BN(amountFromBaseUnits),
+				marketIndexTo,
+			)
+			.accounts({
+				vault: this.vaultPubkey,
+				caller: caller,
+				callerSplTo: getAssociatedTokenAddressSync(
+					mintTo,
+					caller,
+					true,
+					tokenProgramTo,
+				),
+				mintSubstitute: mintSubstitute,
+				mintFrom: mintFrom,
+				driftUser: this.driftUser.pubkey,
+				driftUserStats: this.driftUser.statsPubkey,
+				driftState: getDriftStatePublicKey(),
+				driftSpotMarketVaultSubstitute:
+					getDriftSpotMarketVaultPublicKey(MARKET_INDEX_USDC),
+				driftSpotMarketVaultFrom:
+					getDriftSpotMarketVaultPublicKey(marketIndexFrom),
+				driftSigner: this.driftSigner,
+				tokenProgramSubstitute: tokenProgramSubstitute,
+				tokenProgramFrom: tokenProgramFrom,
+				payer: payer,
+			})
+			.remainingAccounts(
+				this.driftUser.getRemainingAccounts([
+					MARKET_INDEX_USDC,
+					marketIndexFrom,
+					marketIndexTo,
+				]),
+			)
+			.instruction();
+
+		const ix_endSwapDriftV2 = await this.program.methods
+			.endSwapDriftV2(
+				MARKET_INDEX_USDC,
+				marketIndexFrom,
+				marketIndexTo,
+			)
+			.accounts({
+				owner: this.pubkey,
+				caller: caller,
+				mintFrom: mintFrom,
+				mintTo: mintTo,
+				mintSubstitute: mintSubstitute,
+				tokenProgramTo: tokenProgramTo,
+				tokenProgramSubstitute: tokenProgramSubstitute,
+				payer: payer,
+				driftUser: this.driftUser.pubkey,
+				driftUserStats: this.driftUser.statsPubkey,
+				driftState: getDriftStatePublicKey(),
+				driftSpotMarketVaultTo:
+					getDriftSpotMarketVaultPublicKey(marketIndexTo),
+				driftSpotMarketVaultSubstitute:
+					getDriftSpotMarketVaultPublicKey(MARKET_INDEX_USDC),
+				driftSigner: this.driftSigner,
+				priceUpdateFrom: getPythOracle(marketIndexFrom),
+				priceUpdateTo: getPythOracle(marketIndexTo),
+			})
+			.remainingAccounts(
+				this.driftUser.getRemainingAccounts([
+					MARKET_INDEX_USDC,
+					marketIndexFrom,
+					marketIndexTo,
+				]),
+			)
+			.instruction();
+
+		const ownerAccountMeta = ix_endSwapDriftV2.keys.find((key) =>
+			key.pubkey.equals(this.pubkey),
+		);
+		if (ownerAccountMeta) {
+			ownerAccountMeta.isSigner = isOwnerSigner;
+		}
+
+		return {
+			ixs: [ix_startSwapDriftV2, ...swapInstructions, ix_endSwapDriftV2],
+			lookupTables: this.getLookupTables(),
+			signers: [],
+		};
+	}
 }

@@ -30,6 +30,14 @@ export const getSwapLedgerPublicKey = (owner: PublicKey) => {
 	return swapLedgerPda;
 };
 
+export const getSwapLedgerV2PublicKey = (mintFrom: PublicKey) => {
+	const [swapLedgerV2Pda] = PublicKey.findProgramAddressSync(
+		[Buffer.from("swap_ledger_v2"), mintFrom.toBuffer()],
+		QUARTZ_PROGRAM_ID,
+	);
+	return swapLedgerV2Pda;
+};
+
 export const getDepositAddressPublicKey = (owner: PublicKey) => {
 	const vaultPda = getVaultPublicKey(owner);
 	const [depositAddressPda] = PublicKey.findProgramAddressSync(
