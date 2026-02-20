@@ -419,24 +419,26 @@ export async function fetchAndParse<T>(
 	retries = 0,
 ): Promise<T> {
 	const response = await retryWithBackoff(async () => fetch(url, req), retries);
+	const text = await response.text();
 
 	if (!response.ok) {
-		let body: any;
+		let body: string;
 		try {
-			body = await response.json();
+			body = JSON.stringify(JSON.parse(text));
 		} catch {
-			body = null;
+			body = text;
 		}
 		throw new Error(
-			`HTTP ${response.status} error fetching ${url}${body ? `: ${JSON.stringify(body)}` : ""}`,
+			`HTTP ${response.status} error fetching ${url}${body ? `: ${body}` : ""}`,
 		);
 	}
 
 	try {
-		const body = await response.json();
-		return body as T;
+		return JSON.parse(text) as T;
 	} catch {
-		return response as T;
+		throw new Error(
+			`Failed to parse response from ${url} as JSON: ${text}`,
+		);
 	}
 }
 
