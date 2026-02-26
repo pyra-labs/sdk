@@ -8,7 +8,7 @@ import {
 } from "./constants.js";
 
 export const MarketIndex = [
-	1, 0, 5, 22, 28, 3, 6, 19, 8, 32, 11, 45, 4, 57,
+	1, 0, 5, 22, 28, 3, 6, 19, 8, 32, 11, 45, 4, 57, 27,
 ] as const;
 export type MarketIndex = (typeof MarketIndex)[number];
 
@@ -136,5 +136,13 @@ export const TOKENS: Record<MarketIndex, Token> = {
 			"0x2ad31d1c4a85fbf2156ce57fab4104124c5ef76a6386375ecfc8da1ed5ce1486",
 		decimalPrecision: new BN(6),
 		coingeckoPriceId: "syrupusdc",
+	},
+	27: {
+		name: "cbBTC",
+		mint: new PublicKey("cbbtcf3aa214zXHbiAZQwf4122FBYbraNdFqgw4iMij"),
+		pythPriceFeedId:
+			"0x2817d7bfe5c64b8ea956e9a26f573ef64e72e4d7891f2d6af9bcc93f7aff9a97",
+		decimalPrecision: new BN(8),
+		coingeckoPriceId: "coinbase-wrapped-btc",
 	},
 };
