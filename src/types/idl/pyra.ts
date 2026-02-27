@@ -8,7 +8,7 @@ export type Pyra = {
   "address": "6JjHXLheGSNvvexgzMthEcgjkcirDrGduc3HAKB2P1v2",
   "metadata": {
     "name": "pyra",
-    "version": "1.1.0",
+    "version": "1.2.1",
     "spec": "0.1.0",
     "description": "Pyra's Solana smart contract"
   },
@@ -947,6 +947,10 @@ export type Pyra = {
         {
           "name": "driftMarketIndexTo",
           "type": "u16"
+        },
+        {
+          "name": "isLiquidationAttempt",
+          "type": "bool"
         }
       ]
     },
@@ -1318,6 +1322,10 @@ export type Pyra = {
         {
           "name": "driftMarketIndexTo",
           "type": "u16"
+        },
+        {
+          "name": "isLiquidationAttempt",
+          "type": "bool"
         }
       ]
     },
@@ -3182,6 +3190,10 @@ export type Pyra = {
         {
           "name": "driftMarketIndexTo",
           "type": "u16"
+        },
+        {
+          "name": "reduceOnly",
+          "type": "bool"
         }
       ]
     }
@@ -3604,6 +3616,11 @@ export type Pyra = {
       "code": 6064,
       "name": "swapDriftUserMismatch",
       "msg": "Drift user mismatch between start and end swap instructions"
+    },
+    {
+      "code": 6065,
+      "name": "liquidationHealthNotZero",
+      "msg": "Health must be at 0 for a liquidation attempt"
     }
   ],
   "types": [

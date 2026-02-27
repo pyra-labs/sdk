@@ -1031,6 +1031,7 @@ export class QuartzUser {
 		marketIndexTo: MarketIndex,
 		swapInstructions: TransactionInstruction[],
 		isOwnerSigner: boolean,
+		isLiquidationAttempt: boolean,
 	): Promise<{
 		ixs: TransactionInstruction[];
 		lookupTables: AddressLookupTableAccount[];
@@ -1055,7 +1056,7 @@ export class QuartzUser {
 			.instruction();
 
 		const ix_executeSwapDrift = await this.program.methods
-			.executeSwapDrift(marketIndexFrom, marketIndexTo)
+			.executeSwapDrift(marketIndexFrom, marketIndexTo, isLiquidationAttempt)
 			.accounts({
 				owner: this.pubkey,
 				caller: caller,
@@ -1123,6 +1124,8 @@ export class QuartzUser {
 		amountFromBaseUnits: number,
 		swapInstructions: TransactionInstruction[],
 		isOwnerSigner: boolean,
+		reduceOnly: boolean,
+		isLiquidationAttempt: boolean,
 	): Promise<{
 		ixs: TransactionInstruction[];
 		lookupTables: AddressLookupTableAccount[];
@@ -1131,7 +1134,10 @@ export class QuartzUser {
 		const mintSubstitute = TOKENS[MARKET_INDEX_USDC].mint;
 		const mintFrom = TOKENS[marketIndexFrom].mint;
 		const mintTo = TOKENS[marketIndexTo].mint;
-		const tokenProgramSubstitute = await getTokenProgram(this.connection, mintSubstitute);
+		const tokenProgramSubstitute = await getTokenProgram(
+			this.connection,
+			mintSubstitute,
+		);
 		const tokenProgramFrom = await getTokenProgram(this.connection, mintFrom);
 		const tokenProgramTo = await getTokenProgram(this.connection, mintTo);
 
@@ -1142,6 +1148,7 @@ export class QuartzUser {
 				marketIndexFrom,
 				new BN(amountFromBaseUnits),
 				marketIndexTo,
+				reduceOnly,
 			)
 			.accounts({
 				vault: this.vaultPubkey,
@@ -1180,6 +1187,7 @@ export class QuartzUser {
 				MARKET_INDEX_USDC,
 				marketIndexFrom,
 				marketIndexTo,
+				isLiquidationAttempt,
 			)
 			.accounts({
 				owner: this.pubkey,
@@ -1193,8 +1201,7 @@ export class QuartzUser {
 				driftUser: this.driftUser.pubkey,
 				driftUserStats: this.driftUser.statsPubkey,
 				driftState: getDriftStatePublicKey(),
-				driftSpotMarketVaultTo:
-					getDriftSpotMarketVaultPublicKey(marketIndexTo),
+				driftSpotMarketVaultTo: getDriftSpotMarketVaultPublicKey(marketIndexTo),
 				driftSpotMarketVaultSubstitute:
 					getDriftSpotMarketVaultPublicKey(MARKET_INDEX_USDC),
 				driftSigner: this.driftSigner,
