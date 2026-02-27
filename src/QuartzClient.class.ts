@@ -39,7 +39,7 @@ import { DummyWallet } from "./types/classes/DummyWallet.class.js";
 import type { TransactionInstruction } from "@solana/web3.js";
 import { retryWithBackoff } from "./utils/helpers.js";
 import { Keypair } from "@solana/web3.js";
-import { DriftClientService } from "./services/driftClientService.js";
+import { DriftClientService } from "./services/DriftClientService.js";
 import type { VersionedTransactionResponse } from "@solana/web3.js";
 import type {
 	WithdrawOrder,
