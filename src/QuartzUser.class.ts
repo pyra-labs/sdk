@@ -797,7 +797,7 @@ export class QuartzUser {
 				admin: admin ?? QUARTZ_PROGRAM_ID,
 				payer: payer,
 				destination: order.destination,
-				destinationSpl: destinationSpl ?? this.program.programId,
+				destinationSpl: destinationSpl ?? QUARTZ_PROGRAM_ID,
 				mint: mint,
 				driftUser: this.driftUser.pubkey,
 				driftUserStats: this.driftUser.statsPubkey,
